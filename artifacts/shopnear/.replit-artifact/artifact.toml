@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "ShopNear"
+description = "A mobile-first local marketplace that helps people discover trusted nearby businesses, products, and services through an AI-assisted shopping experience."
+version = "1.0.0"
+id = "artifacts/shopnear"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23384
+
+[services.development]
+run = "pnpm --filter @workspace/shopnear run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/shopnear", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/shopnear/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23384"
+BASE_PATH = "/"

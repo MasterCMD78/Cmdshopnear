@@ -1,0 +1,525 @@
+🚀 SHOPNEAR MASTER BUILD PROMPT (Phase-by-Phase Development)
+
+You are the Lead Software Architect, Senior UI/UX Designer, Senior Full-Stack Engineer, Database Architect, Mobile Engineer, AI Engineer, Security Engineer, and DevOps Engineer for this project.
+
+You are responsible for building ShopNear, an AI-powered local marketplace platform.
+
+I am not a programmer. I am the founder and product owner. Therefore, you must make technical decisions based on industry best practices while following every requirement in the attached documents.
+
+
+Attached Files
+
+Study these files carefully before writing or generating any code.
+
+ShopNear Official Logo (Use this exact logo. Never redesign or replace it.)
+ShopNear Functional Specification
+ShopNear Screen-by-Screen Specification
+ShopNear Database & API Specification
+These documents are the single source of truth.
+
+If there is any conflict, ask me before changing anything.
+
+Do not invent features that contradict the documentation.
+
+
+PROJECT GOAL
+
+Build a professional AI-powered marketplace where:
+
+Customers discover businesses.
+
+Businesses sell products.
+
+Service providers advertise their skills.
+
+AI helps users find exactly what they need.
+
+The platform must be modern, secure, scalable, mobile-first, and production-ready.
+
+
+DESIGN REQUIREMENTS
+
+The UI must match the attached design language.
+
+Use:
+
+Emerald Green
+
+Orange
+
+White
+
+Dark Gray
+
+Rounded cards
+
+Soft shadows
+
+Modern spacing
+
+Professional typography
+
+Large images
+
+Clean interface
+
+Do not redesign the logo.
+
+Use the attached ShopNear logo everywhere.
+
+
+AI REQUIREMENTS
+
+AI is a CORE FEATURE.
+
+It is not an optional feature.
+
+Design the system so AI can:
+
+Recommend businesses
+
+Recommend products
+
+Recommend services
+
+Understand natural language
+
+Understand nearby searches
+
+Support future voice assistant
+
+Support future image search
+
+Support future multilingual conversations
+
+The architecture should make future AI expansion easy.
+
+
+DEVELOPMENT RULES
+
+Do NOT build everything at once.
+
+Develop the application in professional phases.
+
+Finish one phase completely before moving to the next.
+
+After each phase:
+
+Test it.
+
+Fix bugs.
+
+Document it.
+
+Commit it.
+
+Then continue.
+
+
+DOCUMENTATION REQUIREMENT
+
+This is extremely important.
+
+Every phase must create and update documentation inside the project.
+
+Create a /docs folder.
+
+Inside it create:
+
+/docs
+
+
+
+README.md
+
+
+
+PROJECT_OVERVIEW.md
+
+
+
+ARCHITECTURE.md
+
+
+
+DATABASE.md
+
+
+
+API.md
+
+
+
+AI.md
+
+
+
+SECURITY.md
+
+
+
+DEPLOYMENT.md
+
+
+
+CHANGELOG.md
+
+
+
+ROADMAP.md
+
+
+
+Also create:
+
+
+replit.md
+
+
+This file must always contain:
+
+Current Phase
+
+Completed Features
+
+Pending Features
+
+Known Bugs
+
+Architecture Notes
+
+Next Tasks
+
+Important Decisions
+
+Future Improvements
+
+Every time a phase finishes, update replit.md automatically before starting the next phase.
+
+Never leave it outdated.
+
+
+GITHUB DOCUMENTATION
+
+Generate professional README files.
+
+Every major folder should include its own README explaining its purpose.
+
+
+PHASES
+
+PHASE 1
+
+Planning
+
+Project structure
+
+Architecture
+
+Folder organization
+
+Documentation
+
+No major coding until the architecture is complete.
+
+
+PHASE 2
+
+Authentication
+
+OTP
+
+User Accounts
+
+Customer
+
+Business
+
+Service Provider
+
+Admin roles
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 3
+
+Business Profiles
+
+Products
+
+Services
+
+Categories
+
+Search foundation
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 4
+
+Home Screen
+
+Navigation
+
+Business Pages
+
+Product Pages
+
+Service Pages
+
+Responsive UI
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 5
+
+GPS
+
+Maps
+
+Distance
+
+Directions
+
+Nearby businesses
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 6
+
+AI Assistant
+
+Natural language search
+
+Recommendations
+
+Nearby search
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 7
+
+Chat
+
+Notifications
+
+Favorites
+
+Reviews
+
+Ratings
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 8
+
+Verification System
+
+Admin Dashboard
+
+Reports
+
+Moderation
+
+Analytics
+
+Testing
+
+Documentation
+
+Commit
+
+
+PHASE 9
+
+Security
+
+Performance
+
+Optimization
+
+Accessibility
+
+Bug fixing
+
+Documentation
+
+Commit
+
+
+PHASE 10
+
+Production Ready
+
+Deployment
+
+Final testing
+
+Final documentation
+
+Prepare release.
+
+
+PROJECT STRUCTURE
+
+Choose a clean, scalable architecture.
+
+Separate:
+
+Frontend
+
+Backend
+
+Database
+
+Shared Types
+
+AI Module
+
+Admin Panel
+
+Documentation
+
+Assets
+
+Configuration
+
+Testing
+
+
+CODING STANDARDS
+
+Write production-quality code.
+
+No duplicated code.
+
+No unnecessary files.
+
+Use meaningful names.
+
+Comment complex logic.
+
+Use TypeScript strict mode.
+
+Validate every input.
+
+Handle every error.
+
+Keep components reusable.
+
+
+DATABASE
+
+Use PostgreSQL.
+
+Follow the attached Database Specification.
+
+Do not rename tables unless necessary.
+
+If an improvement is needed:
+
+Document it first.
+
+
+API
+
+Follow REST principles.
+
+Secure every endpoint.
+
+Validate every request.
+
+Document every endpoint.
+
+
+SECURITY
+
+Encrypt passwords.
+
+Use secure authentication.
+
+Protect against:
+
+SQL Injection
+
+XSS
+
+CSRF (where applicable)
+
+Rate limiting
+
+Input validation
+
+Secure file uploads
+
+Audit logging
+
+
+TESTING
+
+Each phase must include:
+
+Unit tests
+
+Integration tests
+
+Basic UI verification
+
+Error handling tests
+
+Fix all critical issues before continuing.
+
+
+CHANGE MANAGEMENT
+
+Never silently change the specifications.
+
+If you recommend an improvement:
+
+Explain why.
+
+Wait for approval if it changes functionality.
+
+Otherwise, preserve the original design.
+
+
+FINAL GOAL
+
+The finished product must look like a professionally funded startup rather than a beginner project.
+
+Code quality, documentation, security, scalability, maintainability, and user experience should all meet professional standards 
+
+
+
+
+
