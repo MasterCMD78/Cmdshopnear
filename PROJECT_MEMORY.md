@@ -7,3 +7,4 @@
 - Role authorization is enforced in API middleware, not trusted from frontend state.
 - New-on-ShopNear visibility is derived from approval timestamps and an admin-controlled day count, defaulting to 30.
 - User media stores object paths and metadata, not binary file contents in PostgreSQL.
+- The project uses the imported Neon PostgreSQL database through the Replit `DATABASE_URL` secret. Drizzle `push` is the current schema reconciliation workflow because no committed migration directory exists.

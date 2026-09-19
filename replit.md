@@ -9,7 +9,8 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Neon PostgreSQL connection string, configured as a Replit Secret
+- The app, Drizzle schema tooling, and API database client all read `DATABASE_URL` automatically; never hardcode its value.
 
 ## Stack
 
@@ -56,6 +57,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - `SESSION_SECRET` is required for signing tokens; never commit or print its value.
 - Run API codegen after changing `lib/api-spec/openapi.yaml`.
 - Run database push only against the development database.
+- The current development database is Neon PostgreSQL configured through the Replit `DATABASE_URL` secret. Run `pnpm --filter @workspace/db run push` to reconcile it with the Drizzle schema.
 
 ## Pointers
 
