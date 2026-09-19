@@ -1,0 +1,2 @@
+- [Phase 2 auth boundary](phase2-auth.md) — Phone OTP is provider-agnostic; JWT cookies are backed by revocable database sessions.
+- [Vite workspace builds](vite-builds.md) — Vite artifact builds require workflow-style PORT and BASE_PATH variables even when run from the root.

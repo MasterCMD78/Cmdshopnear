@@ -1,6 +1,6 @@
-# [Project name]
+# ShopNear
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+ShopNear is a mobile-first local marketplace that helps people discover trusted nearby businesses, products, and services.
 
 ## Run & Operate
 
@@ -22,23 +22,40 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/shopnear` — React/Vite customer-facing app and existing marketplace UI
+- `artifacts/api-server` — Express API, authentication, account, and marketplace routes
+- `lib/db/src/schema` — Drizzle/PostgreSQL source of truth
+- `lib/api-spec/openapi.yaml` — REST contract source of truth
+- `docs` — project, API, database, security, deployment, and phase documentation
+- `PROJECT_MEMORY.md` — durable implementation decisions for this project
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Phase 2 uses a replaceable `OtpProvider` interface with a local development provider; no SMS vendor is required for local development.
+- JWT access tokens are held in secure, HTTP-only cookies and are backed by database session records so logout and session revocation work.
+- Role-specific account setup is protected server-side; the UI is only a convenience layer.
+- Uploaded user media uses authenticated object-storage upload paths; database rows retain object paths rather than file bytes.
+- “New on ShopNear” is computed from approval timestamps and an admin-controlled duration, defaulting to 30 days.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Existing marketplace dashboard with Home, Search, Favorites, Messages, and Profile navigation
+- Phase 2 phone/OTP onboarding and session-aware account setup
+- Customer, Business, Service Provider, and Administrator roles
+- Business and service provider registration with verification-ready status
+- Automatically surfaced newly approved businesses and service providers
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Preserve the existing ShopNear brand, logo, navigation, and completed marketplace UI.
+- Do not modify backend behavior outside the requested Phase 2 scope.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Development OTP is intentionally local and is returned only in development responses; replace the provider implementation before production SMS.
+- `SESSION_SECRET` is required for signing tokens; never commit or print its value.
+- Run API codegen after changing `lib/api-spec/openapi.yaml`.
+- Run database push only against the development database.
 
 ## Pointers
 

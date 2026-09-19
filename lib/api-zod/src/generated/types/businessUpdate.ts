@@ -5,7 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { BusinessInput } from './businessInput';
 
-export interface HealthStatus {
-  status: string;
-}
+export type BusinessUpdate = BusinessInput;

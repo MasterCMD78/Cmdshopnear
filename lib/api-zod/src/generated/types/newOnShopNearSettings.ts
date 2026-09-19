@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface NewOnShopNearSettings {
+  /**
+     * @minimum 0
+     * @maximum 365
+     */
+  days: number;
 }

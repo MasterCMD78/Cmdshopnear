@@ -10,13 +10,26 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Phone and session authentication
+  - name: profile
+    description: Authenticated profile setup and updates
+  - name: businesses
+    description: Business account registration and editing
+  - name: service-providers
+    description: Service provider account registration and editing
+  - name: marketplace
+    description: Discovery surfaces
+  - name: admin
+    description: Administrator-only settings
+  - name: storage
+    description: Authenticated media upload preparation
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +37,570 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/request-otp:
+    post:
+      operationId: requestOtp
+      tags: [auth]
+      summary: Send a phone verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "200":
+          description: OTP challenge created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallenge"
+        "429":
+          description: Too many requests
+  /login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Start phone login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpRequest"
+      responses:
+        "200":
+          description: OTP challenge created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpChallenge"
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify a phone code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerification"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          description: Invalid or expired code
+  /verify-otp:
+    post:
+      operationId: verifyOtpAlias
+      tags: [auth]
+      summary: Verify a phone code compatibility alias
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerification"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Revoke the current session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+  /auth/session:
+    get:
+      operationId: getSession
+      tags: [auth]
+      summary: Validate the current session
+      responses:
+        "200":
+          description: Current session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: No active session
+  /register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Complete a verified account registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Registration"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get the authenticated profile
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update the authenticated profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /businesses:
+    post:
+      operationId: createBusiness
+      tags: [businesses]
+      summary: Register a business account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessInput"
+      responses:
+        "201":
+          description: Business registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+  /businesses/mine:
+    get:
+      operationId: getMyBusiness
+      tags: [businesses]
+      summary: Get the authenticated user's business
+      responses:
+        "200":
+          description: Business registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+        "404":
+          description: Business not registered
+  /businesses/{id}:
+    put:
+      operationId: updateBusiness
+      tags: [businesses]
+      summary: Update an owned business
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessUpdate"
+      responses:
+        "200":
+          description: Updated business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+  /service-providers:
+    post:
+      operationId: createServiceProvider
+      tags: [service-providers]
+      summary: Register a service provider account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceProviderInput"
+      responses:
+        "201":
+          description: Service provider registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceProvider"
+  /service-providers/mine:
+    get:
+      operationId: getMyServiceProvider
+      tags: [service-providers]
+      summary: Get the authenticated user's service provider profile
+      responses:
+        "200":
+          description: Service provider registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceProvider"
+        "404":
+          description: Service provider not registered
+  /service-providers/{id}:
+    put:
+      operationId: updateServiceProvider
+      tags: [service-providers]
+      summary: Update an owned service provider
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceProviderUpdate"
+      responses:
+        "200":
+          description: Updated service provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceProvider"
+  /new-on-shopnear:
+    get:
+      operationId: getNewOnShopNear
+      tags: [marketplace]
+      summary: List recently approved businesses and service providers
+      responses:
+        "200":
+          description: New listings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewOnShopNear"
+  /admin/settings/new-on-shopnear:
+    get:
+      operationId: getNewOnShopNearSettings
+      tags: [admin]
+      summary: Read the new-listing window
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewOnShopNearSettings"
+    put:
+      operationId: updateNewOnShopNearSettings
+      tags: [admin]
+      summary: Update the new-listing window
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOnShopNearSettings"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewOnShopNearSettings"
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request an authenticated direct upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadRequest"
+      responses:
+        "200":
+          description: Signed upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+    OtpRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 7
+          maxLength: 20
+      required: [phone]
+    OtpVerification:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 7
+          maxLength: 20
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+      required: [phone, code]
+    OtpChallenge:
+      type: object
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        developmentOtp:
+          type: ["string", "null"]
+      required: [challengeId, expiresAt, developmentOtp]
+    AuthResult:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        needsRegistration:
+          type: boolean
+        phone:
+          type: ["string", "null"]
+        user:
+          anyOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+      required: [authenticated, needsRegistration, phone, user]
+    Registration:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        accountType:
+          type: string
+          enum: [customer, business, service_provider]
+        city:
+          type: string
+          maxLength: 80
+        state:
+          type: string
+          maxLength: 80
+        address:
+          type: string
+          maxLength: 250
+        preferredLanguage:
+          type: string
+          maxLength: 10
+        notificationsEnabled:
+          type: boolean
+      required: [fullName, accountType]
+    ProfileUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        profilePhoto:
+          type: ["string", "null"]
+          maxLength: 500
+        city:
+          type: ["string", "null"]
+          maxLength: 80
+        state:
+          type: ["string", "null"]
+          maxLength: 80
+        address:
+          type: ["string", "null"]
+          maxLength: 250
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        preferredLanguage:
+          type: ["string", "null"]
+          maxLength: 10
+        notificationsEnabled:
+          type: boolean
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: ["string", "null"]
+        accountType:
+          type: string
+          enum: [customer, business, service_provider, admin]
+        profilePhoto:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        preferredLanguage:
+          type: string
+        notificationsEnabled:
+          type: boolean
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, fullName, phone, email, accountType, profilePhoto, city, state, address, preferredLanguage, notificationsEnabled, status, createdAt]
+    BusinessInput:
+      type: object
+      properties:
+        businessName: { type: string, minLength: 2, maxLength: 160 }
+        category: { type: string, minLength: 2, maxLength: 100 }
+        businessLogo: { type: ["string", "null"], maxLength: 500 }
+        coverPhoto: { type: ["string", "null"], maxLength: 500 }
+        description: { type: ["string", "null"], maxLength: 2000 }
+        workingHours: { type: ["object", "null"], additionalProperties: true }
+        businessAddress: { type: ["string", "null"], maxLength: 250 }
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        whatsapp: { type: ["string", "null"], maxLength: 20 }
+        phone: { type: ["string", "null"], maxLength: 20 }
+        website: { type: ["string", "null"], maxLength: 500 }
+        socialLinks: { type: ["object", "null"], additionalProperties: true }
+      required: [businessName, category]
+    BusinessUpdate:
+      allOf:
+        - $ref: "#/components/schemas/BusinessInput"
+    Business:
+      allOf:
+        - $ref: "#/components/schemas/BusinessInput"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            ownerId: { type: string, format: uuid }
+            verificationStatus: { type: string }
+            approvedAt: { type: ["string", "null"], format: date-time }
+            createdAt: { type: string, format: date-time }
+          required: [id, ownerId, verificationStatus, approvedAt, createdAt]
+    ServiceProviderInput:
+      type: object
+      properties:
+        profession: { type: string, minLength: 2, maxLength: 120 }
+        experience: { type: ["string", "null"], maxLength: 120 }
+        skills: { type: array, items: { type: string }, maxItems: 20 }
+        serviceRadius: { type: ["integer", "null"], minimum: 0, maximum: 500 }
+        portfolioImages: { type: array, items: { type: string, maxLength: 500 }, maxItems: 12 }
+        availability: { type: ["object", "null"], additionalProperties: true }
+        phone: { type: ["string", "null"], maxLength: 20 }
+        whatsapp: { type: ["string", "null"], maxLength: 20 }
+        location: { type: ["string", "null"], maxLength: 250 }
+      required: [profession]
+    ServiceProviderUpdate:
+      allOf:
+        - $ref: "#/components/schemas/ServiceProviderInput"
+    ServiceProvider:
+      allOf:
+        - $ref: "#/components/schemas/ServiceProviderInput"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            ownerId: { type: string, format: uuid }
+            verificationStatus: { type: string }
+            approvedAt: { type: ["string", "null"], format: date-time }
+            createdAt: { type: string, format: date-time }
+          required: [id, ownerId, verificationStatus, approvedAt, createdAt]
+    NewOnShopNearSettings:
+      type: object
+      properties:
+        days:
+          type: integer
+          minimum: 0
+          maximum: 365
+      required: [days]
+    NewOnShopNear:
+      type: object
+      properties:
+        businesses:
+          type: array
+          items: { $ref: "#/components/schemas/Business" }
+        serviceProviders:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceProvider" }
+        days:
+          type: integer
+      required: [businesses, serviceProviders, days]
+    UploadRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        size: { type: integer, minimum: 1, maximum: 5242880 }
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+      required: [name, size, contentType]
+    UploadResponse:
+      type: object
+      properties:
+        uploadURL: { type: string, format: uri }
+        objectPath: { type: string }
+        metadata:
+          type: object
+          properties:
+            name: { type: string }
+            size: { type: integer }
+            contentType: { type: string }
+          required: [name, size, contentType]
+      required: [uploadURL, objectPath, metadata]
 

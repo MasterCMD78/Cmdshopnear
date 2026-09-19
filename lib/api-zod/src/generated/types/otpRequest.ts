@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface OtpRequest {
+  /**
+     * @minLength 7
+     * @maxLength 20
+     */
+  phone: string;
 }

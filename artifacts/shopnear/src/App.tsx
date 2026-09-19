@@ -1,10 +1,11 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock3, Compass, Heart, Home as HomeIcon, MapPin, Menu, MessageCircle, Search, Send, Settings2, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Tag, UserRound, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import { getMyBusiness, getMyServiceProvider, getSession, logout, registerAccount, requestOtp, saveBusiness, saveServiceProvider, updateProfile, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type ServiceProviderRecord } from '@/lib/auth-api';
 
 const queryClient = new QueryClient();
 const logoPath = '/assets/shopnear-logo.png';
@@ -329,30 +330,124 @@ function MessagesPage() {
   );
 }
 
+function ProfileEditor({ user, onSaved, onCancel }: { user: AuthUser; onSaved: (user: AuthUser) => void; onCancel: () => void }) {
+  const [fullName, setFullName] = useState(user.fullName);
+  const [city, setCity] = useState(user.city ?? '');
+  const [state, setState] = useState(user.state ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const submit = async (event: FormEvent) => {
+    event.preventDefault(); setBusy(true); setError('');
+    try { onSaved(await updateProfile({ fullName, city: city || null, state: state || null })); } catch (err) { setError(err instanceof Error ? err.message : 'Could not save profile'); } finally { setBusy(false); }
+  };
+  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#dcecdf] bg-[#f7fbf7] p-4"><div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-bold text-[#4d715f] sm:col-span-3">Full name<input required value={fullName} onChange={(event) => setFullName(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">City<input value={city} onChange={(event) => setCity(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">State<input value={state} onChange={(event) => setState(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{error && <p className="mt-3 text-xs font-semibold text-[#b34b32]">{error}</p>}<div className="mt-4 flex gap-2"><button disabled={busy} className="focus-ring rounded-full bg-[#087044] px-4 py-2 text-xs font-bold text-white">{busy ? 'Saving…' : 'Save profile'}</button><button type="button" onClick={onCancel} className="focus-ring rounded-full border border-[#dbe6dc] px-4 py-2 text-xs font-bold text-[#658071]">Cancel</button></div></form>;
+}
+
+function BusinessEditor() {
+  const [record, setRecord] = useState<BusinessRecord | null>(null);
+  const [businessName, setBusinessName] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  useEffect(() => { getMyBusiness().then((value) => { setRecord(value); setBusinessName(value.businessName); setCategory(value.category); setDescription(value.description ?? ''); setBusinessAddress(value.businessAddress ?? ''); setPhone(value.phone ?? ''); }).catch(() => undefined); }, []);
+  const submit = async (event: FormEvent) => { event.preventDefault(); setBusy(true); setNotice(''); try { const value = await saveBusiness({ businessName, category, description: description || null, businessAddress: businessAddress || null, phone: phone || null }, record?.id); setRecord(value); setNotice('Business profile saved. It is pending verification.'); } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save business'); } finally { setBusy(false); } };
+  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#f3dfcf] bg-[#fffaf5] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#ee7117]">Business account</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your business' : 'Register your business'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Business name<input required value={businessName} onChange={(event) => setBusinessName(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Category<input required value={category} onChange={(event) => setCategory(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Description<textarea value={description} onChange={(event) => setDescription(event.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Address<input value={businessAddress} onChange={(event) => setBusinessAddress(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Business phone<input value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<button disabled={busy} className="focus-ring mt-4 rounded-full bg-[#f47716] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save business' : 'Register business'}</button></form>;
+}
+
+function ServiceProviderEditor() {
+  const [record, setRecord] = useState<ServiceProviderRecord | null>(null);
+  const [profession, setProfession] = useState('');
+  const [experience, setExperience] = useState('');
+  const [skills, setSkills] = useState('');
+  const [location, setLocation] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  useEffect(() => { getMyServiceProvider().then((value) => { setRecord(value); setProfession(value.profession); setExperience(value.experience ?? ''); setSkills(value.skills?.join(', ') ?? ''); setLocation(value.location ?? ''); }).catch(() => undefined); }, []);
+  const submit = async (event: FormEvent) => { event.preventDefault(); setBusy(true); setNotice(''); try { const value = await saveServiceProvider({ profession, experience: experience || null, skills: skills.split(',').map((item) => item.trim()).filter(Boolean), location: location || null }, record?.id); setRecord(value); setNotice('Provider profile saved. It is pending verification.'); } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save provider profile'); } finally { setBusy(false); } };
+  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#dfe5f1] bg-[#f8fafc] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#5871a0]">Service provider</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your provider profile' : 'Register your services'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Profession<input required value={profession} onChange={(event) => setProfession(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Experience<input value={experience} onChange={(event) => setExperience(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="5 years" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Skills<input value={skills} onChange={(event) => setSkills(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="Repairs, installation, maintenance" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Service location<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<button disabled={busy} className="focus-ring mt-4 rounded-full bg-[#087044] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save provider profile' : 'Register provider profile'}</button></form>;
+}
+
 function ProfilePage() {
   const [toast, setToast] = useState('');
   const [notifications, setNotifications] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    getSession().then((session) => {
+      setUser(session.user);
+      if (session.user) setNotifications(session.user.notificationsEnabled);
+    }).finally(() => setLoadingSession(false));
+  }, []);
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200); };
-  const settings = [{ label: 'Account details', detail: 'Maya Thompson', icon: UserRound }, { label: 'Saved locations', detail: 'Brooklyn, NY', icon: MapPin }, { label: 'Notifications', detail: notifications ? 'On' : 'Off', icon: Bell }, { label: 'Preferences', detail: 'Shopping & local services', icon: Settings2 }];
+  const displayName = user?.fullName ?? 'Maya Thompson';
+  const settings = [{ label: 'Account details', detail: displayName, icon: UserRound }, { label: 'Saved locations', detail: user?.city ? `${user.city}${user.state ? `, ${user.state}` : ''}` : 'Brooklyn, NY', icon: MapPin }, { label: 'Notifications', detail: notifications ? 'On' : 'Off', icon: Bell }, { label: 'Preferences', detail: user ? `${user.accountType.replace('_', ' ')} account` : 'Shopping & local services', icon: Settings2 }];
+  const saveNotifications = async () => {
+    const next = !notifications;
+    setNotifications(next);
+    if (user) {
+      try { await updateProfile({ notificationsEnabled: next }); } catch { setNotifications(!next); notify('Could not update notifications'); }
+    }
+  };
+  const signOut = async () => {
+    await logout();
+    setUser(null);
+    notify('Signed out securely');
+  };
   return (
     <Shell active="profile" toast={toast}>
       <div className="px-5 py-6 md:px-10 md:py-9">
         <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Your ShopNear</p>
         <h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Profile</h1>
-        <section className="mt-6 flex items-center gap-4 rounded-[24px] bg-[#e4f3e7] p-5">
-          <span className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-[23px] bg-[#087044] font-display text-2xl font-extrabold text-white">MT</span>
-          <div className="min-w-0"><h2 className="font-display text-xl font-extrabold text-[#164d38]">Maya Thompson</h2><p className="mt-1 text-xs text-[#5f806e]">Exploring Brooklyn one find at a time.</p><button type="button" onClick={() => notify('Profile editing is ready for your details')} className="focus-ring mt-2 text-xs font-bold text-[#087044] underline underline-offset-4" data-testid="button-edit-profile">Edit profile</button></div>
-        </section>
+        {loadingSession ? <div className="mt-6 rounded-[24px] bg-[#eef6ef] p-5 text-sm text-[#5f806e]">Checking your secure session…</div> : user ? <section className="mt-6 flex items-center gap-4 rounded-[24px] bg-[#e4f3e7] p-5">
+          <span className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-[23px] bg-[#087044] font-display text-2xl font-extrabold text-white">{user.fullName.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+          <div className="min-w-0"><h2 className="font-display text-xl font-extrabold text-[#164d38]">{user.fullName}</h2><p className="mt-1 text-xs text-[#5f806e]">{user.phone} · {user.accountType.replace('_', ' ')}</p><button type="button" onClick={() => setEditingProfile((value) => !value)} className="focus-ring mt-2 text-xs font-bold text-[#087044] underline underline-offset-4" data-testid="button-edit-profile">{editingProfile ? 'Close editor' : 'Edit profile'}</button></div>
+        </section> : <section className="mt-6 rounded-[24px] bg-[#e4f3e7] p-5"><div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#087044] text-white"><ShieldCheck size={22} /></span><div><h2 className="font-display text-xl font-extrabold text-[#164d38]">Make ShopNear yours.</h2><p className="mt-1 text-xs leading-relaxed text-[#5f806e]">Sign in to sync your profile, save your details, and register as a local business or service provider.</p><button type="button" onClick={() => setLocation('/auth')} className="focus-ring mt-3 rounded-full bg-[#f47716] px-4 py-2 text-xs font-bold text-white" data-testid="button-sign-in">Sign in with phone</button></div></div></section>}
+        {user && editingProfile && <ProfileEditor user={user} onSaved={(next) => { setUser(next); setEditingProfile(false); notify('Profile saved'); }} onCancel={() => setEditingProfile(false)} />}
+        {user?.accountType === 'business' && <BusinessEditor />}
+        {user?.accountType === 'service_provider' && <ServiceProviderEditor />}
         <section className="mt-8"><SectionHeading title="Your activity" /><div className="grid grid-cols-3 gap-2.5"><div className="rounded-[18px] bg-[#fff1df] p-3.5"><p className="font-display text-2xl font-extrabold text-[#e56e12]">12</p><p className="mt-1 text-[10px] font-bold text-[#9b6b4a]">Places saved</p></div><div className="rounded-[18px] bg-[#e4f3e7] p-3.5"><p className="font-display text-2xl font-extrabold text-[#087044]">4</p><p className="mt-1 text-[10px] font-bold text-[#5f806e]">Visits planned</p></div><div className="rounded-[18px] bg-[#edf0f4] p-3.5"><p className="font-display text-2xl font-extrabold text-[#486274]">8</p><p className="mt-1 text-[10px] font-bold text-[#687e89]">Reviews shared</p></div></div></section>
-        <section className="mt-8"><SectionHeading title="Settings" /><div className="overflow-hidden rounded-[22px] border border-[#ebe5da] bg-white shadow-[0_6px_20px_rgba(16,72,50,.04)]">{settings.map(({ label, detail, icon: Icon }, index) => <button type="button" key={label} onClick={() => label === 'Notifications' ? setNotifications((value) => !value) : notify(`${label} selected`)} className={`focus-ring flex w-full items-center gap-3 p-4 text-left transition hover:bg-[#f8faf6] ${index ? 'border-t border-[#f0ece4]' : ''}`} data-testid={`button-setting-${label.toLowerCase().replaceAll(' ', '-')}`}><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf6ef] text-[#087044]"><Icon size={17} strokeWidth={1.8} /></span><span className="min-w-0 flex-1"><strong className="block text-xs font-bold text-[#174d37]">{label}</strong><span className="mt-1 block text-[11px] text-[#89948c]">{detail}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}</div></section>
-        <button type="button" onClick={() => notify('You are all set.')} className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-full border border-[#e8ded1] py-3 text-xs font-bold text-[#9a6b47]" data-testid="button-sign-out"><Clock3 size={15} /> Sign out</button>
+        <section className="mt-8"><SectionHeading title="Settings" /><div className="overflow-hidden rounded-[22px] border border-[#ebe5da] bg-white shadow-[0_6px_20px_rgba(16,72,50,.04)]">{settings.map(({ label, detail, icon: Icon }, index) => <button type="button" key={label} onClick={() => label === 'Notifications' ? saveNotifications() : notify(`${label} selected`)} className={`focus-ring flex w-full items-center gap-3 p-4 text-left transition hover:bg-[#f8faf6] ${index ? 'border-t border-[#f0ece4]' : ''}`} data-testid={`button-setting-${label.toLowerCase().replaceAll(' ', '-')}`}><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf6ef] text-[#087044]"><Icon size={17} strokeWidth={1.8} /></span><span className="min-w-0 flex-1"><strong className="block text-xs font-bold text-[#174d37]">{label}</strong><span className="mt-1 block text-[11px] text-[#89948c]">{detail}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}</div></section>
+        <button type="button" onClick={() => user ? signOut() : setLocation('/auth')} className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-full border border-[#e8ded1] py-3 text-xs font-bold text-[#9a6b47]" data-testid="button-sign-out"><Clock3 size={15} /> {user ? 'Sign out' : 'Sign in'}</button>
       </div>
     </Shell>
   );
 }
 
+function AuthPage() {
+  const [, setLocation] = useLocation();
+  const [step, setStep] = useState<'phone' | 'otp' | 'profile'>('phone');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [accountType, setAccountType] = useState<Exclude<AccountType, 'admin'>>('customer');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [developmentOtp, setDevelopmentOtp] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submitPhone = async (event: FormEvent) => {
+    event.preventDefault(); setError(''); setBusy(true);
+    try { const challenge = await requestOtp(phone); setDevelopmentOtp(challenge.developmentOtp); setStep('otp'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to send code'); } finally { setBusy(false); }
+  };
+  const submitCode = async (event: FormEvent) => {
+    event.preventDefault(); setError(''); setBusy(true);
+    try { const result = await verifyOtp(phone, code); if (result.authenticated) setLocation('/profile'); else setStep('profile'); } catch (err) { setError(err instanceof Error ? err.message : 'That code is not valid'); } finally { setBusy(false); }
+  };
+  const submitProfile = async (event: FormEvent) => {
+    event.preventDefault(); setError(''); setBusy(true);
+    try { await registerAccount({ fullName, accountType, city: city || undefined, state: state || undefined }); setLocation('/'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to create account'); } finally { setBusy(false); }
+  };
+  const inputClass = "mt-2 w-full rounded-2xl border border-[#e5dfd3] bg-white px-4 py-3 text-sm text-[#174d37] outline-none focus:border-[#087044] focus:ring-2 focus:ring-[#d8efdf]";
+  return <div className="min-h-[100dvh] bg-[#f5f1e9] px-5 py-7 md:px-10 md:py-10"><div className="mx-auto max-w-xl rounded-[30px] bg-[#fffdf9] p-6 shadow-[0_18px_50px_rgba(16,72,50,.10)] md:p-10"><div className="flex items-center justify-between"><Logo compact /><button type="button" onClick={() => setLocation('/')} className="focus-ring text-xs font-bold text-[#087044]">Back to ShopNear</button></div><p className="mt-10 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Secure phone access</p><h1 className="mt-2 font-display text-[32px] font-extrabold leading-tight tracking-[-.05em] text-[#164d38]">{step === 'phone' ? 'Welcome to your neighborhood.' : step === 'otp' ? 'Enter your code.' : 'Tell us about you.'}</h1><p className="mt-3 text-sm leading-relaxed text-[#77867c]">{step === 'phone' ? 'Use your phone number to sign in or create a ShopNear account.' : step === 'otp' ? `We sent a six-digit code to ${phone}.` : 'One quick step, then your ShopNear account is ready.'}</p>{developmentOtp && step === 'otp' && <div className="mt-5 rounded-2xl border border-[#f8d5b9] bg-[#fff1df] p-3 text-xs text-[#8c572f]">Development code: <strong className="tracking-[.2em]">{developmentOtp}</strong></div>}{error && <div className="mt-5 rounded-2xl bg-[#fff0ed] p-3 text-xs font-semibold text-[#b34b32]" role="alert">{error}</div>}{step === 'phone' && <form onSubmit={submitPhone} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Phone number<input required value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+234 801 234 5678" inputMode="tel" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Sending code…' : 'Send verification code'}</button></form>}{step === 'otp' && <form onSubmit={submitCode} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Six-digit code<input required minLength={6} maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))} className={`${inputClass} text-center text-xl tracking-[.35em]`} placeholder="123456" inputMode="numeric" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Verifying…' : 'Verify phone'}</button><button type="button" onClick={() => { setStep('phone'); setDevelopmentOtp(null); }} className="focus-ring w-full text-xs font-bold text-[#087044]">Use a different number</button></form>}{step === 'profile' && <form onSubmit={submitProfile} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Full name<input required minLength={2} value={fullName} onChange={(event) => setFullName(event.target.value)} className={inputClass} placeholder="Your name" /></label><fieldset><legend className="text-xs font-bold text-[#4d715f]">I’m joining as</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{([['customer', 'Customer'], ['business', 'Business'], ['service_provider', 'Service provider']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setAccountType(value)} className={`focus-ring rounded-2xl border px-3 py-3 text-xs font-bold ${accountType === value ? 'border-[#087044] bg-[#e4f3e7] text-[#087044]' : 'border-[#e5dfd3] bg-white text-[#718278]'}`}>{label}</button>)}</div></fieldset><div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-[#4d715f]">City<input value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Lagos" /></label><label className="block text-xs font-bold text-[#4d715f]">State<input value={state} onChange={(event) => setState(event.target.value)} className={inputClass} placeholder="Lagos" /></label></div><button disabled={busy} className="focus-ring w-full rounded-full bg-[#f47716] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Creating account…' : 'Finish account setup'}</button></form>}</div></div>;
+}
+
 function Router() {
-  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/auth" component={AuthPage} /><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
 }
 
 function App() {
