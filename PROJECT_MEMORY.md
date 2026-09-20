@@ -8,3 +8,5 @@
 - New-on-ShopNear visibility is derived from approval timestamps and an admin-controlled day count, defaulting to 30.
 - User media stores object paths and metadata, not binary file contents in PostgreSQL.
 - The project uses the imported Neon PostgreSQL database through the Replit `DATABASE_URL` secret. Drizzle `push` is the current schema reconciliation workflow because no committed migration directory exists.
+- Service-provider JSON arrays are nullable in the existing schema; API responses normalize them to empty arrays to preserve the current contract without changing storage.
+- Replit App Storage is provisioned, but this runtime currently rejects its sidecar credential exchange with `401 no allowed resources`; treat upload verification as an environment dependency.

@@ -4,7 +4,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server using the workflow-provided `PORT`
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -36,6 +36,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - JWT access tokens are held in secure, HTTP-only cookies and are backed by database session records so logout and session revocation work.
 - Role-specific account setup is protected server-side; the UI is only a convenience layer.
 - Uploaded user media uses authenticated object-storage upload paths; database rows retain object paths rather than file bytes.
+- App Storage is provisioned through Replit secrets, but the current development runtime returns `401 no allowed resources` during sidecar credential exchange; do not treat uploads as verified until that runtime authorization is resolved.
 - “New on ShopNear” is computed from approval timestamps and an admin-controlled duration, defaulting to 30 days.
 
 ## Product
