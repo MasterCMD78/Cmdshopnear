@@ -1,0 +1,263 @@
+🚀 SHOPNEAR PHASE 2 FINALIZATION PROMPT
+
+The attached ShopNear project is NOT a new project.
+
+Do NOT regenerate architecture.
+
+Do NOT rebuild authentication.
+
+Do NOT redesign the UI.
+
+Continue from the current codebase exactly where the previous implementation stopped.
+
+Before writing any code:
+
+1. Read
+
+* replit.md
+* PROJECT_MEMORY.md
+* docs/
+* OpenAPI contract
+* Database schema
+* Existing authentication modules
+
+Understand the current implementation first.
+
+⸻
+
+Current State
+
+The previous implementation already completed almost all of Phase 2.
+
+Already implemented:
+
+* Phone authentication
+* Mock OTP provider
+* JWT authentication
+* Session management
+* Role middleware
+* Customer account
+* Business account
+* Service Provider account
+* Admin foundation
+* Protected routes
+* Profile editing
+* Business editing
+* Provider editing
+* Audit logging
+* Secure upload architecture
+* OpenAPI updates
+* Generated API clients
+* PostgreSQL schema
+* Typecheck
+* API build
+* Frontend build
+
+Do NOT replace these systems.
+
+Only extend and verify them.
+
+⸻
+
+Finish Phase 2
+
+Perform a complete implementation audit.
+
+Verify every required feature.
+
+Fix only genuine bugs.
+
+Do not refactor working code unnecessarily.
+
+⸻
+
+Verification Checklist
+
+Verify:
+
+Customer Registration
+
+Business Registration
+
+Service Provider Registration
+
+OTP Flow
+
+JWT Sessions
+
+Protected Routes
+
+Role Middleware
+
+Profile Editing
+
+Business Editing
+
+Provider Editing
+
+Logout
+
+Session Persistence
+
+Upload Permissions
+
+Audit Logs
+
+“New on ShopNear”
+
+Admin configuration
+
+⸻
+
+Testing
+
+Run
+
+Typecheck
+
+Production Build
+
+API Tests
+
+Authentication Tests
+
+Role Permission Tests
+
+OTP Tests
+
+Profile Tests
+
+Business Tests
+
+Provider Tests
+
+Regression Tests
+
+Fix every critical issue before continuing.
+
+⸻
+
+Documentation
+
+Update:
+
+docs/README.md
+
+docs/API.md
+
+docs/DATABASE.md
+
+docs/ARCHITECTURE.md
+
+docs/SECURITY.md
+
+docs/AI.md
+
+docs/CHANGELOG.md
+
+docs/ROADMAP.md
+
+Update:
+
+PROJECT_MEMORY.md
+
+Include:
+
+Important implementation decisions
+
+Database extensions
+
+Authentication architecture
+
+Session architecture
+
+Role system
+
+Known limitations
+
+Future production improvements
+
+⸻
+
+Update:
+
+replit.md
+
+Include:
+
+Current Phase
+
+Completed Features
+
+Pending Features
+
+Known Bugs
+
+Architecture Notes
+
+Testing Results
+
+Next Phase
+
+Future Improvements
+
+⸻
+
+Clean Up
+
+Remove
+
+unused imports
+
+unused code
+
+temporary files
+
+generated whitespace issues
+
+developer-only artifacts
+
+Ensure the repository is clean.
+
+⸻
+
+Definition of Done
+
+Phase 2 is complete only when:
+
+✅ All tests pass
+
+✅ Typecheck passes
+
+✅ Production build passes
+
+✅ Documentation is updated
+
+✅ PROJECT_MEMORY.md updated
+
+✅ replit.md updated
+
+✅ No critical bugs remain
+
+✅ Working tree is clean
+
+⸻
+
+After Phase 2
+
+Do NOT start implementing Phase 3.
+
+Instead:
+
+Create a detailed Phase 2 Completion Report including:
+
+* Features completed
+* API endpoints added
+* Database changes
+* Authentication flow
+* Security implementation
+* Test results
+* Documentation updated
+* Remaining recommendations
+
+Then stop and wait for my approval before starting Phase 3.

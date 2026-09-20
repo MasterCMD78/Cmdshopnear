@@ -18,11 +18,19 @@ import {
   UpdateServiceProviderResponse,
 } from "@workspace/api-zod";
 import { db } from "@workspace/db";
-import { appSettings, businesses, serviceProviders, users } from "@workspace/db/schema";
+import { appSettings, businesses, serviceProviders, users, type ServiceProvider } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
 import { requireAuth, requireRole, serializeUser } from "../lib/auth";
 
 const router: IRouter = Router();
+
+function serializeServiceProvider(provider: ServiceProvider) {
+  return {
+    ...provider,
+    skills: provider.skills ?? [],
+    portfolioImages: provider.portfolioImages ?? [],
+  };
+}
 
 router.get("/profile", requireAuth, (req, res) => {
   res.json(GetProfileResponse.parse(serializeUser(req.user!)));
@@ -118,7 +126,7 @@ router.post("/service-providers", requireAuth, requireRole("service_provider"), 
   }
   const [provider] = await db.insert(serviceProviders).values({ ...parsed.data, ownerId: req.user!.id }).returning();
   await audit(req, "service_provider.created", "service_provider", provider.id);
-  res.status(201).json(CreateServiceProviderResponse.parse(provider));
+  res.status(201).json(CreateServiceProviderResponse.parse(serializeServiceProvider(provider)));
 });
 
 router.get("/service-providers/mine", requireAuth, requireRole("service_provider", "admin"), async (req, res) => {
@@ -127,7 +135,7 @@ router.get("/service-providers/mine", requireAuth, requireRole("service_provider
     res.status(404).json({ error: "Service provider not registered" });
     return;
   }
-  res.json(CreateServiceProviderResponse.parse(provider));
+  res.json(CreateServiceProviderResponse.parse(serializeServiceProvider(provider)));
 });
 
 router.put("/service-providers/:id", requireAuth, requireRole("service_provider", "admin"), async (req, res) => {
@@ -146,7 +154,7 @@ router.put("/service-providers/:id", requireAuth, requireRole("service_provider"
     return;
   }
   await audit(req, "service_provider.updated", "service_provider", provider.id);
-  res.json(UpdateServiceProviderResponse.parse(provider));
+  res.json(UpdateServiceProviderResponse.parse(serializeServiceProvider(provider)));
 });
 
 router.get("/new-on-shopnear", async (_req, res) => {
@@ -157,7 +165,11 @@ router.get("/new-on-shopnear", async (_req, res) => {
     db.select().from(businesses).where(and(eq(businesses.verificationStatus, "approved"), isNotNull(businesses.approvedAt), gte(businesses.approvedAt, cutoff))).orderBy(desc(businesses.approvedAt)),
     db.select().from(serviceProviders).where(and(eq(serviceProviders.verificationStatus, "approved"), isNotNull(serviceProviders.approvedAt), gte(serviceProviders.approvedAt, cutoff))).orderBy(desc(serviceProviders.approvedAt)),
   ]);
-  res.json(GetNewOnShopNearResponse.parse({ businesses: newBusinesses, serviceProviders: newProviders, days }));
+  res.json(GetNewOnShopNearResponse.parse({
+    businesses: newBusinesses,
+    serviceProviders: newProviders.map(serializeServiceProvider),
+    days,
+  }));
 });
 
 router.get("/admin/settings/new-on-shopnear", requireAuth, requireRole("admin"), async (_req, res) => {
