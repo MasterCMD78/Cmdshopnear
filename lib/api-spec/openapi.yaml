@@ -302,6 +302,157 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NewOnShopNear"
+  /marketplace/categories:
+    get:
+      operationId: getMarketplaceCategories
+      tags: [marketplace]
+      summary: List product and service categories
+      responses:
+        "200":
+          description: Marketplace categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceCategories"
+  /marketplace/catalog:
+    get:
+      operationId: getMarketplaceCatalog
+      tags: [marketplace]
+      summary: List visible, available marketplace listings
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema: { type: string, maxLength: 120 }
+      responses:
+        "200":
+          description: Marketplace catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceCatalog"
+  /business/dashboard:
+    get:
+      operationId: getBusinessDashboard
+      tags: [businesses]
+      summary: Read business marketplace metrics
+      responses:
+        "200":
+          description: Business dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDashboard"
+  /business/products:
+    get:
+      operationId: getMyProducts
+      tags: [businesses]
+      summary: List products owned by the business
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Product" }
+    post:
+      operationId: createProduct
+      tags: [businesses]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductInput" }
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+  /business/products/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    put:
+      operationId: updateProduct
+      tags: [businesses]
+      summary: Update an owned product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductInput" }
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Product" }
+    delete:
+      operationId: deleteProduct
+      tags: [businesses]
+      summary: Delete an owned product
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+  /provider/services:
+    get:
+      operationId: getMyServices
+      tags: [service-providers]
+      summary: List owned services
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Service" }
+    post:
+      operationId: createService
+      tags: [service-providers]
+      summary: Create a service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ServiceInput" }
+      responses:
+        "201":
+          description: Created service
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Service" }
+  /provider/services/{id}:
+    parameters: [{ $ref: "#/components/parameters/Id" }]
+    put:
+      operationId: updateService
+      tags: [service-providers]
+      summary: Update an owned service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ServiceInput" }
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Service" }
+    delete:
+      operationId: deleteService
+      tags: [service-providers]
+      summary: Delete an owned service
+      responses:
+        "200":
+          description: Service deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
   /admin/settings/new-on-shopnear:
     get:
       operationId: getNewOnShopNearSettings
@@ -581,6 +732,98 @@ components:
         days:
           type: integer
       required: [businesses, serviceProviders, days]
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+      required: [id, name, slug]
+    MarketplaceCategories:
+      type: object
+      properties:
+        products:
+          type: array
+          items: { $ref: "#/components/schemas/Category" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/Category" }
+      required: [products, services]
+    ProductInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 120 }
+        description: { type: ["string", "null"], maxLength: 2000 }
+        categoryId: { type: ["string", "null"], format: uuid }
+        imagePaths: { type: array, items: { type: string, maxLength: 500 }, maxItems: 10 }
+        priceCents: { type: integer, minimum: 0 }
+        isAvailable: { type: boolean }
+        isVisible: { type: boolean }
+      required: [name, priceCents]
+    Product:
+      allOf:
+        - $ref: "#/components/schemas/ProductInput"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            ownerId: { type: string, format: uuid }
+            businessId: { type: string, format: uuid }
+            status: { type: string }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+          required: [id, ownerId, businessId, status, createdAt, updatedAt]
+    ServiceInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 120 }
+        description: { type: ["string", "null"], maxLength: 2000 }
+        categoryId: { type: ["string", "null"], format: uuid }
+        imagePaths: { type: array, items: { type: string, maxLength: 500 }, maxItems: 10 }
+        priceFromCents: { type: ["integer", "null"], minimum: 0 }
+        serviceRadius: { type: ["integer", "null"], minimum: 0, maximum: 1000 }
+        availability: { type: ["object", "null"], additionalProperties: true }
+        isAvailable: { type: boolean }
+        isVisible: { type: boolean }
+      required: [name]
+    Service:
+      allOf:
+        - $ref: "#/components/schemas/ServiceInput"
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            ownerId: { type: string, format: uuid }
+            businessId: { type: ["string", "null"], format: uuid }
+            providerId: { type: ["string", "null"], format: uuid }
+            status: { type: string }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+          required: [id, ownerId, businessId, providerId, status, createdAt, updatedAt]
+    MarketplaceCatalog:
+      type: object
+      properties:
+        products:
+          type: array
+          items: { $ref: "#/components/schemas/Product" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/Service" }
+      required: [products, services]
+    BusinessDashboard:
+      type: object
+      properties:
+        business:
+          anyOf:
+            - $ref: "#/components/schemas/Business"
+            - type: "null"
+        metrics:
+          type: object
+          properties:
+            products: { type: integer }
+            availableProducts: { type: integer }
+            services: { type: integer }
+            visibleProducts: { type: integer }
+          required: [products, availableProducts, services, visibleProducts]
+      required: [business, metrics]
     UploadRequest:
       type: object
       properties:

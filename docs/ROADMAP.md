@@ -5,10 +5,11 @@
 - Phase 1: responsive marketplace UI and ShopNear navigation
 - Phase 2: authentication and account foundation
 - Phase 2 finalization audit: Neon verification, role/account smoke coverage, response compatibility fix, and documentation
+- Phase 3 foundation: persistent products/services, owner-scoped CRUD, availability/visibility controls, categories, catalog, and business metrics
 
 ## Next
 
-- Phase 3: persistent business profiles, products, services, categories, and search
+- Phase 3 follow-through: product image upload UI, category administration, featured listings, and richer analytics
 - Phase 4: production-grade business/product/service detail screens
 - Phase 5: GPS, maps, distance, and directions
 - Phase 6: full ShopNear AI recommendations

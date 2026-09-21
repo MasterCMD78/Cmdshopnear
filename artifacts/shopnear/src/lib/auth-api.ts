@@ -106,3 +106,57 @@ export function getMyServiceProvider() {
 export function saveServiceProvider(input: Record<string, unknown>, id?: string) {
   return request<ServiceProviderRecord>(id ? `/api/service-providers/${id}` : "/api/service-providers", { method: id ? "PUT" : "POST", body: JSON.stringify(input) });
 }
+
+export type MarketplaceProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  priceCents: number;
+  isAvailable: boolean;
+  isVisible: boolean;
+  status: string;
+};
+
+export type MarketplaceService = {
+  id: string;
+  name: string;
+  description: string | null;
+  priceFromCents: number | null;
+  serviceRadius: number | null;
+  isAvailable: boolean;
+  isVisible: boolean;
+  status: string;
+};
+
+export type BusinessDashboard = {
+  business: BusinessRecord | null;
+  metrics: { products: number; availableProducts: number; services: number; visibleProducts: number };
+};
+
+export function getBusinessDashboard() {
+  return request<BusinessDashboard>("/api/business/dashboard");
+}
+
+export function getMyProducts() {
+  return request<MarketplaceProduct[]>("/api/business/products");
+}
+
+export function saveProduct(input: Record<string, unknown>, id?: string) {
+  return request<MarketplaceProduct>(id ? `/api/business/products/${id}` : "/api/business/products", { method: id ? "PUT" : "POST", body: JSON.stringify(input) });
+}
+
+export function deleteProduct(id: string) {
+  return request<{ message: string }>(`/api/business/products/${id}`, { method: "DELETE" });
+}
+
+export function getMyServices() {
+  return request<MarketplaceService[]>("/api/provider/services");
+}
+
+export function saveService(input: Record<string, unknown>, id?: string) {
+  return request<MarketplaceService>(id ? `/api/provider/services/${id}` : "/api/provider/services", { method: id ? "PUT" : "POST", body: JSON.stringify(input) });
+}
+
+export function deleteService(id: string) {
+  return request<{ message: string }>(`/api/provider/services/${id}`, { method: "DELETE" });
+}

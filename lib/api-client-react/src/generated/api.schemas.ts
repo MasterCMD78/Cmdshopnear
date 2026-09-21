@@ -295,6 +295,119 @@ export interface NewOnShopNear {
   days: number;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface MarketplaceCategories {
+  products: Category[];
+  services: Category[];
+}
+
+export interface ProductInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  description?: string | null;
+  /** @nullable */
+  categoryId?: string | null;
+  /**
+     * @maxItems 10
+     * @items.maxLength 500
+     */
+  imagePaths?: string[];
+  /** @minimum 0 */
+  priceCents: number;
+  isAvailable?: boolean;
+  isVisible?: boolean;
+}
+
+export type Product = ProductInput & {
+  id: string;
+  ownerId: string;
+  businessId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * @nullable
+ */
+export type ServiceInputAvailability = { [key: string]: unknown } | null;
+
+export interface ServiceInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  description?: string | null;
+  /** @nullable */
+  categoryId?: string | null;
+  /**
+     * @maxItems 10
+     * @items.maxLength 500
+     */
+  imagePaths?: string[];
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  priceFromCents?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 1000
+     * @nullable
+     */
+  serviceRadius?: number | null;
+  /** @nullable */
+  availability?: ServiceInputAvailability;
+  isAvailable?: boolean;
+  isVisible?: boolean;
+}
+
+export type Service = ServiceInput & ({
+  id: string;
+  ownerId: string;
+  /** @nullable */
+  businessId: string | null;
+  /** @nullable */
+  providerId: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+});
+
+export interface MarketplaceCatalog {
+  products: Product[];
+  services: Service[];
+}
+
+export type BusinessDashboardMetrics = {
+  products: number;
+  availableProducts: number;
+  services: number;
+  visibleProducts: number;
+};
+
+export interface BusinessDashboard {
+  business: Business | null;
+  metrics: BusinessDashboardMetrics;
+}
+
 export type UploadRequestContentType = typeof UploadRequestContentType[keyof typeof UploadRequestContentType];
 
 
@@ -329,3 +442,11 @@ export interface UploadResponse {
   objectPath: string;
   metadata: UploadResponseMetadata;
 }
+
+export type GetMarketplaceCatalogParams = {
+/**
+ * @maxLength 120
+ */
+query?: string;
+};
+

@@ -1,0 +1,222 @@
+🚀 SHOPNEAR CONTINUATION PROMPT
+
+You are continuing an existing ShopNear project.
+
+Do NOT rebuild the application.
+
+This repository already contains the completed work from Phases 1 and 2.
+
+Your first responsibility is to recover the project state from the existing codebase before writing any code.
+
+⸻
+
+STEP 1 — PROJECT RECOVERY
+
+Before making any changes:
+
+1. Read:
+    * replit.md
+    * PROJECT_MEMORY.md
+    * everything inside /docs
+    * README files
+    * OpenAPI specification
+    * database schema
+    * existing API routes
+    * frontend routes
+    * tests
+
+Treat these files as the project’s source of truth.
+
+Do not overwrite architecture decisions that already exist.
+
+⸻
+
+STEP 2 — VERIFY THE NEW ENVIRONMENT
+
+This repository has been imported into a new Replit workspace.
+
+A new Neon PostgreSQL database has been configured through Secrets.
+
+Before changing any code:
+
+* verify the DATABASE_URL is being used
+* connect to the new Neon database
+* run migrations if required
+* verify the schema
+* verify seed data (only if required)
+* ensure the application works with the new database
+
+If migration is required:
+
+* migrate only
+* do not redesign the schema
+* do not rename tables
+* preserve compatibility
+
+⸻
+
+STEP 3 — PHASE 2 VERIFICATION
+
+Do not rebuild Phase 2.
+
+Instead verify:
+
+* authentication
+* OTP (development provider)
+* JWT sessions
+* role permissions
+* customer accounts
+* business accounts
+* provider accounts
+* profile editing
+* business editing
+* provider editing
+* “New on ShopNear”
+* API routes
+* OpenAPI
+* database
+* frontend
+
+Fix only genuine defects.
+
+Do not redesign working systems.
+
+⸻
+
+STEP 4 — APP STORAGE CHECK
+
+The previous workspace encountered a Replit App Storage runtime limitation.
+
+Verify whether this new workspace still has the issue.
+
+If storage now works:
+
+* keep the existing architecture
+* do not redesign uploads
+* simply restore full upload functionality
+
+If the environment still returns authorization errors:
+
+document the limitation and continue development.
+
+Do not redesign the upload system because of a Replit environment issue.
+
+⸻
+
+STEP 5 — TESTING
+
+Run:
+
+* Typecheck
+* Production build
+* API tests
+* Authentication tests
+* Smoke tests
+* Role tests
+* Database tests
+
+Fix only real failures.
+
+⸻
+
+STEP 6 — DOCUMENTATION
+
+Update only if necessary:
+
+* replit.md
+* PROJECT_MEMORY.md
+* CHANGELOG.md
+
+Do not rewrite documentation unnecessarily.
+
+⸻
+
+STEP 7 — IF EVERYTHING PASSES
+
+If all verification succeeds and Phase 2 is confirmed complete,
+
+begin Phase 3 automatically.
+
+⸻
+
+PHASE 3
+
+Implement the Marketplace Management System.
+
+This phase includes:
+
+Business Management
+
+* Business Dashboard
+* Edit Business
+* Business Analytics
+* Business Status
+* Business Visibility
+
+Product Management
+
+* Create Product
+* Edit Product
+* Delete Product
+* Product Images
+* Product Categories
+* Product Availability
+* Product Pricing
+
+Service Management
+
+* Create Service
+* Edit Service
+* Delete Service
+* Service Categories
+* Service Radius
+* Availability
+
+Marketplace
+
+* Product Categories
+* Service Categories
+* Featured Businesses
+* Featured Products
+* Featured Services
+* Search foundation improvements
+
+Requirements
+
+Maintain the existing ShopNear UI.
+
+Do not redesign completed screens.
+
+Continue using:
+
+* Emerald Green
+* Orange
+* White
+* Rounded Cards
+* Fixed bottom navigation:
+    * Home
+    * Search
+    * Favorites
+    * Messages
+    * Profile
+
+Preserve the existing mobile-first design.
+
+Do not change branding.
+
+⸻
+
+DOCUMENTATION
+
+When Phase 3 is complete:
+
+Update:
+
+* replit.md
+* PROJECT_MEMORY.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+
+Never leave documentation outdated.

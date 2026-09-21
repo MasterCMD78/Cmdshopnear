@@ -15,3 +15,10 @@
 
 - Typecheck and production-style workspace build passed.
 - Replit App Storage provisioning is present, but upload URL signing is currently blocked by the runtime sidecar returning `401 no allowed resources` during credential exchange. No storage architecture change was made.
+
+## Phase 3 — Marketplace Management
+
+- Added persistent product and service categories and owner-scoped marketplace listings.
+- Added product and service CRUD APIs with availability, visibility, pricing, service radius, and audit logging.
+- Added public marketplace catalog/category endpoints and a business dashboard metrics endpoint.
+- Added mobile-first product/service management controls to the authenticated Profile surface without changing the existing navigation or brand.

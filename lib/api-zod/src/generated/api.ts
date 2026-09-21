@@ -14,6 +14,8 @@ import * as zod from 'zod';
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
+
+
 /**
  * @summary Send a phone verification code
  */
@@ -25,11 +27,14 @@ export const requestOtpBodyPhoneMax = 20;
 export const RequestOtpBody = zod.object({
   "phone": zod.string().min(requestOtpBodyPhoneMin).max(requestOtpBodyPhoneMax)
 })
+
 export const RequestOtpResponse = zod.object({
   "challengeId": zod.string().uuid(),
   "expiresAt": zod.coerce.date(),
   "developmentOtp": zod.string().nullable()
 })
+
+
 /**
  * @summary Start phone login
  */
@@ -790,6 +795,514 @@ export const GetNewOnShopNearResponse = zod.object({
 
 
 /**
+ * @summary List product and service categories
+ */
+export const GetMarketplaceCategoriesResponse = zod.object({
+  "products": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "slug": zod.string()
+})),
+  "services": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "slug": zod.string()
+}))
+})
+
+
+/**
+ * @summary List visible, available marketplace listings
+ */
+export const getMarketplaceCatalogQueryQueryMax = 120;
+
+
+
+export const GetMarketplaceCatalogQueryParams = zod.object({
+  "query": zod.coerce.string().max(getMarketplaceCatalogQueryQueryMax).optional()
+})
+
+export const getMarketplaceCatalogResponseProductsItemOneNameMin = 2;
+export const getMarketplaceCatalogResponseProductsItemOneNameMax = 120;
+
+export const getMarketplaceCatalogResponseProductsItemOneDescriptionMax = 2000;
+
+export const getMarketplaceCatalogResponseProductsItemOneImagePathsItemMax = 500;
+
+export const getMarketplaceCatalogResponseProductsItemOneImagePathsMax = 10;
+
+export const getMarketplaceCatalogResponseProductsItemOnePriceCentsMin = 0;
+
+export const getMarketplaceCatalogResponseServicesItemOneNameMin = 2;
+export const getMarketplaceCatalogResponseServicesItemOneNameMax = 120;
+
+export const getMarketplaceCatalogResponseServicesItemOneDescriptionMax = 2000;
+
+export const getMarketplaceCatalogResponseServicesItemOneImagePathsItemMax = 500;
+
+export const getMarketplaceCatalogResponseServicesItemOneImagePathsMax = 10;
+
+export const getMarketplaceCatalogResponseServicesItemOnePriceFromCentsMin = 0;
+
+export const getMarketplaceCatalogResponseServicesItemOneServiceRadiusMin = 0;
+export const getMarketplaceCatalogResponseServicesItemOneServiceRadiusMax = 1000;
+
+
+
+export const GetMarketplaceCatalogResponse = zod.object({
+  "products": zod.array(zod.object({
+  "name": zod.string().min(getMarketplaceCatalogResponseProductsItemOneNameMin).max(getMarketplaceCatalogResponseProductsItemOneNameMax),
+  "description": zod.string().max(getMarketplaceCatalogResponseProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getMarketplaceCatalogResponseProductsItemOneImagePathsItemMax)).max(getMarketplaceCatalogResponseProductsItemOneImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(getMarketplaceCatalogResponseProductsItemOnePriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "services": zod.array(zod.object({
+  "name": zod.string().min(getMarketplaceCatalogResponseServicesItemOneNameMin).max(getMarketplaceCatalogResponseServicesItemOneNameMax),
+  "description": zod.string().max(getMarketplaceCatalogResponseServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getMarketplaceCatalogResponseServicesItemOneImagePathsItemMax)).max(getMarketplaceCatalogResponseServicesItemOneImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(getMarketplaceCatalogResponseServicesItemOnePriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(getMarketplaceCatalogResponseServicesItemOneServiceRadiusMin).max(getMarketplaceCatalogResponseServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})))
+})
+
+
+/**
+ * @summary Read business marketplace metrics
+ */
+export const getBusinessDashboardResponseBusinessOneOneBusinessNameMin = 2;
+export const getBusinessDashboardResponseBusinessOneOneBusinessNameMax = 160;
+
+export const getBusinessDashboardResponseBusinessOneOneCategoryMin = 2;
+export const getBusinessDashboardResponseBusinessOneOneCategoryMax = 100;
+
+export const getBusinessDashboardResponseBusinessOneOneBusinessLogoMax = 500;
+
+export const getBusinessDashboardResponseBusinessOneOneCoverPhotoMax = 500;
+
+export const getBusinessDashboardResponseBusinessOneOneDescriptionMax = 2000;
+
+export const getBusinessDashboardResponseBusinessOneOneBusinessAddressMax = 250;
+
+export const getBusinessDashboardResponseBusinessOneOneWhatsappMax = 20;
+
+export const getBusinessDashboardResponseBusinessOneOnePhoneMax = 20;
+
+export const getBusinessDashboardResponseBusinessOneOneWebsiteMax = 500;
+
+
+
+export const GetBusinessDashboardResponse = zod.object({
+  "business": zod.union([zod.object({
+  "businessName": zod.string().min(getBusinessDashboardResponseBusinessOneOneBusinessNameMin).max(getBusinessDashboardResponseBusinessOneOneBusinessNameMax),
+  "category": zod.string().min(getBusinessDashboardResponseBusinessOneOneCategoryMin).max(getBusinessDashboardResponseBusinessOneOneCategoryMax),
+  "businessLogo": zod.string().max(getBusinessDashboardResponseBusinessOneOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getBusinessDashboardResponseBusinessOneOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getBusinessDashboardResponseBusinessOneOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getBusinessDashboardResponseBusinessOneOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getBusinessDashboardResponseBusinessOneOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getBusinessDashboardResponseBusinessOneOnePhoneMax).nullish(),
+  "website": zod.string().max(getBusinessDashboardResponseBusinessOneOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),zod.null()]),
+  "metrics": zod.object({
+  "products": zod.number().int(),
+  "availableProducts": zod.number().int(),
+  "services": zod.number().int(),
+  "visibleProducts": zod.number().int()
+})
+})
+
+
+/**
+ * @summary List products owned by the business
+ */
+export const getMyProductsResponseOneNameMin = 2;
+export const getMyProductsResponseOneNameMax = 120;
+
+export const getMyProductsResponseOneDescriptionMax = 2000;
+
+export const getMyProductsResponseOneImagePathsItemMax = 500;
+
+export const getMyProductsResponseOneImagePathsMax = 10;
+
+export const getMyProductsResponseOnePriceCentsMin = 0;
+
+
+
+export const GetMyProductsResponseItem = zod.object({
+  "name": zod.string().min(getMyProductsResponseOneNameMin).max(getMyProductsResponseOneNameMax),
+  "description": zod.string().max(getMyProductsResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getMyProductsResponseOneImagePathsItemMax)).max(getMyProductsResponseOneImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(getMyProductsResponseOnePriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+export const GetMyProductsResponse = zod.array(GetMyProductsResponseItem)
+
+
+/**
+ * @summary Create a product
+ */
+export const createProductBodyNameMin = 2;
+export const createProductBodyNameMax = 120;
+
+export const createProductBodyDescriptionMax = 2000;
+
+export const createProductBodyImagePathsItemMax = 500;
+
+export const createProductBodyImagePathsMax = 10;
+
+export const createProductBodyPriceCentsMin = 0;
+
+
+
+export const CreateProductBody = zod.object({
+  "name": zod.string().min(createProductBodyNameMin).max(createProductBodyNameMax),
+  "description": zod.string().max(createProductBodyDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(createProductBodyImagePathsItemMax)).max(createProductBodyImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(createProductBodyPriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+})
+
+export const createProductResponseOneNameMin = 2;
+export const createProductResponseOneNameMax = 120;
+
+export const createProductResponseOneDescriptionMax = 2000;
+
+export const createProductResponseOneImagePathsItemMax = 500;
+
+export const createProductResponseOneImagePathsMax = 10;
+
+export const createProductResponseOnePriceCentsMin = 0;
+
+
+
+export const CreateProductResponse = zod.object({
+  "name": zod.string().min(createProductResponseOneNameMin).max(createProductResponseOneNameMax),
+  "description": zod.string().max(createProductResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(createProductResponseOneImagePathsItemMax)).max(createProductResponseOneImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(createProductResponseOnePriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+
+
+/**
+ * @summary Update an owned product
+ */
+export const UpdateProductParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateProductBodyNameMin = 2;
+export const updateProductBodyNameMax = 120;
+
+export const updateProductBodyDescriptionMax = 2000;
+
+export const updateProductBodyImagePathsItemMax = 500;
+
+export const updateProductBodyImagePathsMax = 10;
+
+export const updateProductBodyPriceCentsMin = 0;
+
+
+
+export const UpdateProductBody = zod.object({
+  "name": zod.string().min(updateProductBodyNameMin).max(updateProductBodyNameMax),
+  "description": zod.string().max(updateProductBodyDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(updateProductBodyImagePathsItemMax)).max(updateProductBodyImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(updateProductBodyPriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+})
+
+export const updateProductResponseOneNameMin = 2;
+export const updateProductResponseOneNameMax = 120;
+
+export const updateProductResponseOneDescriptionMax = 2000;
+
+export const updateProductResponseOneImagePathsItemMax = 500;
+
+export const updateProductResponseOneImagePathsMax = 10;
+
+export const updateProductResponseOnePriceCentsMin = 0;
+
+
+
+export const UpdateProductResponse = zod.object({
+  "name": zod.string().min(updateProductResponseOneNameMin).max(updateProductResponseOneNameMax),
+  "description": zod.string().max(updateProductResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(updateProductResponseOneImagePathsItemMax)).max(updateProductResponseOneImagePathsMax).optional(),
+  "priceCents": zod.number().int().min(updateProductResponseOnePriceCentsMin),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+
+
+/**
+ * @summary Delete an owned product
+ */
+export const DeleteProductParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteProductResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary List owned services
+ */
+export const getMyServicesResponseOneNameMin = 2;
+export const getMyServicesResponseOneNameMax = 120;
+
+export const getMyServicesResponseOneDescriptionMax = 2000;
+
+export const getMyServicesResponseOneImagePathsItemMax = 500;
+
+export const getMyServicesResponseOneImagePathsMax = 10;
+
+export const getMyServicesResponseOnePriceFromCentsMin = 0;
+
+export const getMyServicesResponseOneServiceRadiusMin = 0;
+export const getMyServicesResponseOneServiceRadiusMax = 1000;
+
+
+
+export const GetMyServicesResponseItem = zod.object({
+  "name": zod.string().min(getMyServicesResponseOneNameMin).max(getMyServicesResponseOneNameMax),
+  "description": zod.string().max(getMyServicesResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getMyServicesResponseOneImagePathsItemMax)).max(getMyServicesResponseOneImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(getMyServicesResponseOnePriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(getMyServicesResponseOneServiceRadiusMin).max(getMyServicesResponseOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+export const GetMyServicesResponse = zod.array(GetMyServicesResponseItem)
+
+
+/**
+ * @summary Create a service
+ */
+export const createServiceBodyNameMin = 2;
+export const createServiceBodyNameMax = 120;
+
+export const createServiceBodyDescriptionMax = 2000;
+
+export const createServiceBodyImagePathsItemMax = 500;
+
+export const createServiceBodyImagePathsMax = 10;
+
+export const createServiceBodyPriceFromCentsMin = 0;
+
+export const createServiceBodyServiceRadiusMin = 0;
+export const createServiceBodyServiceRadiusMax = 1000;
+
+
+
+export const CreateServiceBody = zod.object({
+  "name": zod.string().min(createServiceBodyNameMin).max(createServiceBodyNameMax),
+  "description": zod.string().max(createServiceBodyDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(createServiceBodyImagePathsItemMax)).max(createServiceBodyImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(createServiceBodyPriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(createServiceBodyServiceRadiusMin).max(createServiceBodyServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+})
+
+export const createServiceResponseOneNameMin = 2;
+export const createServiceResponseOneNameMax = 120;
+
+export const createServiceResponseOneDescriptionMax = 2000;
+
+export const createServiceResponseOneImagePathsItemMax = 500;
+
+export const createServiceResponseOneImagePathsMax = 10;
+
+export const createServiceResponseOnePriceFromCentsMin = 0;
+
+export const createServiceResponseOneServiceRadiusMin = 0;
+export const createServiceResponseOneServiceRadiusMax = 1000;
+
+
+
+export const CreateServiceResponse = zod.object({
+  "name": zod.string().min(createServiceResponseOneNameMin).max(createServiceResponseOneNameMax),
+  "description": zod.string().max(createServiceResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(createServiceResponseOneImagePathsItemMax)).max(createServiceResponseOneImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(createServiceResponseOnePriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(createServiceResponseOneServiceRadiusMin).max(createServiceResponseOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+
+
+/**
+ * @summary Update an owned service
+ */
+export const UpdateServiceParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateServiceBodyNameMin = 2;
+export const updateServiceBodyNameMax = 120;
+
+export const updateServiceBodyDescriptionMax = 2000;
+
+export const updateServiceBodyImagePathsItemMax = 500;
+
+export const updateServiceBodyImagePathsMax = 10;
+
+export const updateServiceBodyPriceFromCentsMin = 0;
+
+export const updateServiceBodyServiceRadiusMin = 0;
+export const updateServiceBodyServiceRadiusMax = 1000;
+
+
+
+export const UpdateServiceBody = zod.object({
+  "name": zod.string().min(updateServiceBodyNameMin).max(updateServiceBodyNameMax),
+  "description": zod.string().max(updateServiceBodyDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(updateServiceBodyImagePathsItemMax)).max(updateServiceBodyImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(updateServiceBodyPriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(updateServiceBodyServiceRadiusMin).max(updateServiceBodyServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+})
+
+export const updateServiceResponseOneNameMin = 2;
+export const updateServiceResponseOneNameMax = 120;
+
+export const updateServiceResponseOneDescriptionMax = 2000;
+
+export const updateServiceResponseOneImagePathsItemMax = 500;
+
+export const updateServiceResponseOneImagePathsMax = 10;
+
+export const updateServiceResponseOnePriceFromCentsMin = 0;
+
+export const updateServiceResponseOneServiceRadiusMin = 0;
+export const updateServiceResponseOneServiceRadiusMax = 1000;
+
+
+
+export const UpdateServiceResponse = zod.object({
+  "name": zod.string().min(updateServiceResponseOneNameMin).max(updateServiceResponseOneNameMax),
+  "description": zod.string().max(updateServiceResponseOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(updateServiceResponseOneImagePathsItemMax)).max(updateServiceResponseOneImagePathsMax).optional(),
+  "priceFromCents": zod.number().int().min(updateServiceResponseOnePriceFromCentsMin).nullish(),
+  "serviceRadius": zod.number().int().min(updateServiceResponseOneServiceRadiusMin).max(updateServiceResponseOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+
+
+/**
+ * @summary Delete an owned service
+ */
+export const DeleteServiceParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteServiceResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Read the new-listing window
  */
 export const getNewOnShopNearSettingsResponseDaysMin = 0;
@@ -848,3 +1361,5 @@ export const RequestUploadUrlResponse = zod.object({
   "contentType": zod.string()
 })
 })
+
+

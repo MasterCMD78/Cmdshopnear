@@ -14,7 +14,7 @@ This folder is the source of truth for the ShopNear product and its implementati
 - [Changelog](CHANGELOG.md)
 - [Roadmap](ROADMAP.md)
 
-Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware account setup, protected profile registration, audit logging, and the configurable “New on ShopNear” discovery surface.
+Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware account setup, protected profile registration, audit logging, and the configurable “New on ShopNear” discovery surface. Phase 3 adds persistent product/service management, catalog filtering, and business metrics.
 
 ## Phase 2 finalization status
 

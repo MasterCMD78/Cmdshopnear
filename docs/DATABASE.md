@@ -24,6 +24,14 @@ The project does not contain a committed migration directory. `drizzle-kit push`
 - `app_settings` — configurable platform settings, including the new-listing window
 - `audit_logs` — security and account activity records
 
+## Phase 3 marketplace tables
+
+- `product_categories` and `service_categories` — normalized marketplace category records
+- `products` — business-owned product names, descriptions, image object paths, integer prices, availability, visibility, and publication status
+- `services` — business/provider-owned service names, descriptions, image object paths, starting prices, service radius, availability, visibility, and publication status
+
+Product and service ownership is tied to the authenticated user and the related business/provider record. Prices are stored as integer cents to avoid floating-point currency drift.
+
 User-uploaded files are stored outside PostgreSQL. Rows store object paths and metadata only.
 
 ## Compatibility
@@ -40,5 +48,5 @@ The schema uses the names and concepts from the official specification. Nullable
 - Schema: seven tables created and confirmed against the Drizzle definitions
 - Foreign keys: four validated relationships are present
 - Indexes: primary-key indexes and the unique indexes for `users.phone` and `sessions.token_hash` are present
-- Seed/demo data: none exists in the project; all seven tables are currently empty
+- Seed/demo data: none exists in the project; marketplace category and listing tables are empty until an authenticated owner creates records
 - API: `GET /api/healthz` returns `{"status":"ok"}`

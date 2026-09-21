@@ -43,6 +43,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 
 - Existing marketplace dashboard with Home, Search, Favorites, Messages, and Profile navigation
 - Phase 2 phone/OTP onboarding and session-aware account setup
+- Phase 3 owner-scoped product and service management with availability, visibility, pricing, categories, catalog, and business metrics
 - Customer, Business, Service Provider, and Administrator roles
 - Business and service provider registration with verification-ready status
 - Automatically surfaced newly approved businesses and service providers

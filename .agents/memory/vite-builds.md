@@ -7,4 +7,4 @@ Workspace Vite builds that use the artifact configs require `PORT` and `BASE_PAT
 
 **Why:** The configs intentionally fail fast when artifact routing variables are absent.
 
-**How to apply:** Set representative workflow values such as `PORT=4173 BASE_PATH=/shopnear/` when running the root build manually.
+**How to apply:** Artifact-level builds need explicit values; the workspace root build should pass artifact-specific `PORT`/`BASE_PATH` values so the documented command works from a clean shell.

@@ -31,6 +31,22 @@ The API is mounted at `/api`. All JSON bodies are validated with Zod schemas gen
 
 The upload endpoint accepts metadata only. The client uploads the file directly to the returned URL and stores the returned `/objects/...` path, not the file bytes, in application data. During the Phase 2 finalization audit, the route and validation passed, but the development App Storage runtime returned `401 no allowed resources` while signing the URL; this is documented as a runtime integration limitation rather than an API contract change.
 
+## Marketplace management
+
+- `GET /marketplace/categories` — list product and service categories
+- `GET /marketplace/catalog?query=` — list visible and available products and services
+- `GET /business/dashboard` — return business marketplace metrics
+- `GET /business/products` — list the authenticated business's products
+- `POST /business/products` — create a product
+- `PUT /business/products/:id` — update an owned product, including price, availability, and visibility
+- `DELETE /business/products/:id` — delete an owned product
+- `GET /provider/services` — list the authenticated provider or business's services
+- `POST /provider/services` — create a service
+- `PUT /provider/services/:id` — update an owned service, including price, radius, availability, and visibility
+- `DELETE /provider/services/:id` — delete an owned service
+
+Product and service mutations are owner-scoped in the API. The UI provides the first marketplace-management surface from the authenticated Profile area while preserving the existing bottom navigation and mobile-first shell.
+
 ## Administration
 
 - `GET /admin/settings/new-on-shopnear` — read the configured window
