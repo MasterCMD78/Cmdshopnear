@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ServiceInputAvailability } from './serviceInputAvailability';
+import type { ServiceInputPricingOptionsItem } from './serviceInputPricingOptionsItem';
+import type { ServiceInputStatus } from './serviceInputStatus';
+import type { ServiceInputWorkingHours } from './serviceInputWorkingHours';
 
 export interface ServiceInput {
   /**
@@ -26,10 +29,20 @@ export interface ServiceInput {
      */
   imagePaths?: string[];
   /**
+     * @maxLength 500
+     * @nullable
+     */
+  primaryImagePath?: string | null;
+  /**
      * @minimum 0
      * @nullable
      */
   priceFromCents?: number | null;
+  /**
+     * @maxItems 20
+     * @nullable
+     */
+  pricingOptions?: ServiceInputPricingOptionsItem[] | null;
   /**
      * @minimum 0
      * @maximum 1000
@@ -38,6 +51,29 @@ export interface ServiceInput {
   serviceRadius?: number | null;
   /** @nullable */
   availability?: ServiceInputAvailability;
+  /** @nullable */
+  workingHours?: ServiceInputWorkingHours;
+  emergencyService?: boolean;
+  bookingReady?: boolean;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  estimatedDuration?: number | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @maxItems 30
+     * @items.maxLength 40
+     */
+  tags?: string[];
   isAvailable?: boolean;
   isVisible?: boolean;
+  status?: ServiceInputStatus;
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: Date | null;
 }

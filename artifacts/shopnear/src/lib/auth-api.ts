@@ -111,26 +111,62 @@ export type MarketplaceProduct = {
   id: string;
   name: string;
   description: string | null;
+  imagePaths?: string[];
+  primaryImagePath?: string | null;
   priceCents: number;
+  regularPriceCents?: number | null;
+  discountPriceCents?: number | null;
+  brand?: string | null;
+  condition?: string | null;
+  specifications?: Record<string, unknown> | null;
+  location?: string | null;
+  tags?: string[];
   isAvailable: boolean;
   isVisible: boolean;
   status: string;
+  isFeatured?: boolean;
 };
 
 export type MarketplaceService = {
   id: string;
   name: string;
   description: string | null;
+  imagePaths?: string[];
+  primaryImagePath?: string | null;
   priceFromCents: number | null;
+  pricingOptions?: Record<string, unknown>[] | null;
   serviceRadius: number | null;
+  availability?: Record<string, unknown> | null;
+  workingHours?: Record<string, unknown> | null;
+  emergencyService?: boolean;
+  bookingReady?: boolean;
+  estimatedDuration?: number | null;
+  location?: string | null;
+  tags?: string[];
   isAvailable: boolean;
   isVisible: boolean;
   status: string;
+  isFeatured?: boolean;
 };
 
 export type BusinessDashboard = {
   business: BusinessRecord | null;
-  metrics: { products: number; availableProducts: number; services: number; visibleProducts: number };
+  metrics: {
+    products: number;
+    availableProducts: number;
+    services: number;
+    visibleProducts: number;
+    featuredProducts: number;
+    views: number;
+    favorites: number;
+    messages: number;
+    verificationStatus: string;
+    visibility: string;
+    recentActivity: { label?: string; createdAt?: string }[];
+    quickActions: string[];
+    sales: { status: string; value: number };
+    analytics: { status: string; value: number };
+  };
 };
 
 export function getBusinessDashboard() {
@@ -159,4 +195,28 @@ export function saveService(input: Record<string, unknown>, id?: string) {
 
 export function deleteService(id: string) {
   return request<{ message: string }>(`/api/provider/services/${id}`, { method: "DELETE" });
+}
+
+export type MarketplaceCatalog = {
+  products: MarketplaceProduct[];
+  services: MarketplaceService[];
+  page: number;
+  limit: number;
+};
+
+export function getMarketplaceCatalog(params: Record<string, string | number | boolean | undefined> = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value !== undefined && query.set(key, String(value)));
+  return request<MarketplaceCatalog>(`/api/marketplace/catalog${query.size ? `?${query.toString()}` : ''}`);
+}
+
+export type MarketplaceSearchResult = MarketplaceCatalog & {
+  businesses: BusinessRecord[];
+  serviceProviders: ServiceProviderRecord[];
+};
+
+export function searchMarketplace(query: string, verified = false) {
+  const params = new URLSearchParams({ query });
+  if (verified) params.set('verified', 'true');
+  return request<MarketplaceSearchResult>(`/api/marketplace/search?${params.toString()}`);
 }

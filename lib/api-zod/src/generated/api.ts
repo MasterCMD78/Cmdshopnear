@@ -801,12 +801,20 @@ export const GetMarketplaceCategoriesResponse = zod.object({
   "products": zod.array(zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "sortOrder": zod.number().int(),
+  "isVisible": zod.boolean(),
+  "isFeatured": zod.boolean(),
+  "createdAt": zod.coerce.date()
 })),
   "services": zod.array(zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "sortOrder": zod.number().int(),
+  "isVisible": zod.boolean(),
+  "isFeatured": zod.boolean(),
+  "createdAt": zod.coerce.date()
 }))
 })
 
@@ -816,10 +824,26 @@ export const GetMarketplaceCategoriesResponse = zod.object({
  */
 export const getMarketplaceCatalogQueryQueryMax = 120;
 
+export const getMarketplaceCatalogQueryTagMax = 40;
+
+export const getMarketplaceCatalogQueryLocationMax = 120;
+
+export const getMarketplaceCatalogQueryPageDefault = 1;
+
+export const getMarketplaceCatalogQueryLimitDefault = 20;
+export const getMarketplaceCatalogQueryLimitMax = 50;
+
 
 
 export const GetMarketplaceCatalogQueryParams = zod.object({
-  "query": zod.coerce.string().max(getMarketplaceCatalogQueryQueryMax).optional()
+  "query": zod.coerce.string().max(getMarketplaceCatalogQueryQueryMax).optional(),
+  "categoryId": zod.coerce.string().uuid().optional(),
+  "featured": zod.coerce.boolean().optional(),
+  "newest": zod.coerce.boolean().optional(),
+  "tag": zod.coerce.string().max(getMarketplaceCatalogQueryTagMax).optional(),
+  "location": zod.coerce.string().max(getMarketplaceCatalogQueryLocationMax).optional(),
+  "page": zod.coerce.number().int().min(1).default(getMarketplaceCatalogQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(getMarketplaceCatalogQueryLimitMax).default(getMarketplaceCatalogQueryLimitDefault)
 })
 
 export const getMarketplaceCatalogResponseProductsItemOneNameMin = 2;
@@ -831,7 +855,23 @@ export const getMarketplaceCatalogResponseProductsItemOneImagePathsItemMax = 500
 
 export const getMarketplaceCatalogResponseProductsItemOneImagePathsMax = 10;
 
+export const getMarketplaceCatalogResponseProductsItemOnePrimaryImagePathMax = 500;
+
 export const getMarketplaceCatalogResponseProductsItemOnePriceCentsMin = 0;
+
+export const getMarketplaceCatalogResponseProductsItemOneRegularPriceCentsMin = 0;
+
+export const getMarketplaceCatalogResponseProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getMarketplaceCatalogResponseProductsItemOneBrandMax = 120;
+
+export const getMarketplaceCatalogResponseProductsItemOneConditionMax = 80;
+
+export const getMarketplaceCatalogResponseProductsItemOneLocationMax = 250;
+
+export const getMarketplaceCatalogResponseProductsItemOneTagsItemMax = 40;
+
+export const getMarketplaceCatalogResponseProductsItemOneTagsMax = 30;
 
 export const getMarketplaceCatalogResponseServicesItemOneNameMin = 2;
 export const getMarketplaceCatalogResponseServicesItemOneNameMax = 120;
@@ -842,10 +882,22 @@ export const getMarketplaceCatalogResponseServicesItemOneImagePathsItemMax = 500
 
 export const getMarketplaceCatalogResponseServicesItemOneImagePathsMax = 10;
 
+export const getMarketplaceCatalogResponseServicesItemOnePrimaryImagePathMax = 500;
+
 export const getMarketplaceCatalogResponseServicesItemOnePriceFromCentsMin = 0;
+
+export const getMarketplaceCatalogResponseServicesItemOnePricingOptionsMax = 20;
 
 export const getMarketplaceCatalogResponseServicesItemOneServiceRadiusMin = 0;
 export const getMarketplaceCatalogResponseServicesItemOneServiceRadiusMax = 1000;
+
+export const getMarketplaceCatalogResponseServicesItemOneEstimatedDurationMin = 0;
+
+export const getMarketplaceCatalogResponseServicesItemOneLocationMax = 250;
+
+export const getMarketplaceCatalogResponseServicesItemOneTagsItemMax = 40;
+
+export const getMarketplaceCatalogResponseServicesItemOneTagsMax = 30;
 
 
 
@@ -855,14 +907,38 @@ export const GetMarketplaceCatalogResponse = zod.object({
   "description": zod.string().max(getMarketplaceCatalogResponseProductsItemOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(getMarketplaceCatalogResponseProductsItemOneImagePathsItemMax)).max(getMarketplaceCatalogResponseProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getMarketplaceCatalogResponseProductsItemOnePrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(getMarketplaceCatalogResponseProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getMarketplaceCatalogResponseProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getMarketplaceCatalogResponseProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getMarketplaceCatalogResponseProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getMarketplaceCatalogResponseProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getMarketplaceCatalogResponseProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getMarketplaceCatalogResponseProductsItemOneTagsItemMax)).max(getMarketplaceCatalogResponseProductsItemOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -871,20 +947,823 @@ export const GetMarketplaceCatalogResponse = zod.object({
   "description": zod.string().max(getMarketplaceCatalogResponseServicesItemOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(getMarketplaceCatalogResponseServicesItemOneImagePathsItemMax)).max(getMarketplaceCatalogResponseServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getMarketplaceCatalogResponseServicesItemOnePrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(getMarketplaceCatalogResponseServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getMarketplaceCatalogResponseServicesItemOnePricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(getMarketplaceCatalogResponseServicesItemOneServiceRadiusMin).max(getMarketplaceCatalogResponseServicesItemOneServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getMarketplaceCatalogResponseServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getMarketplaceCatalogResponseServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getMarketplaceCatalogResponseServicesItemOneTagsItemMax)).max(getMarketplaceCatalogResponseServicesItemOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid().nullable(),
   "providerId": zod.string().uuid().nullable(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "page": zod.number().int().optional(),
+  "limit": zod.number().int().optional()
+})
+
+
+/**
+ * @summary List featured, trending, and newest marketplace records
+ */
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessNameMin = 2;
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessNameMax = 160;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCategoryMin = 2;
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCategoryMax = 100;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessLogoMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCoverPhotoMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessAddressMax = 250;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWhatsappMax = 20;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOnePhoneMax = 20;
+
+export const getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWebsiteMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOnePriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneRegularPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneBrandMax = 120;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneConditionMax = 80;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseFeaturedProductsItemOneTagsMax = 30;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOnePriceFromCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOnePricingOptionsMax = 20;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneServiceRadiusMin = 0;
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneServiceRadiusMax = 1000;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneEstimatedDurationMin = 0;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseFeaturedServicesItemOneTagsMax = 30;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOnePriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneRegularPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneBrandMax = 120;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneConditionMax = 80;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseTrendingProductsItemOneTagsMax = 30;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOnePriceFromCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOnePricingOptionsMax = 20;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneServiceRadiusMin = 0;
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneServiceRadiusMax = 1000;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneEstimatedDurationMin = 0;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseTrendingServicesItemOneTagsMax = 30;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessNameMin = 2;
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessNameMax = 160;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneCategoryMin = 2;
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneCategoryMax = 100;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessLogoMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneCoverPhotoMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessAddressMax = 250;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneWhatsappMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOnePhoneMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestBusinessesItemOneWebsiteMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMin = 2;
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMax = 120;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneExperienceMax = 120;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneSkillsMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneServiceRadiusMin = 0;
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneServiceRadiusMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOnePortfolioImagesItemMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOnePortfolioImagesMax = 12;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOnePhoneMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneWhatsappMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseNewestProductsItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOnePriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneRegularPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneBrandMax = 120;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneConditionMax = 80;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseNewestProductsItemOneTagsMax = 30;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneNameMin = 2;
+export const getFeaturedMarketplaceResponseNewestServicesItemOneNameMax = 120;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneDescriptionMax = 2000;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneImagePathsItemMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneImagePathsMax = 10;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOnePrimaryImagePathMax = 500;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOnePriceFromCentsMin = 0;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOnePricingOptionsMax = 20;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneServiceRadiusMin = 0;
+export const getFeaturedMarketplaceResponseNewestServicesItemOneServiceRadiusMax = 1000;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneEstimatedDurationMin = 0;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneLocationMax = 250;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneTagsItemMax = 40;
+
+export const getFeaturedMarketplaceResponseNewestServicesItemOneTagsMax = 30;
+
+
+
+export const GetFeaturedMarketplaceResponse = zod.object({
+  "featuredBusinesses": zod.array(zod.object({
+  "businessName": zod.string().min(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessNameMin).max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessNameMax),
+  "category": zod.string().min(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCategoryMin).max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCategoryMax),
+  "businessLogo": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOnePhoneMax).nullish(),
+  "website": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))),
+  "featuredProducts": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMin).max(getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseFeaturedProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseFeaturedProductsItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseFeaturedProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "featuredServices": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseFeaturedServicesItemOneNameMin).max(getFeaturedMarketplaceResponseFeaturedServicesItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseFeaturedServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseFeaturedServicesItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseFeaturedServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseFeaturedServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getFeaturedMarketplaceResponseFeaturedServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedServicesItemOneServiceRadiusMin).max(getFeaturedMarketplaceResponseFeaturedServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getFeaturedMarketplaceResponseFeaturedServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseFeaturedServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseFeaturedServicesItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseFeaturedServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "trendingProducts": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseTrendingProductsItemOneNameMin).max(getFeaturedMarketplaceResponseTrendingProductsItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseTrendingProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getFeaturedMarketplaceResponseTrendingProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseTrendingProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseTrendingProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseTrendingProductsItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseTrendingProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "trendingServices": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseTrendingServicesItemOneNameMin).max(getFeaturedMarketplaceResponseTrendingServicesItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseTrendingServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseTrendingServicesItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseTrendingServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseTrendingServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getFeaturedMarketplaceResponseTrendingServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getFeaturedMarketplaceResponseTrendingServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getFeaturedMarketplaceResponseTrendingServicesItemOneServiceRadiusMin).max(getFeaturedMarketplaceResponseTrendingServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getFeaturedMarketplaceResponseTrendingServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseTrendingServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseTrendingServicesItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseTrendingServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "newestBusinesses": zod.array(zod.object({
+  "businessName": zod.string().min(getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessNameMin).max(getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessNameMax),
+  "category": zod.string().min(getFeaturedMarketplaceResponseNewestBusinessesItemOneCategoryMin).max(getFeaturedMarketplaceResponseNewestBusinessesItemOneCategoryMax),
+  "businessLogo": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOnePhoneMax).nullish(),
+  "website": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))),
+  "newestProviders": zod.array(zod.object({
+  "profession": zod.string().min(getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMax),
+  "experience": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneExperienceMax).nullish(),
+  "skills": zod.array(zod.string()).max(getFeaturedMarketplaceResponseNewestProvidersItemOneSkillsMax).optional(),
+  "serviceRadius": zod.number().int().min(getFeaturedMarketplaceResponseNewestProvidersItemOneServiceRadiusMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneServiceRadiusMax).nullish(),
+  "portfolioImages": zod.array(zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOnePortfolioImagesItemMax)).max(getFeaturedMarketplaceResponseNewestProvidersItemOnePortfolioImagesMax).optional(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "phone": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOnePhoneMax).nullish(),
+  "whatsapp": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneWhatsappMax).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneLocationMax).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))),
+  "newestProducts": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseNewestProductsItemOneNameMin).max(getFeaturedMarketplaceResponseNewestProductsItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseNewestProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getFeaturedMarketplaceResponseNewestProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseNewestProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getFeaturedMarketplaceResponseNewestProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseNewestProductsItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseNewestProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "newestServices": zod.array(zod.object({
+  "name": zod.string().min(getFeaturedMarketplaceResponseNewestServicesItemOneNameMin).max(getFeaturedMarketplaceResponseNewestServicesItemOneNameMax),
+  "description": zod.string().max(getFeaturedMarketplaceResponseNewestServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getFeaturedMarketplaceResponseNewestServicesItemOneImagePathsItemMax)).max(getFeaturedMarketplaceResponseNewestServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getFeaturedMarketplaceResponseNewestServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getFeaturedMarketplaceResponseNewestServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getFeaturedMarketplaceResponseNewestServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getFeaturedMarketplaceResponseNewestServicesItemOneServiceRadiusMin).max(getFeaturedMarketplaceResponseNewestServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getFeaturedMarketplaceResponseNewestServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getFeaturedMarketplaceResponseNewestServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getFeaturedMarketplaceResponseNewestServicesItemOneTagsItemMax)).max(getFeaturedMarketplaceResponseNewestServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })))
+})
+
+
+/**
+ * @summary Search businesses, providers, products, and services
+ */
+export const searchMarketplaceQueryQueryMax = 120;
+
+export const searchMarketplaceQueryPageDefault = 1;
+
+export const searchMarketplaceQueryLimitDefault = 20;
+export const searchMarketplaceQueryLimitMax = 50;
+
+
+
+export const SearchMarketplaceQueryParams = zod.object({
+  "query": zod.coerce.string().max(searchMarketplaceQueryQueryMax).optional(),
+  "verified": zod.coerce.boolean().optional(),
+  "page": zod.coerce.number().int().min(1).default(searchMarketplaceQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(searchMarketplaceQueryLimitMax).default(searchMarketplaceQueryLimitDefault)
+})
+
+export const searchMarketplaceResponseBusinessesItemOneBusinessNameMin = 2;
+export const searchMarketplaceResponseBusinessesItemOneBusinessNameMax = 160;
+
+export const searchMarketplaceResponseBusinessesItemOneCategoryMin = 2;
+export const searchMarketplaceResponseBusinessesItemOneCategoryMax = 100;
+
+export const searchMarketplaceResponseBusinessesItemOneBusinessLogoMax = 500;
+
+export const searchMarketplaceResponseBusinessesItemOneCoverPhotoMax = 500;
+
+export const searchMarketplaceResponseBusinessesItemOneDescriptionMax = 2000;
+
+export const searchMarketplaceResponseBusinessesItemOneBusinessAddressMax = 250;
+
+export const searchMarketplaceResponseBusinessesItemOneWhatsappMax = 20;
+
+export const searchMarketplaceResponseBusinessesItemOnePhoneMax = 20;
+
+export const searchMarketplaceResponseBusinessesItemOneWebsiteMax = 500;
+
+export const searchMarketplaceResponseServiceProvidersItemOneProfessionMin = 2;
+export const searchMarketplaceResponseServiceProvidersItemOneProfessionMax = 120;
+
+export const searchMarketplaceResponseServiceProvidersItemOneExperienceMax = 120;
+
+export const searchMarketplaceResponseServiceProvidersItemOneSkillsMax = 20;
+
+export const searchMarketplaceResponseServiceProvidersItemOneServiceRadiusMin = 0;
+export const searchMarketplaceResponseServiceProvidersItemOneServiceRadiusMax = 500;
+
+export const searchMarketplaceResponseServiceProvidersItemOnePortfolioImagesItemMax = 500;
+
+export const searchMarketplaceResponseServiceProvidersItemOnePortfolioImagesMax = 12;
+
+export const searchMarketplaceResponseServiceProvidersItemOnePhoneMax = 20;
+
+export const searchMarketplaceResponseServiceProvidersItemOneWhatsappMax = 20;
+
+export const searchMarketplaceResponseServiceProvidersItemOneLocationMax = 250;
+
+export const searchMarketplaceResponseProductsItemOneNameMin = 2;
+export const searchMarketplaceResponseProductsItemOneNameMax = 120;
+
+export const searchMarketplaceResponseProductsItemOneDescriptionMax = 2000;
+
+export const searchMarketplaceResponseProductsItemOneImagePathsItemMax = 500;
+
+export const searchMarketplaceResponseProductsItemOneImagePathsMax = 10;
+
+export const searchMarketplaceResponseProductsItemOnePrimaryImagePathMax = 500;
+
+export const searchMarketplaceResponseProductsItemOnePriceCentsMin = 0;
+
+export const searchMarketplaceResponseProductsItemOneRegularPriceCentsMin = 0;
+
+export const searchMarketplaceResponseProductsItemOneDiscountPriceCentsMin = 0;
+
+export const searchMarketplaceResponseProductsItemOneBrandMax = 120;
+
+export const searchMarketplaceResponseProductsItemOneConditionMax = 80;
+
+export const searchMarketplaceResponseProductsItemOneLocationMax = 250;
+
+export const searchMarketplaceResponseProductsItemOneTagsItemMax = 40;
+
+export const searchMarketplaceResponseProductsItemOneTagsMax = 30;
+
+export const searchMarketplaceResponseServicesItemOneNameMin = 2;
+export const searchMarketplaceResponseServicesItemOneNameMax = 120;
+
+export const searchMarketplaceResponseServicesItemOneDescriptionMax = 2000;
+
+export const searchMarketplaceResponseServicesItemOneImagePathsItemMax = 500;
+
+export const searchMarketplaceResponseServicesItemOneImagePathsMax = 10;
+
+export const searchMarketplaceResponseServicesItemOnePrimaryImagePathMax = 500;
+
+export const searchMarketplaceResponseServicesItemOnePriceFromCentsMin = 0;
+
+export const searchMarketplaceResponseServicesItemOnePricingOptionsMax = 20;
+
+export const searchMarketplaceResponseServicesItemOneServiceRadiusMin = 0;
+export const searchMarketplaceResponseServicesItemOneServiceRadiusMax = 1000;
+
+export const searchMarketplaceResponseServicesItemOneEstimatedDurationMin = 0;
+
+export const searchMarketplaceResponseServicesItemOneLocationMax = 250;
+
+export const searchMarketplaceResponseServicesItemOneTagsItemMax = 40;
+
+export const searchMarketplaceResponseServicesItemOneTagsMax = 30;
+
+
+
+export const SearchMarketplaceResponse = zod.object({
+  "businesses": zod.array(zod.object({
+  "businessName": zod.string().min(searchMarketplaceResponseBusinessesItemOneBusinessNameMin).max(searchMarketplaceResponseBusinessesItemOneBusinessNameMax),
+  "category": zod.string().min(searchMarketplaceResponseBusinessesItemOneCategoryMin).max(searchMarketplaceResponseBusinessesItemOneCategoryMax),
+  "businessLogo": zod.string().max(searchMarketplaceResponseBusinessesItemOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(searchMarketplaceResponseBusinessesItemOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(searchMarketplaceResponseBusinessesItemOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(searchMarketplaceResponseBusinessesItemOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(searchMarketplaceResponseBusinessesItemOneWhatsappMax).nullish(),
+  "phone": zod.string().max(searchMarketplaceResponseBusinessesItemOnePhoneMax).nullish(),
+  "website": zod.string().max(searchMarketplaceResponseBusinessesItemOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))),
+  "serviceProviders": zod.array(zod.object({
+  "profession": zod.string().min(searchMarketplaceResponseServiceProvidersItemOneProfessionMin).max(searchMarketplaceResponseServiceProvidersItemOneProfessionMax),
+  "experience": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneExperienceMax).nullish(),
+  "skills": zod.array(zod.string()).max(searchMarketplaceResponseServiceProvidersItemOneSkillsMax).optional(),
+  "serviceRadius": zod.number().int().min(searchMarketplaceResponseServiceProvidersItemOneServiceRadiusMin).max(searchMarketplaceResponseServiceProvidersItemOneServiceRadiusMax).nullish(),
+  "portfolioImages": zod.array(zod.string().max(searchMarketplaceResponseServiceProvidersItemOnePortfolioImagesItemMax)).max(searchMarketplaceResponseServiceProvidersItemOnePortfolioImagesMax).optional(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "phone": zod.string().max(searchMarketplaceResponseServiceProvidersItemOnePhoneMax).nullish(),
+  "whatsapp": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneWhatsappMax).nullish(),
+  "location": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneLocationMax).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+}))),
+  "products": zod.array(zod.object({
+  "name": zod.string().min(searchMarketplaceResponseProductsItemOneNameMin).max(searchMarketplaceResponseProductsItemOneNameMax),
+  "description": zod.string().max(searchMarketplaceResponseProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(searchMarketplaceResponseProductsItemOneImagePathsItemMax)).max(searchMarketplaceResponseProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(searchMarketplaceResponseProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(searchMarketplaceResponseProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(searchMarketplaceResponseProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(searchMarketplaceResponseProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(searchMarketplaceResponseProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(searchMarketplaceResponseProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(searchMarketplaceResponseProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(searchMarketplaceResponseProductsItemOneTagsItemMax)).max(searchMarketplaceResponseProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "services": zod.array(zod.object({
+  "name": zod.string().min(searchMarketplaceResponseServicesItemOneNameMin).max(searchMarketplaceResponseServicesItemOneNameMax),
+  "description": zod.string().max(searchMarketplaceResponseServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(searchMarketplaceResponseServicesItemOneImagePathsItemMax)).max(searchMarketplaceResponseServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(searchMarketplaceResponseServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(searchMarketplaceResponseServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(searchMarketplaceResponseServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(searchMarketplaceResponseServicesItemOneServiceRadiusMin).max(searchMarketplaceResponseServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(searchMarketplaceResponseServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(searchMarketplaceResponseServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(searchMarketplaceResponseServicesItemOneTagsItemMax)).max(searchMarketplaceResponseServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "page": zod.number().int(),
+  "limit": zod.number().int()
 })
 
 
@@ -939,7 +1818,17 @@ export const GetBusinessDashboardResponse = zod.object({
   "products": zod.number().int(),
   "availableProducts": zod.number().int(),
   "services": zod.number().int(),
-  "visibleProducts": zod.number().int()
+  "visibleProducts": zod.number().int(),
+  "featuredProducts": zod.number().int(),
+  "views": zod.number().int(),
+  "favorites": zod.number().int(),
+  "messages": zod.number().int(),
+  "verificationStatus": zod.string(),
+  "visibility": zod.string(),
+  "recentActivity": zod.array(zod.record(zod.string(), zod.unknown())),
+  "quickActions": zod.array(zod.string()),
+  "sales": zod.record(zod.string(), zod.unknown()),
+  "analytics": zod.record(zod.string(), zod.unknown())
 })
 })
 
@@ -956,7 +1845,23 @@ export const getMyProductsResponseOneImagePathsItemMax = 500;
 
 export const getMyProductsResponseOneImagePathsMax = 10;
 
+export const getMyProductsResponseOnePrimaryImagePathMax = 500;
+
 export const getMyProductsResponseOnePriceCentsMin = 0;
+
+export const getMyProductsResponseOneRegularPriceCentsMin = 0;
+
+export const getMyProductsResponseOneDiscountPriceCentsMin = 0;
+
+export const getMyProductsResponseOneBrandMax = 120;
+
+export const getMyProductsResponseOneConditionMax = 80;
+
+export const getMyProductsResponseOneLocationMax = 250;
+
+export const getMyProductsResponseOneTagsItemMax = 40;
+
+export const getMyProductsResponseOneTagsMax = 30;
 
 
 
@@ -965,14 +1870,38 @@ export const GetMyProductsResponseItem = zod.object({
   "description": zod.string().max(getMyProductsResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(getMyProductsResponseOneImagePathsItemMax)).max(getMyProductsResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getMyProductsResponseOnePrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(getMyProductsResponseOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getMyProductsResponseOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getMyProductsResponseOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getMyProductsResponseOneBrandMax).nullish(),
+  "condition": zod.string().max(getMyProductsResponseOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getMyProductsResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getMyProductsResponseOneTagsItemMax)).max(getMyProductsResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -991,7 +1920,23 @@ export const createProductBodyImagePathsItemMax = 500;
 
 export const createProductBodyImagePathsMax = 10;
 
+export const createProductBodyPrimaryImagePathMax = 500;
+
 export const createProductBodyPriceCentsMin = 0;
+
+export const createProductBodyRegularPriceCentsMin = 0;
+
+export const createProductBodyDiscountPriceCentsMin = 0;
+
+export const createProductBodyBrandMax = 120;
+
+export const createProductBodyConditionMax = 80;
+
+export const createProductBodyLocationMax = 250;
+
+export const createProductBodyTagsItemMax = 40;
+
+export const createProductBodyTagsMax = 30;
 
 
 
@@ -1000,9 +1945,20 @@ export const CreateProductBody = zod.object({
   "description": zod.string().max(createProductBodyDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(createProductBodyImagePathsItemMax)).max(createProductBodyImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(createProductBodyPrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(createProductBodyPriceCentsMin),
+  "regularPriceCents": zod.number().int().min(createProductBodyRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(createProductBodyDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(createProductBodyBrandMax).nullish(),
+  "condition": zod.string().max(createProductBodyConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(createProductBodyLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(createProductBodyTagsItemMax)).max(createProductBodyTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 })
 
 export const createProductResponseOneNameMin = 2;
@@ -1014,7 +1970,23 @@ export const createProductResponseOneImagePathsItemMax = 500;
 
 export const createProductResponseOneImagePathsMax = 10;
 
+export const createProductResponseOnePrimaryImagePathMax = 500;
+
 export const createProductResponseOnePriceCentsMin = 0;
+
+export const createProductResponseOneRegularPriceCentsMin = 0;
+
+export const createProductResponseOneDiscountPriceCentsMin = 0;
+
+export const createProductResponseOneBrandMax = 120;
+
+export const createProductResponseOneConditionMax = 80;
+
+export const createProductResponseOneLocationMax = 250;
+
+export const createProductResponseOneTagsItemMax = 40;
+
+export const createProductResponseOneTagsMax = 30;
 
 
 
@@ -1023,14 +1995,38 @@ export const CreateProductResponse = zod.object({
   "description": zod.string().max(createProductResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(createProductResponseOneImagePathsItemMax)).max(createProductResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(createProductResponseOnePrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(createProductResponseOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(createProductResponseOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(createProductResponseOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(createProductResponseOneBrandMax).nullish(),
+  "condition": zod.string().max(createProductResponseOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(createProductResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(createProductResponseOneTagsItemMax)).max(createProductResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -1052,7 +2048,23 @@ export const updateProductBodyImagePathsItemMax = 500;
 
 export const updateProductBodyImagePathsMax = 10;
 
+export const updateProductBodyPrimaryImagePathMax = 500;
+
 export const updateProductBodyPriceCentsMin = 0;
+
+export const updateProductBodyRegularPriceCentsMin = 0;
+
+export const updateProductBodyDiscountPriceCentsMin = 0;
+
+export const updateProductBodyBrandMax = 120;
+
+export const updateProductBodyConditionMax = 80;
+
+export const updateProductBodyLocationMax = 250;
+
+export const updateProductBodyTagsItemMax = 40;
+
+export const updateProductBodyTagsMax = 30;
 
 
 
@@ -1061,9 +2073,20 @@ export const UpdateProductBody = zod.object({
   "description": zod.string().max(updateProductBodyDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(updateProductBodyImagePathsItemMax)).max(updateProductBodyImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(updateProductBodyPrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(updateProductBodyPriceCentsMin),
+  "regularPriceCents": zod.number().int().min(updateProductBodyRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(updateProductBodyDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(updateProductBodyBrandMax).nullish(),
+  "condition": zod.string().max(updateProductBodyConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(updateProductBodyLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(updateProductBodyTagsItemMax)).max(updateProductBodyTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 })
 
 export const updateProductResponseOneNameMin = 2;
@@ -1075,7 +2098,23 @@ export const updateProductResponseOneImagePathsItemMax = 500;
 
 export const updateProductResponseOneImagePathsMax = 10;
 
+export const updateProductResponseOnePrimaryImagePathMax = 500;
+
 export const updateProductResponseOnePriceCentsMin = 0;
+
+export const updateProductResponseOneRegularPriceCentsMin = 0;
+
+export const updateProductResponseOneDiscountPriceCentsMin = 0;
+
+export const updateProductResponseOneBrandMax = 120;
+
+export const updateProductResponseOneConditionMax = 80;
+
+export const updateProductResponseOneLocationMax = 250;
+
+export const updateProductResponseOneTagsItemMax = 40;
+
+export const updateProductResponseOneTagsMax = 30;
 
 
 
@@ -1084,14 +2123,38 @@ export const UpdateProductResponse = zod.object({
   "description": zod.string().max(updateProductResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(updateProductResponseOneImagePathsItemMax)).max(updateProductResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(updateProductResponseOnePrimaryImagePathMax).nullish(),
   "priceCents": zod.number().int().min(updateProductResponseOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(updateProductResponseOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(updateProductResponseOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(updateProductResponseOneBrandMax).nullish(),
+  "condition": zod.string().max(updateProductResponseOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(updateProductResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(updateProductResponseOneTagsItemMax)).max(updateProductResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -1121,10 +2184,22 @@ export const getMyServicesResponseOneImagePathsItemMax = 500;
 
 export const getMyServicesResponseOneImagePathsMax = 10;
 
+export const getMyServicesResponseOnePrimaryImagePathMax = 500;
+
 export const getMyServicesResponseOnePriceFromCentsMin = 0;
+
+export const getMyServicesResponseOnePricingOptionsMax = 20;
 
 export const getMyServicesResponseOneServiceRadiusMin = 0;
 export const getMyServicesResponseOneServiceRadiusMax = 1000;
+
+export const getMyServicesResponseOneEstimatedDurationMin = 0;
+
+export const getMyServicesResponseOneLocationMax = 250;
+
+export const getMyServicesResponseOneTagsItemMax = 40;
+
+export const getMyServicesResponseOneTagsMax = 30;
 
 
 
@@ -1133,17 +2208,41 @@ export const GetMyServicesResponseItem = zod.object({
   "description": zod.string().max(getMyServicesResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(getMyServicesResponseOneImagePathsItemMax)).max(getMyServicesResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getMyServicesResponseOnePrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(getMyServicesResponseOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getMyServicesResponseOnePricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(getMyServicesResponseOneServiceRadiusMin).max(getMyServicesResponseOneServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getMyServicesResponseOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getMyServicesResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getMyServicesResponseOneTagsItemMax)).max(getMyServicesResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid().nullable(),
   "providerId": zod.string().uuid().nullable(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -1162,10 +2261,22 @@ export const createServiceBodyImagePathsItemMax = 500;
 
 export const createServiceBodyImagePathsMax = 10;
 
+export const createServiceBodyPrimaryImagePathMax = 500;
+
 export const createServiceBodyPriceFromCentsMin = 0;
+
+export const createServiceBodyPricingOptionsMax = 20;
 
 export const createServiceBodyServiceRadiusMin = 0;
 export const createServiceBodyServiceRadiusMax = 1000;
+
+export const createServiceBodyEstimatedDurationMin = 0;
+
+export const createServiceBodyLocationMax = 250;
+
+export const createServiceBodyTagsItemMax = 40;
+
+export const createServiceBodyTagsMax = 30;
 
 
 
@@ -1174,11 +2285,22 @@ export const CreateServiceBody = zod.object({
   "description": zod.string().max(createServiceBodyDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(createServiceBodyImagePathsItemMax)).max(createServiceBodyImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(createServiceBodyPrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(createServiceBodyPriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(createServiceBodyPricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(createServiceBodyServiceRadiusMin).max(createServiceBodyServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(createServiceBodyEstimatedDurationMin).nullish(),
+  "location": zod.string().max(createServiceBodyLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(createServiceBodyTagsItemMax)).max(createServiceBodyTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 })
 
 export const createServiceResponseOneNameMin = 2;
@@ -1190,10 +2312,22 @@ export const createServiceResponseOneImagePathsItemMax = 500;
 
 export const createServiceResponseOneImagePathsMax = 10;
 
+export const createServiceResponseOnePrimaryImagePathMax = 500;
+
 export const createServiceResponseOnePriceFromCentsMin = 0;
+
+export const createServiceResponseOnePricingOptionsMax = 20;
 
 export const createServiceResponseOneServiceRadiusMin = 0;
 export const createServiceResponseOneServiceRadiusMax = 1000;
+
+export const createServiceResponseOneEstimatedDurationMin = 0;
+
+export const createServiceResponseOneLocationMax = 250;
+
+export const createServiceResponseOneTagsItemMax = 40;
+
+export const createServiceResponseOneTagsMax = 30;
 
 
 
@@ -1202,17 +2336,41 @@ export const CreateServiceResponse = zod.object({
   "description": zod.string().max(createServiceResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(createServiceResponseOneImagePathsItemMax)).max(createServiceResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(createServiceResponseOnePrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(createServiceResponseOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(createServiceResponseOnePricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(createServiceResponseOneServiceRadiusMin).max(createServiceResponseOneServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(createServiceResponseOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(createServiceResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(createServiceResponseOneTagsItemMax)).max(createServiceResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid().nullable(),
   "providerId": zod.string().uuid().nullable(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -1234,10 +2392,22 @@ export const updateServiceBodyImagePathsItemMax = 500;
 
 export const updateServiceBodyImagePathsMax = 10;
 
+export const updateServiceBodyPrimaryImagePathMax = 500;
+
 export const updateServiceBodyPriceFromCentsMin = 0;
+
+export const updateServiceBodyPricingOptionsMax = 20;
 
 export const updateServiceBodyServiceRadiusMin = 0;
 export const updateServiceBodyServiceRadiusMax = 1000;
+
+export const updateServiceBodyEstimatedDurationMin = 0;
+
+export const updateServiceBodyLocationMax = 250;
+
+export const updateServiceBodyTagsItemMax = 40;
+
+export const updateServiceBodyTagsMax = 30;
 
 
 
@@ -1246,11 +2416,22 @@ export const UpdateServiceBody = zod.object({
   "description": zod.string().max(updateServiceBodyDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(updateServiceBodyImagePathsItemMax)).max(updateServiceBodyImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(updateServiceBodyPrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(updateServiceBodyPriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(updateServiceBodyPricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(updateServiceBodyServiceRadiusMin).max(updateServiceBodyServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(updateServiceBodyEstimatedDurationMin).nullish(),
+  "location": zod.string().max(updateServiceBodyLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(updateServiceBodyTagsItemMax)).max(updateServiceBodyTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 })
 
 export const updateServiceResponseOneNameMin = 2;
@@ -1262,10 +2443,22 @@ export const updateServiceResponseOneImagePathsItemMax = 500;
 
 export const updateServiceResponseOneImagePathsMax = 10;
 
+export const updateServiceResponseOnePrimaryImagePathMax = 500;
+
 export const updateServiceResponseOnePriceFromCentsMin = 0;
+
+export const updateServiceResponseOnePricingOptionsMax = 20;
 
 export const updateServiceResponseOneServiceRadiusMin = 0;
 export const updateServiceResponseOneServiceRadiusMax = 1000;
+
+export const updateServiceResponseOneEstimatedDurationMin = 0;
+
+export const updateServiceResponseOneLocationMax = 250;
+
+export const updateServiceResponseOneTagsItemMax = 40;
+
+export const updateServiceResponseOneTagsMax = 30;
 
 
 
@@ -1274,17 +2467,41 @@ export const UpdateServiceResponse = zod.object({
   "description": zod.string().max(updateServiceResponseOneDescriptionMax).nullish(),
   "categoryId": zod.string().uuid().nullish(),
   "imagePaths": zod.array(zod.string().max(updateServiceResponseOneImagePathsItemMax)).max(updateServiceResponseOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(updateServiceResponseOnePrimaryImagePathMax).nullish(),
   "priceFromCents": zod.number().int().min(updateServiceResponseOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(updateServiceResponseOnePricingOptionsMax).nullish(),
   "serviceRadius": zod.number().int().min(updateServiceResponseOneServiceRadiusMin).max(updateServiceResponseOneServiceRadiusMax).nullish(),
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(updateServiceResponseOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(updateServiceResponseOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(updateServiceResponseOneTagsItemMax)).max(updateServiceResponseOneTagsMax).optional(),
   "isAvailable": zod.boolean().optional(),
-  "isVisible": zod.boolean().optional()
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "businessId": zod.string().uuid().nullable(),
   "providerId": zod.string().uuid().nullable(),
   "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -1334,6 +2551,110 @@ export const updateNewOnShopNearSettingsResponseDaysMax = 365;
 
 export const UpdateNewOnShopNearSettingsResponse = zod.object({
   "days": zod.number().int().min(updateNewOnShopNearSettingsResponseDaysMin).max(updateNewOnShopNearSettingsResponseDaysMax)
+})
+
+
+/**
+ * @summary List all product or service categories
+ */
+export const GetAdminCategoriesQueryParams = zod.object({
+  "type": zod.enum(['products', 'services'])
+})
+
+export const GetAdminCategoriesResponse = zod.object({
+  "type": zod.enum(['products', 'services']),
+  "categories": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "sortOrder": zod.number().int(),
+  "isVisible": zod.boolean(),
+  "isFeatured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create a product or service category
+ */
+export const createAdminCategoryBodyNameMin = 2;
+export const createAdminCategoryBodyNameMax = 100;
+
+export const createAdminCategoryBodySlugMin = 2;
+export const createAdminCategoryBodySlugMax = 120;
+
+export const createAdminCategoryBodySortOrderMin = 0;
+
+
+
+export const CreateAdminCategoryBody = zod.object({
+  "type": zod.enum(['products', 'services']),
+  "name": zod.string().min(createAdminCategoryBodyNameMin).max(createAdminCategoryBodyNameMax),
+  "slug": zod.string().min(createAdminCategoryBodySlugMin).max(createAdminCategoryBodySlugMax),
+  "sortOrder": zod.number().int().min(createAdminCategoryBodySortOrderMin).optional(),
+  "isVisible": zod.boolean().optional(),
+  "isFeatured": zod.boolean().optional()
+})
+
+export const CreateAdminCategoryResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "sortOrder": zod.number().int(),
+  "isVisible": zod.boolean(),
+  "isFeatured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a product or service category
+ */
+export const UpdateAdminCategoryParams = zod.object({
+  "type": zod.enum(['products', 'services']),
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateAdminCategoryBodyNameMin = 2;
+export const updateAdminCategoryBodyNameMax = 100;
+
+export const updateAdminCategoryBodySlugMin = 2;
+export const updateAdminCategoryBodySlugMax = 120;
+
+export const updateAdminCategoryBodySortOrderMin = 0;
+
+
+
+export const UpdateAdminCategoryBody = zod.object({
+  "name": zod.string().min(updateAdminCategoryBodyNameMin).max(updateAdminCategoryBodyNameMax).optional(),
+  "slug": zod.string().min(updateAdminCategoryBodySlugMin).max(updateAdminCategoryBodySlugMax).optional(),
+  "sortOrder": zod.number().int().min(updateAdminCategoryBodySortOrderMin).optional(),
+  "isVisible": zod.boolean().optional(),
+  "isFeatured": zod.boolean().optional()
+})
+
+export const UpdateAdminCategoryResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "sortOrder": zod.number().int(),
+  "isVisible": zod.boolean(),
+  "isFeatured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a product or service category
+ */
+export const DeleteAdminCategoryParams = zod.object({
+  "type": zod.enum(['products', 'services']),
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteAdminCategoryResponse = zod.object({
+  "message": zod.string()
 })
 
 

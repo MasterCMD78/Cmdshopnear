@@ -10,4 +10,8 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  sortOrder: number;
+  isVisible: boolean;
+  isFeatured: boolean;
+  createdAt: Date;
 }

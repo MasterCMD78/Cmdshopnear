@@ -299,12 +299,75 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  sortOrder: number;
+  isVisible: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+export type AdminCategoryInputType = typeof AdminCategoryInputType[keyof typeof AdminCategoryInputType];
+
+
+export const AdminCategoryInputType = {
+  products: 'products',
+  services: 'services',
+} as const;
+
+export interface AdminCategoryInput {
+  type: AdminCategoryInputType;
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  name: string;
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  slug: string;
+  /** @minimum 0 */
+  sortOrder?: number;
+  isVisible?: boolean;
+  isFeatured?: boolean;
+}
+
+export interface AdminCategoryUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  slug?: string;
+  /** @minimum 0 */
+  sortOrder?: number;
+  isVisible?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface MarketplaceCategories {
   products: Category[];
   services: Category[];
 }
+
+/**
+ * @nullable
+ */
+export type ProductInputSpecifications = { [key: string]: unknown } | null;
+
+export type ProductInputStatus = typeof ProductInputStatus[keyof typeof ProductInputStatus];
+
+
+export const ProductInputStatus = {
+  draft: 'draft',
+  published: 'published',
+  hidden: 'hidden',
+  scheduled: 'scheduled',
+  out_of_stock: 'out_of_stock',
+} as const;
 
 export interface ProductInput {
   /**
@@ -324,25 +387,111 @@ export interface ProductInput {
      * @items.maxLength 500
      */
   imagePaths?: string[];
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  primaryImagePath?: string | null;
   /** @minimum 0 */
   priceCents: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  regularPriceCents?: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  discountPriceCents?: number | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  brand?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  condition?: string | null;
+  /** @nullable */
+  specifications?: ProductInputSpecifications;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @maxItems 30
+     * @items.maxLength 40
+     */
+  tags?: string[];
   isAvailable?: boolean;
   isVisible?: boolean;
+  status?: ProductInputStatus;
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: string | null;
 }
 
-export type Product = ProductInput & {
+/**
+ * @nullable
+ */
+export type ProductSpecifications = { [key: string]: unknown } | null;
+
+export type Product = ProductInput & ({
   id: string;
   ownerId: string;
   businessId: string;
   status: string;
+  /** @nullable */
+  primaryImagePath?: string | null;
+  /** @nullable */
+  regularPriceCents?: number | null;
+  /** @nullable */
+  discountPriceCents?: number | null;
+  /** @nullable */
+  brand?: string | null;
+  /** @nullable */
+  condition?: string | null;
+  /** @nullable */
+  specifications?: ProductSpecifications;
+  /** @nullable */
+  location?: string | null;
+  tags?: string[];
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  viewCount?: number;
+  favoriteCount?: number;
   createdAt: string;
   updatedAt: string;
-};
+});
+
+export type ServiceInputPricingOptionsItem = { [key: string]: unknown };
 
 /**
  * @nullable
  */
 export type ServiceInputAvailability = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type ServiceInputWorkingHours = { [key: string]: unknown } | null;
+
+export type ServiceInputStatus = typeof ServiceInputStatus[keyof typeof ServiceInputStatus];
+
+
+export const ServiceInputStatus = {
+  draft: 'draft',
+  published: 'published',
+  hidden: 'hidden',
+  scheduled: 'scheduled',
+  out_of_stock: 'out_of_stock',
+} as const;
 
 export interface ServiceInput {
   /**
@@ -363,10 +512,20 @@ export interface ServiceInput {
      */
   imagePaths?: string[];
   /**
+     * @maxLength 500
+     * @nullable
+     */
+  primaryImagePath?: string | null;
+  /**
      * @minimum 0
      * @nullable
      */
   priceFromCents?: number | null;
+  /**
+     * @maxItems 20
+     * @nullable
+     */
+  pricingOptions?: ServiceInputPricingOptionsItem[] | null;
   /**
      * @minimum 0
      * @maximum 1000
@@ -375,9 +534,39 @@ export interface ServiceInput {
   serviceRadius?: number | null;
   /** @nullable */
   availability?: ServiceInputAvailability;
+  /** @nullable */
+  workingHours?: ServiceInputWorkingHours;
+  emergencyService?: boolean;
+  bookingReady?: boolean;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  estimatedDuration?: number | null;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @maxItems 30
+     * @items.maxLength 40
+     */
+  tags?: string[];
   isAvailable?: boolean;
   isVisible?: boolean;
+  status?: ServiceInputStatus;
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: string | null;
 }
+
+export type ServicePricingOptionsItem = { [key: string]: unknown };
+
+/**
+ * @nullable
+ */
+export type ServiceWorkingHours = { [key: string]: unknown } | null;
 
 export type Service = ServiceInput & ({
   id: string;
@@ -387,6 +576,26 @@ export type Service = ServiceInput & ({
   /** @nullable */
   providerId: string | null;
   status: string;
+  /** @nullable */
+  primaryImagePath?: string | null;
+  /** @nullable */
+  pricingOptions?: ServicePricingOptionsItem[] | null;
+  /** @nullable */
+  workingHours?: ServiceWorkingHours;
+  emergencyService?: boolean;
+  bookingReady?: boolean;
+  /** @nullable */
+  estimatedDuration?: number | null;
+  /** @nullable */
+  location?: string | null;
+  tags?: string[];
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  viewCount?: number;
+  favoriteCount?: number;
   createdAt: string;
   updatedAt: string;
 });
@@ -394,13 +603,65 @@ export type Service = ServiceInput & ({
 export interface MarketplaceCatalog {
   products: Product[];
   services: Service[];
+  page?: number;
+  limit?: number;
 }
+
+export interface FeaturedMarketplace {
+  featuredBusinesses: Business[];
+  featuredProducts: Product[];
+  featuredServices: Service[];
+  trendingProducts: Product[];
+  trendingServices: Service[];
+  newestBusinesses: Business[];
+  newestProviders: ServiceProvider[];
+  newestProducts: Product[];
+  newestServices: Service[];
+}
+
+export interface MarketplaceSearch {
+  businesses: Business[];
+  serviceProviders: ServiceProvider[];
+  products: Product[];
+  services: Service[];
+  page: number;
+  limit: number;
+}
+
+export type AdminCategoriesType = typeof AdminCategoriesType[keyof typeof AdminCategoriesType];
+
+
+export const AdminCategoriesType = {
+  products: 'products',
+  services: 'services',
+} as const;
+
+export interface AdminCategories {
+  type: AdminCategoriesType;
+  categories: Category[];
+}
+
+export type BusinessDashboardMetricsRecentActivityItem = { [key: string]: unknown };
+
+export type BusinessDashboardMetricsSales = { [key: string]: unknown };
+
+export type BusinessDashboardMetricsAnalytics = { [key: string]: unknown };
 
 export type BusinessDashboardMetrics = {
   products: number;
   availableProducts: number;
   services: number;
   visibleProducts: number;
+  featuredProducts: number;
+  views: number;
+  favorites: number;
+  messages: number;
+  verificationStatus: string;
+  visibility: string;
+  recentActivity: BusinessDashboardMetricsRecentActivityItem[];
+  quickActions: string[];
+  sales: BusinessDashboardMetricsSales;
+  analytics: BusinessDashboardMetricsAnalytics;
 };
 
 export interface BusinessDashboard {
@@ -448,5 +709,54 @@ export type GetMarketplaceCatalogParams = {
  * @maxLength 120
  */
 query?: string;
+categoryId?: string;
+featured?: boolean;
+newest?: boolean;
+/**
+ * @maxLength 40
+ */
+tag?: string;
+/**
+ * @maxLength 120
+ */
+location?: string;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
 };
+
+export type SearchMarketplaceParams = {
+/**
+ * @maxLength 120
+ */
+query?: string;
+verified?: boolean;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type GetAdminCategoriesParams = {
+type: GetAdminCategoriesType;
+};
+
+export type GetAdminCategoriesType = typeof GetAdminCategoriesType[keyof typeof GetAdminCategoriesType];
+
+
+export const GetAdminCategoriesType = {
+  products: 'products',
+  services: 'services',
+} as const;
 

@@ -5,10 +5,23 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { BusinessDashboardMetricsAnalytics } from './businessDashboardMetricsAnalytics';
+import type { BusinessDashboardMetricsRecentActivityItem } from './businessDashboardMetricsRecentActivityItem';
+import type { BusinessDashboardMetricsSales } from './businessDashboardMetricsSales';
 
 export type BusinessDashboardMetrics = {
   products: number;
   availableProducts: number;
   services: number;
   visibleProducts: number;
+  featuredProducts: number;
+  views: number;
+  favorites: number;
+  messages: number;
+  verificationStatus: string;
+  visibility: string;
+  recentActivity: BusinessDashboardMetricsRecentActivityItem[];
+  quickActions: string[];
+  sales: BusinessDashboardMetricsSales;
+  analytics: BusinessDashboardMetricsAnalytics;
 };

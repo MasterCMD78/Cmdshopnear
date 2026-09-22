@@ -22,3 +22,8 @@
 - Added product and service CRUD APIs with availability, visibility, pricing, service radius, and audit logging.
 - Added public marketplace catalog/category endpoints and a business dashboard metrics endpoint.
 - Added mobile-first product/service management controls to the authenticated Profile surface without changing the existing navigation or brand.
+- Added listing metadata for images, primary images, regular/discount pricing, brands, conditions, specifications, locations, tags, featured state, and publication scheduling.
+- Added featured, trending/newest, location/tag-filtered catalog discovery and cross-entity marketplace search.
+- Added administrator category CRUD endpoints and expanded business dashboard metrics for visibility, featured listings, views, favorites, and follow-up analytics placeholders.
+- Updated the existing Search surface to read marketplace results from the API and expanded the Profile dashboard panel to show the returned metrics.
+- Regenerated OpenAPI client/Zod types and verified the additive schema changes against the development database.

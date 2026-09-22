@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ServiceInput } from './serviceInput';
+import type { ServicePricingOptionsItem } from './servicePricingOptionsItem';
+import type { ServiceWorkingHours } from './serviceWorkingHours';
 
 export type Service = ServiceInput & ({
   id: string;
@@ -15,6 +17,26 @@ export type Service = ServiceInput & ({
   /** @nullable */
   providerId: string | null;
   status: string;
+  /** @nullable */
+  primaryImagePath?: string | null;
+  /** @nullable */
+  pricingOptions?: ServicePricingOptionsItem[] | null;
+  /** @nullable */
+  workingHours?: ServiceWorkingHours;
+  emergencyService?: boolean;
+  bookingReady?: boolean;
+  /** @nullable */
+  estimatedDuration?: number | null;
+  /** @nullable */
+  location?: string | null;
+  tags?: string[];
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: Date | null;
+  /** @nullable */
+  publishedAt?: Date | null;
+  viewCount?: number;
+  favoriteCount?: number;
   createdAt: Date;
   updatedAt: Date;
 });

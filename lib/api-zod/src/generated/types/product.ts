@@ -6,12 +6,35 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ProductInput } from './productInput';
+import type { ProductSpecifications } from './productSpecifications';
 
-export type Product = ProductInput & {
+export type Product = ProductInput & ({
   id: string;
   ownerId: string;
   businessId: string;
   status: string;
+  /** @nullable */
+  primaryImagePath?: string | null;
+  /** @nullable */
+  regularPriceCents?: number | null;
+  /** @nullable */
+  discountPriceCents?: number | null;
+  /** @nullable */
+  brand?: string | null;
+  /** @nullable */
+  condition?: string | null;
+  /** @nullable */
+  specifications?: ProductSpecifications;
+  /** @nullable */
+  location?: string | null;
+  tags?: string[];
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: Date | null;
+  /** @nullable */
+  publishedAt?: Date | null;
+  viewCount?: number;
+  favoriteCount?: number;
   createdAt: Date;
   updatedAt: Date;
-};
+});

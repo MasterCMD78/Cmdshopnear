@@ -5,12 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Business } from './business';
 import type { Product } from './product';
 import type { Service } from './service';
+import type { ServiceProvider } from './serviceProvider';
 
-export interface MarketplaceCatalog {
+export interface MarketplaceSearch {
+  businesses: Business[];
+  serviceProviders: ServiceProvider[];
   products: Product[];
   services: Service[];
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
 }

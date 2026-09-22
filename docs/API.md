@@ -33,8 +33,10 @@ The upload endpoint accepts metadata only. The client uploads the file directly 
 
 ## Marketplace management
 
-- `GET /marketplace/categories` — list product and service categories
-- `GET /marketplace/catalog?query=` — list visible and available products and services
+- `GET /marketplace/categories` — list visible product and service categories
+- `GET /marketplace/catalog?query=&categoryId=&featured=&newest=&location=&tag=&page=&limit=` — list visible, available, published products and services with discovery filters
+- `GET /marketplace/featured` — return featured, trending/newest products and services plus approved businesses/providers
+- `GET /marketplace/search?query=&verified=&page=&limit=` — search businesses, service providers, products, and services
 - `GET /business/dashboard` — return business marketplace metrics
 - `GET /business/products` — list the authenticated business's products
 - `POST /business/products` — create a product
@@ -51,5 +53,9 @@ Product and service mutations are owner-scoped in the API. The UI provides the f
 
 - `GET /admin/settings/new-on-shopnear` — read the configured window
 - `PUT /admin/settings/new-on-shopnear` — update the window as an administrator
+- `GET /admin/categories?type=products|services` — list all categories as an administrator
+- `POST /admin/categories` — create a product or service category
+- `PUT /admin/categories/:type/:id` — update a category's name, slug, ordering, or visibility
+- `DELETE /admin/categories/:type/:id` — delete a category
 
 Protected routes return `401` when there is no valid session and `403` when the role is not allowed.

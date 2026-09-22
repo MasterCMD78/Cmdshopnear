@@ -6,22 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetMarketplaceCatalogParams = {
+export type SearchMarketplaceParams = {
 /**
  * @maxLength 120
  */
 query?: string;
-categoryId?: string;
-featured?: boolean;
-newest?: boolean;
-/**
- * @maxLength 40
- */
-tag?: string;
-/**
- * @maxLength 120
- */
-location?: string;
+verified?: boolean;
 /**
  * @minimum 1
  */

@@ -20,15 +20,22 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminCategories,
+  AdminCategoryInput,
+  AdminCategoryUpdate,
   AuthResult,
   Business,
   BusinessDashboard,
   BusinessInput,
   BusinessUpdate,
+  Category,
+  FeaturedMarketplace,
+  GetAdminCategoriesParams,
   GetMarketplaceCatalogParams,
   HealthStatus,
   MarketplaceCatalog,
   MarketplaceCategories,
+  MarketplaceSearch,
   Message,
   NewOnShopNear,
   NewOnShopNearSettings,
@@ -39,6 +46,7 @@ import type {
   ProductInput,
   ProfileUpdate,
   Registration,
+  SearchMarketplaceParams,
   Service,
   ServiceInput,
   ServiceProvider,
@@ -1655,6 +1663,167 @@ export function useGetMarketplaceCatalog<TData = Awaited<ReturnType<typeof getMa
 
 
 
+export const getGetFeaturedMarketplaceUrl = () => {
+
+
+
+
+  return `/api/marketplace/featured`
+}
+
+/**
+ * @summary List featured, trending, and newest marketplace records
+ */
+export const getFeaturedMarketplace = async ( options?: Parameters<typeof customFetch>[1]): Promise<FeaturedMarketplace> => {
+
+  return customFetch<FeaturedMarketplace>(getGetFeaturedMarketplaceUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFeaturedMarketplaceQueryKey = () => {
+    return [
+    `/api/marketplace/featured`
+    ] as const;
+    }
+
+
+export const getGetFeaturedMarketplaceQueryOptions = <TData = Awaited<ReturnType<typeof getFeaturedMarketplace>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeaturedMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFeaturedMarketplaceQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeaturedMarketplace>>> = ({ signal }) => getFeaturedMarketplace({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFeaturedMarketplace>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFeaturedMarketplaceQueryResult = NonNullable<Awaited<ReturnType<typeof getFeaturedMarketplace>>>
+export type GetFeaturedMarketplaceQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List featured, trending, and newest marketplace records
+ */
+
+export function useGetFeaturedMarketplace<TData = Awaited<ReturnType<typeof getFeaturedMarketplace>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeaturedMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFeaturedMarketplaceQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchMarketplaceUrl = (params?: SearchMarketplaceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/marketplace/search?${stringifiedParams}` : `/api/marketplace/search`
+}
+
+/**
+ * @summary Search businesses, providers, products, and services
+ */
+export const searchMarketplace = async (params?: SearchMarketplaceParams, options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceSearch> => {
+
+  return customFetch<MarketplaceSearch>(getSearchMarketplaceUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchMarketplaceQueryKey = (params?: SearchMarketplaceParams,) => {
+    return [
+    `/api/marketplace/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchMarketplaceQueryOptions = <TData = Awaited<ReturnType<typeof searchMarketplace>>, TError = ErrorType<unknown>>(params?: SearchMarketplaceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchMarketplaceQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchMarketplace>>> = ({ signal }) => searchMarketplace(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchMarketplace>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchMarketplaceQueryResult = NonNullable<Awaited<ReturnType<typeof searchMarketplace>>>
+export type SearchMarketplaceQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Search businesses, providers, products, and services
+ */
+
+export function useSearchMarketplace<TData = Awaited<ReturnType<typeof searchMarketplace>>, TError = ErrorType<unknown>>(
+ params?: SearchMarketplaceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchMarketplaceQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetBusinessDashboardUrl = () => {
 
 
@@ -2551,6 +2720,345 @@ export const useUpdateNewOnShopNearSettings = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateNewOnShopNearSettingsMutationOptions(options));
+    }
+
+export const getGetAdminCategoriesUrl = (params: GetAdminCategoriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/categories?${stringifiedParams}` : `/api/admin/categories`
+}
+
+/**
+ * @summary List all product or service categories
+ */
+export const getAdminCategories = async (params: GetAdminCategoriesParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminCategories> => {
+
+  return customFetch<AdminCategories>(getGetAdminCategoriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminCategoriesQueryKey = (params?: GetAdminCategoriesParams,) => {
+    return [
+    `/api/admin/categories`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAdminCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getAdminCategories>>, TError = ErrorType<unknown>>(params: GetAdminCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminCategoriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminCategories>>> = ({ signal }) => getAdminCategories(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminCategories>>>
+export type GetAdminCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all product or service categories
+ */
+
+export function useGetAdminCategories<TData = Awaited<ReturnType<typeof getAdminCategories>>, TError = ErrorType<unknown>>(
+ params: GetAdminCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminCategoriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAdminCategoryUrl = () => {
+
+
+
+
+  return `/api/admin/categories`
+}
+
+/**
+ * @summary Create a product or service category
+ */
+export const createAdminCategory = async (adminCategoryInput: AdminCategoryInput, options?: Parameters<typeof customFetch>[1]): Promise<Category> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Category>(getCreateAdminCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminCategoryInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAdminCategoryMutationKey = () => ['createAdminCategory'] as const;
+
+export const getCreateAdminCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminCategory>>, TError,CreateAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminCategory>>, TError,CreateAdminCategoryMutationVariables, TContext> => {
+
+const mutationKey = getCreateAdminCategoryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminCategory>>, CreateAdminCategoryMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminCategory>>>
+    export type CreateAdminCategoryMutationBody = BodyType<AdminCategoryInput>
+    export type CreateAdminCategoryMutationError = ErrorType<unknown>
+    export type CreateAdminCategoryMutationVariables = {data: BodyType<AdminCategoryInput>}
+
+    /**
+ * @summary Create a product or service category
+ */
+export const useCreateAdminCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminCategory>>, TError,CreateAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminCategory>>,
+        TError,
+        CreateAdminCategoryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAdminCategoryMutationOptions(options));
+    }
+
+export const getUpdateAdminCategoryUrl = (type: 'products' | 'services',
+    id: string,) => {
+
+
+
+
+  return `/api/admin/categories/${type}/${id}`
+}
+
+/**
+ * @summary Update a product or service category
+ */
+export const updateAdminCategory = async (type: 'products' | 'services',
+    id: string,
+    adminCategoryUpdate: AdminCategoryUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Category> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Category>(getUpdateAdminCategoryUrl(type,id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminCategoryUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminCategoryMutationKey = () => ['updateAdminCategory'] as const;
+
+export const getUpdateAdminCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminCategory>>, TError,UpdateAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminCategory>>, TError,UpdateAdminCategoryMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdminCategoryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminCategory>>, UpdateAdminCategoryMutationVariables> = (props) => {
+          const {type,id,data} = props ?? {};
+
+          return  updateAdminCategory(type,id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminCategory>>>
+    export type UpdateAdminCategoryMutationBody = BodyType<AdminCategoryUpdate>
+    export type UpdateAdminCategoryMutationError = ErrorType<unknown>
+    export type UpdateAdminCategoryMutationVariables = {type: 'products' | 'services';id: string;data: BodyType<AdminCategoryUpdate>}
+
+    /**
+ * @summary Update a product or service category
+ */
+export const useUpdateAdminCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminCategory>>, TError,UpdateAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminCategory>>,
+        TError,
+        UpdateAdminCategoryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdminCategoryMutationOptions(options));
+    }
+
+export const getDeleteAdminCategoryUrl = (type: 'products' | 'services',
+    id: string,) => {
+
+
+
+
+  return `/api/admin/categories/${type}/${id}`
+}
+
+/**
+ * @summary Delete a product or service category
+ */
+export const deleteAdminCategory = async (type: 'products' | 'services',
+    id: string, options?: Parameters<typeof customFetch>[1]): Promise<Message> => {
+
+  return customFetch<Message>(getDeleteAdminCategoryUrl(type,id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminCategoryMutationKey = () => ['deleteAdminCategory'] as const;
+
+export const getDeleteAdminCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCategory>>, TError,DeleteAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCategory>>, TError,DeleteAdminCategoryMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAdminCategoryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminCategory>>, DeleteAdminCategoryMutationVariables> = (props) => {
+          const {type,id} = props ?? {};
+
+          return  deleteAdminCategory(type,id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminCategory>>>
+
+    export type DeleteAdminCategoryMutationError = ErrorType<unknown>
+    export type DeleteAdminCategoryMutationVariables = {type: 'products' | 'services';id: string}
+
+    /**
+ * @summary Delete a product or service category
+ */
+export const useDeleteAdminCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCategory>>, TError,DeleteAdminCategoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminCategory>>,
+        TError,
+        DeleteAdminCategoryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAdminCategoryMutationOptions(options));
     }
 
 export const getRequestUploadUrlUrl = () => {

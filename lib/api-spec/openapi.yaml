@@ -21,7 +21,7 @@ tags:
   - name: marketplace
     description: Discovery surfaces
   - name: admin
-    description: Administrator-only settings
+    description: Administrator-only settings and category management
   - name: storage
     description: Authenticated media upload preparation
 paths:
@@ -324,6 +324,27 @@ paths:
           in: query
           required: false
           schema: { type: string, maxLength: 120 }
+        - name: categoryId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: featured
+          in: query
+          schema: { type: boolean }
+        - name: newest
+          in: query
+          schema: { type: boolean }
+        - name: tag
+          in: query
+          schema: { type: string, maxLength: 40 }
+        - name: location
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
         "200":
           description: Marketplace catalog
@@ -331,6 +352,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketplaceCatalog"
+  /marketplace/featured:
+    get:
+      operationId: getFeaturedMarketplace
+      tags: [marketplace]
+      summary: List featured, trending, and newest marketplace records
+      responses:
+        "200":
+          description: Featured marketplace records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeaturedMarketplace"
+  /marketplace/search:
+    get:
+      operationId: searchMarketplace
+      tags: [marketplace]
+      summary: Search businesses, providers, products, and services
+      parameters:
+        - name: query
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: verified
+          in: query
+          schema: { type: boolean }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Marketplace search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceSearch"
   /business/dashboard:
     get:
       operationId: getBusinessDashboard
@@ -482,6 +540,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NewOnShopNearSettings"
+  /admin/categories:
+    get:
+      operationId: getAdminCategories
+      tags: [admin]
+      summary: List all product or service categories
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema: { type: string, enum: [products, services] }
+      responses:
+        "200":
+          description: Category administration list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCategories"
+    post:
+      operationId: createAdminCategory
+      tags: [admin]
+      summary: Create a product or service category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+  /admin/categories/{type}/{id}:
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema: { type: string, enum: [products, services] }
+      - $ref: "#/components/parameters/Id"
+    put:
+      operationId: updateAdminCategory
+      tags: [admin]
+      summary: Update a product or service category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCategoryUpdate"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteAdminCategory
+      tags: [admin]
+      summary: Delete a product or service category
+      responses:
+        "200":
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -738,7 +865,29 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         slug: { type: string }
-      required: [id, name, slug]
+        sortOrder: { type: integer }
+        isVisible: { type: boolean }
+        isFeatured: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, name, slug, sortOrder, isVisible, isFeatured, createdAt]
+    AdminCategoryInput:
+      type: object
+      properties:
+        type: { type: string, enum: [products, services] }
+        name: { type: string, minLength: 2, maxLength: 100 }
+        slug: { type: string, minLength: 2, maxLength: 120 }
+        sortOrder: { type: integer, minimum: 0 }
+        isVisible: { type: boolean }
+        isFeatured: { type: boolean }
+      required: [type, name, slug]
+    AdminCategoryUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        slug: { type: string, minLength: 2, maxLength: 120 }
+        sortOrder: { type: integer, minimum: 0 }
+        isVisible: { type: boolean }
+        isFeatured: { type: boolean }
     MarketplaceCategories:
       type: object
       properties:
@@ -756,9 +905,20 @@ components:
         description: { type: ["string", "null"], maxLength: 2000 }
         categoryId: { type: ["string", "null"], format: uuid }
         imagePaths: { type: array, items: { type: string, maxLength: 500 }, maxItems: 10 }
+        primaryImagePath: { type: ["string", "null"], maxLength: 500 }
         priceCents: { type: integer, minimum: 0 }
+        regularPriceCents: { type: ["integer", "null"], minimum: 0 }
+        discountPriceCents: { type: ["integer", "null"], minimum: 0 }
+        brand: { type: ["string", "null"], maxLength: 120 }
+        condition: { type: ["string", "null"], maxLength: 80 }
+        specifications: { type: ["object", "null"], additionalProperties: true }
+        location: { type: ["string", "null"], maxLength: 250 }
+        tags: { type: array, items: { type: string, maxLength: 40 }, maxItems: 30 }
         isAvailable: { type: boolean }
         isVisible: { type: boolean }
+        status: { type: string, enum: [draft, published, hidden, scheduled, out_of_stock] }
+        isFeatured: { type: boolean }
+        scheduledAt: { type: ["string", "null"], format: date-time }
       required: [name, priceCents]
     Product:
       allOf:
@@ -769,6 +929,19 @@ components:
             ownerId: { type: string, format: uuid }
             businessId: { type: string, format: uuid }
             status: { type: string }
+            primaryImagePath: { type: ["string", "null"] }
+            regularPriceCents: { type: ["integer", "null"] }
+            discountPriceCents: { type: ["integer", "null"] }
+            brand: { type: ["string", "null"] }
+            condition: { type: ["string", "null"] }
+            specifications: { type: ["object", "null"], additionalProperties: true }
+            location: { type: ["string", "null"] }
+            tags: { type: array, items: { type: string } }
+            isFeatured: { type: boolean }
+            scheduledAt: { type: ["string", "null"], format: date-time }
+            publishedAt: { type: ["string", "null"], format: date-time }
+            viewCount: { type: integer }
+            favoriteCount: { type: integer }
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
           required: [id, ownerId, businessId, status, createdAt, updatedAt]
@@ -779,11 +952,22 @@ components:
         description: { type: ["string", "null"], maxLength: 2000 }
         categoryId: { type: ["string", "null"], format: uuid }
         imagePaths: { type: array, items: { type: string, maxLength: 500 }, maxItems: 10 }
+        primaryImagePath: { type: ["string", "null"], maxLength: 500 }
         priceFromCents: { type: ["integer", "null"], minimum: 0 }
+        pricingOptions: { type: ["array", "null"], items: { type: object, additionalProperties: true }, maxItems: 20 }
         serviceRadius: { type: ["integer", "null"], minimum: 0, maximum: 1000 }
         availability: { type: ["object", "null"], additionalProperties: true }
+        workingHours: { type: ["object", "null"], additionalProperties: true }
+        emergencyService: { type: boolean }
+        bookingReady: { type: boolean }
+        estimatedDuration: { type: ["integer", "null"], minimum: 0 }
+        location: { type: ["string", "null"], maxLength: 250 }
+        tags: { type: array, items: { type: string, maxLength: 40 }, maxItems: 30 }
         isAvailable: { type: boolean }
         isVisible: { type: boolean }
+        status: { type: string, enum: [draft, published, hidden, scheduled, out_of_stock] }
+        isFeatured: { type: boolean }
+        scheduledAt: { type: ["string", "null"], format: date-time }
       required: [name]
     Service:
       allOf:
@@ -795,6 +979,19 @@ components:
             businessId: { type: ["string", "null"], format: uuid }
             providerId: { type: ["string", "null"], format: uuid }
             status: { type: string }
+            primaryImagePath: { type: ["string", "null"] }
+            pricingOptions: { type: ["array", "null"], items: { type: object, additionalProperties: true } }
+            workingHours: { type: ["object", "null"], additionalProperties: true }
+            emergencyService: { type: boolean }
+            bookingReady: { type: boolean }
+            estimatedDuration: { type: ["integer", "null"] }
+            location: { type: ["string", "null"] }
+            tags: { type: array, items: { type: string } }
+            isFeatured: { type: boolean }
+            scheduledAt: { type: ["string", "null"], format: date-time }
+            publishedAt: { type: ["string", "null"], format: date-time }
+            viewCount: { type: integer }
+            favoriteCount: { type: integer }
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
           required: [id, ownerId, businessId, providerId, status, createdAt, updatedAt]
@@ -807,7 +1004,38 @@ components:
         services:
           type: array
           items: { $ref: "#/components/schemas/Service" }
+        page: { type: integer }
+        limit: { type: integer }
       required: [products, services]
+    FeaturedMarketplace:
+      type: object
+      properties:
+        featuredBusinesses: { type: array, items: { $ref: "#/components/schemas/Business" } }
+        featuredProducts: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        featuredServices: { type: array, items: { $ref: "#/components/schemas/Service" } }
+        trendingProducts: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        trendingServices: { type: array, items: { $ref: "#/components/schemas/Service" } }
+        newestBusinesses: { type: array, items: { $ref: "#/components/schemas/Business" } }
+        newestProviders: { type: array, items: { $ref: "#/components/schemas/ServiceProvider" } }
+        newestProducts: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        newestServices: { type: array, items: { $ref: "#/components/schemas/Service" } }
+      required: [featuredBusinesses, featuredProducts, featuredServices, trendingProducts, trendingServices, newestBusinesses, newestProviders, newestProducts, newestServices]
+    MarketplaceSearch:
+      type: object
+      properties:
+        businesses: { type: array, items: { $ref: "#/components/schemas/Business" } }
+        serviceProviders: { type: array, items: { $ref: "#/components/schemas/ServiceProvider" } }
+        products: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        services: { type: array, items: { $ref: "#/components/schemas/Service" } }
+        page: { type: integer }
+        limit: { type: integer }
+      required: [businesses, serviceProviders, products, services, page, limit]
+    AdminCategories:
+      type: object
+      properties:
+        type: { type: string, enum: [products, services] }
+        categories: { type: array, items: { $ref: "#/components/schemas/Category" } }
+      required: [type, categories]
     BusinessDashboard:
       type: object
       properties:
@@ -822,7 +1050,17 @@ components:
             availableProducts: { type: integer }
             services: { type: integer }
             visibleProducts: { type: integer }
-          required: [products, availableProducts, services, visibleProducts]
+            featuredProducts: { type: integer }
+            views: { type: integer }
+            favorites: { type: integer }
+            messages: { type: integer }
+            verificationStatus: { type: string }
+            visibility: { type: string }
+            recentActivity: { type: array, items: { type: object, additionalProperties: true } }
+            quickActions: { type: array, items: { type: string } }
+            sales: { type: object, additionalProperties: true }
+            analytics: { type: object, additionalProperties: true }
+          required: [products, availableProducts, services, visibleProducts, featuredProducts, views, favorites, messages, verificationStatus, visibility, recentActivity, quickActions, sales, analytics]
       required: [business, metrics]
     UploadRequest:
       type: object

@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ProductInputSpecifications } from './productInputSpecifications';
+import type { ProductInputStatus } from './productInputStatus';
 
 export interface ProductInput {
   /**
@@ -24,8 +26,49 @@ export interface ProductInput {
      * @items.maxLength 500
      */
   imagePaths?: string[];
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  primaryImagePath?: string | null;
   /** @minimum 0 */
   priceCents: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  regularPriceCents?: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  discountPriceCents?: number | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  brand?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  condition?: string | null;
+  /** @nullable */
+  specifications?: ProductInputSpecifications;
+  /**
+     * @maxLength 250
+     * @nullable
+     */
+  location?: string | null;
+  /**
+     * @maxItems 30
+     * @items.maxLength 40
+     */
+  tags?: string[];
   isAvailable?: boolean;
   isVisible?: boolean;
+  status?: ProductInputStatus;
+  isFeatured?: boolean;
+  /** @nullable */
+  scheduledAt?: Date | null;
 }

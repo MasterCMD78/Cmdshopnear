@@ -26,9 +26,9 @@ The project does not contain a committed migration directory. `drizzle-kit push`
 
 ## Phase 3 marketplace tables
 
-- `product_categories` and `service_categories` — normalized marketplace category records
-- `products` — business-owned product names, descriptions, image object paths, integer prices, availability, visibility, and publication status
-- `services` — business/provider-owned service names, descriptions, image object paths, starting prices, service radius, availability, visibility, and publication status
+- `product_categories` and `service_categories` — normalized marketplace category records with ordering, visibility, and featured flags
+- `products` — business-owned product names, descriptions, image object paths, integer prices, brand/condition/specification metadata, location/tags, availability, visibility, featured state, and publication scheduling
+- `services` — business/provider-owned service names, descriptions, image object paths, starting prices, pricing options, service radius, working hours, booking/emergency flags, duration, location/tags, availability, visibility, featured state, and publication scheduling
 
 Product and service ownership is tied to the authenticated user and the related business/provider record. Prices are stored as integer cents to avoid floating-point currency drift.
 
@@ -45,8 +45,9 @@ The schema uses the names and concepts from the official specification. Nullable
 ## Verification
 
 - Database connection: successful through `DATABASE_URL`
-- Schema: seven tables created and confirmed against the Drizzle definitions
+- Schema: marketplace additions were applied successfully through the existing Drizzle push workflow
 - Foreign keys: four validated relationships are present
 - Indexes: primary-key indexes and the unique indexes for `users.phone` and `sessions.token_hash` are present
 - Seed/demo data: none exists in the project; marketplace category and listing tables are empty until an authenticated owner creates records
 - API: `GET /api/healthz` returns `{"status":"ok"}`
+- Marketplace smoke checks: categories, catalog, featured discovery, and search return valid empty-state envelopes with the current unseeded database

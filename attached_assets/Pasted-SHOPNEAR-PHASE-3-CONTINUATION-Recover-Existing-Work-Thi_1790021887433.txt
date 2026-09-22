@@ -1,0 +1,354 @@
+SHOPNEAR PHASE 3 CONTINUATION (Recover Existing Work)
+
+This is NOT a new project.
+
+This repository already contains the completed work from:
+
+* Phase 1
+* Phase 2
+* Phase 3 (partially completed)
+
+Do NOT rebuild any completed functionality.
+
+Do NOT redesign the UI.
+
+Do NOT replace existing architecture.
+
+Your job is to recover the current project state and continue only from where the previous implementation stopped.
+
+⸻
+
+STEP 1 — PROJECT RECOVERY
+
+Before writing any code, inspect and understand the existing implementation.
+
+Read completely:
+
+* replit.md
+* PROJECT_MEMORY.md
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* OpenAPI specification
+* Drizzle schema
+* Existing API routes
+* Frontend routes
+* Marketplace components
+
+Treat these as the project’s source of truth.
+
+Do not overwrite existing architecture decisions.
+
+⸻
+
+STEP 2 — VERIFY CURRENT IMPLEMENTATION
+
+Verify the current implementation before making changes.
+
+Already completed:
+
+✅ Authentication
+
+✅ OTP
+
+✅ JWT Sessions
+
+✅ Customer
+
+✅ Business
+
+✅ Service Provider
+
+✅ Admin
+
+✅ PostgreSQL
+
+✅ Neon Database
+
+✅ Product CRUD
+
+✅ Service CRUD
+
+✅ Ownership Validation
+
+✅ Dashboard Foundation
+
+✅ Marketplace Foundation
+
+✅ Search Foundation
+
+✅ Featured APIs
+
+✅ Trending APIs
+
+✅ Categories Foundation
+
+✅ OpenAPI
+
+✅ Documentation
+
+Do not rebuild these.
+
+Only verify and extend them.
+
+⸻
+
+STEP 3 — CONTINUE PHASE 3
+
+The previous implementation stopped while extending the marketplace.
+
+Continue from that exact point.
+
+Complete the remaining Marketplace Management features.
+
+⸻
+
+Product Management
+
+Finish support for:
+
+* Multiple Images
+* Image Gallery
+* Primary Image
+* Product Status
+* Draft
+* Published
+* Hidden
+* Scheduled
+* Out of Stock
+* Product Tags
+* Discount Price
+* Regular Price
+* Brand
+* Condition
+* Specifications
+* Product Location
+
+Verify all ownership rules.
+
+⸻
+
+Service Management
+
+Finish:
+
+* Portfolio Gallery
+* Service Images
+* Availability
+* Working Hours
+* Emergency Service
+* Booking Ready
+* Service Radius
+* Estimated Duration
+* Multiple Pricing Options
+
+⸻
+
+Business Dashboard
+
+Complete:
+
+Overview
+
+Products Count
+
+Services Count
+
+Views
+
+Favorites
+
+Messages
+
+Verification Status
+
+Visibility
+
+Recent Activity
+
+Quick Actions
+
+Sales Placeholder
+
+Analytics Placeholder
+
+⸻
+
+Categories
+
+Finish PostgreSQL-backed category management.
+
+Support:
+
+Product Categories
+
+Service Categories
+
+Admin CRUD
+
+Ordering
+
+Visibility
+
+Featured Categories
+
+⸻
+
+Featured Marketplace
+
+Complete:
+
+Featured Businesses
+
+Featured Products
+
+Featured Services
+
+Trending Products
+
+Trending Services
+
+Newest Businesses
+
+Newest Providers
+
+Newest Products
+
+Newest Services
+
+⸻
+
+Search
+
+Finish:
+
+Business Search
+
+Product Search
+
+Service Search
+
+Category Filter
+
+Verified Filter
+
+Featured Filter
+
+Newest Filter
+
+Tags
+
+Location
+
+Pagination
+
+Sorting
+
+Loading States
+
+Empty States
+
+⸻
+
+API
+
+Synchronize:
+
+OpenAPI
+
+Generated Clients
+
+Validation Schemas
+
+Ensure every new endpoint is documented.
+
+⸻
+
+Database
+
+Verify:
+
+Drizzle Schema
+
+Migrations
+
+Indexes
+
+Foreign Keys
+
+Performance
+
+Do not redesign existing tables.
+
+Only extend if absolutely necessary.
+
+⸻
+
+STEP 4 — DOCUMENTATION
+
+Update only where necessary.
+
+Keep synchronized:
+
+* replit.md
+* PROJECT_MEMORY.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+
+Never leave documentation behind the implementation.
+
+⸻
+
+STEP 5 — TESTING
+
+Run:
+
+* Typecheck
+* Production Build
+* API Build
+* Database Verification
+* Marketplace CRUD Tests
+* Ownership Tests
+* Category Tests
+* Search Tests
+* Dashboard Tests
+* API Smoke Tests
+
+Fix only genuine defects.
+
+Do not refactor working code unnecessarily.
+
+⸻
+
+STEP 6 — PHASE 3 COMPLETION REPORT
+
+When every Phase 3 requirement is complete:
+
+Generate a detailed report including:
+
+* Completed Features
+* Database Changes
+* API Endpoints
+* Search Capabilities
+* Marketplace Features
+* Dashboard Features
+* Documentation Updated
+* Test Results
+* Remaining Recommendations
+
+Update:
+
+* replit.md
+* PROJECT_MEMORY.md
+
+Then stop.
+
+Do NOT begin Phase 4 automatically.
+
+Wait for my approval.
