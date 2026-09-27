@@ -11,3 +11,5 @@ The web app and API use managed artifact workflows. The API workflow provides th
 - Object storage variables when uploads are enabled
 
 Do not print or commit secret values. Apply database schema changes through the development database workflow before publishing.
+
+Phase 4 does not require a schema migration in this environment because the existing database already contains the entity-based `favorites` table. The API and web workflows remain the supported runtime entry points.

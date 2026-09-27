@@ -29,6 +29,7 @@ The project does not contain a committed migration directory. `drizzle-kit push`
 - `product_categories` and `service_categories` — normalized marketplace category records with ordering, visibility, and featured flags
 - `products` — business-owned product names, descriptions, image object paths, integer prices, brand/condition/specification metadata, location/tags, availability, visibility, featured state, and publication scheduling
 - `services` — business/provider-owned service names, descriptions, image object paths, starting prices, pricing options, service radius, working hours, booking/emergency flags, duration, location/tags, availability, visibility, featured state, and publication scheduling
+- `favorites` — authenticated user/entity saves using `entity_type` and `entity_id`, with a unique `(user_id, entity_type, entity_id)` index
 
 Product and service ownership is tied to the authenticated user and the related business/provider record. Prices are stored as integer cents to avoid floating-point currency drift.
 
@@ -51,3 +52,4 @@ The schema uses the names and concepts from the official specification. Nullable
 - Seed/demo data: none exists in the project; marketplace category and listing tables are empty until an authenticated owner creates records
 - API: `GET /api/healthz` returns `{"status":"ok"}`
 - Marketplace smoke checks: categories, catalog, featured discovery, and search return valid empty-state envelopes with the current unseeded database
+- Phase 4 reconciliation: the existing entity-based `favorites` table was matched in Drizzle; no destructive migration or table recreation was performed.

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@workspace/db";
 import {
   businesses,
+  favorites,
   productCategories,
   products,
   serviceCategories,
@@ -80,6 +81,54 @@ function normalizeListing<T extends { imagePaths: unknown; tags: unknown }>(list
     imagePaths: Array.isArray(listing.imagePaths) ? listing.imagePaths : [],
     tags: Array.isArray(listing.tags) ? listing.tags : [],
   };
+}
+
+const favoriteInput = z.object({
+  targetType: z.enum(["business", "product", "service"]),
+  targetId: z.string().uuid(),
+});
+
+function publicProductWhere(id: string) {
+  return and(
+    eq(products.id, id),
+    eq(products.status, "published"),
+    eq(products.isVisible, true),
+    eq(products.isAvailable, true),
+  );
+}
+
+function publicServiceWhere(id: string) {
+  return and(
+    eq(services.id, id),
+    eq(services.status, "published"),
+    eq(services.isVisible, true),
+    eq(services.isAvailable, true),
+  );
+}
+
+async function publicBusiness(id: string) {
+  const [business] = await db.select().from(businesses).where(and(eq(businesses.id, id), eq(businesses.verificationStatus, "approved"))).limit(1);
+  return business;
+}
+
+async function favoriteTarget(targetType: "business" | "product" | "service", targetId: string) {
+  if (targetType === "business") {
+    const business = await publicBusiness(targetId);
+    return business ? { business } : null;
+  }
+  if (targetType === "product") {
+    const [product] = await db.select().from(products).where(publicProductWhere(targetId)).limit(1);
+    if (!product) return null;
+    const business = await publicBusiness(product.businessId);
+    return business ? { product, business } : null;
+  }
+  const [service] = await db.select().from(services).where(publicServiceWhere(targetId)).limit(1);
+  if (!service) return null;
+  const business = service.businessId ? await publicBusiness(service.businessId) : null;
+  const provider = service.providerId
+    ? (await db.select().from(serviceProviders).where(and(eq(serviceProviders.id, service.providerId), eq(serviceProviders.verificationStatus, "approved"))).limit(1))[0]
+    : null;
+  return business || provider ? { service, business, provider } : null;
 }
 
 function parsePagination(req: Request) {
@@ -198,6 +247,165 @@ router.get("/marketplace/search", async (req, res) => {
     page,
     limit,
   });
+});
+
+router.get("/businesses/:id", async (req, res) => {
+  const business = await publicBusiness(String(req.params.id));
+  if (!business) {
+    res.status(404).json({ error: "Business not found" });
+    return;
+  }
+  const [businessProducts, businessServices, relatedBusinesses] = await Promise.all([
+    db.select().from(products).where(and(eq(products.businessId, business.id), eq(products.status, "published"), eq(products.isVisible, true), eq(products.isAvailable, true))).orderBy(desc(products.createdAt)).limit(12),
+    db.select().from(services).where(and(eq(services.businessId, business.id), eq(services.status, "published"), eq(services.isVisible, true), eq(services.isAvailable, true))).orderBy(desc(services.createdAt)).limit(12),
+    db.select().from(businesses).where(and(eq(businesses.category, business.category), eq(businesses.verificationStatus, "approved"))).orderBy(desc(businesses.createdAt)).limit(7),
+  ]);
+  res.json({
+    business,
+    products: businessProducts.map(normalizeListing),
+    services: businessServices.map(normalizeListing),
+    relatedBusinesses: relatedBusinesses.filter((item) => item.id !== business.id).slice(0, 6),
+  });
+});
+
+router.get("/products/:id", async (req, res) => {
+  const [product] = await db.select().from(products).where(publicProductWhere(String(req.params.id))).limit(1);
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+  const business = await publicBusiness(product.businessId);
+  if (!business) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+  await db.update(products).set({ viewCount: sql`${products.viewCount} + 1` }).where(eq(products.id, product.id));
+  const related = await db.select().from(products).where(and(
+    eq(products.businessId, product.businessId),
+    eq(products.status, "published"),
+    eq(products.isVisible, true),
+    eq(products.isAvailable, true),
+    sql`${products.id} <> ${product.id}`,
+  )).orderBy(desc(products.createdAt)).limit(6);
+  const servicesList = await db.select().from(services).where(and(
+    eq(services.businessId, product.businessId),
+    eq(services.status, "published"),
+    eq(services.isVisible, true),
+    eq(services.isAvailable, true),
+  )).orderBy(desc(services.createdAt)).limit(6);
+  res.json({
+    product: normalizeListing(product),
+    business,
+    relatedProducts: related.map(normalizeListing),
+    relatedServices: servicesList.map(normalizeListing),
+  });
+});
+
+router.get("/services/:id", async (req, res) => {
+  const [service] = await db.select().from(services).where(publicServiceWhere(String(req.params.id))).limit(1);
+  if (!service) {
+    res.status(404).json({ error: "Service not found" });
+    return;
+  }
+  const business = service.businessId ? await publicBusiness(service.businessId) : null;
+  const provider = service.providerId
+    ? (await db.select().from(serviceProviders).where(and(eq(serviceProviders.id, service.providerId), eq(serviceProviders.verificationStatus, "approved"))).limit(1))[0]
+    : null;
+  if (!business && !provider) {
+    res.status(404).json({ error: "Service not found" });
+    return;
+  }
+  await db.update(services).set({ viewCount: sql`${services.viewCount} + 1` }).where(eq(services.id, service.id));
+  const relatedServices = await db.select().from(services).where(and(
+    service.categoryId ? eq(services.categoryId, service.categoryId) : eq(services.businessId, service.businessId ?? ""),
+    eq(services.status, "published"),
+    eq(services.isVisible, true),
+    eq(services.isAvailable, true),
+    sql`${services.id} <> ${service.id}`,
+  )).orderBy(desc(services.createdAt)).limit(6);
+  res.json({
+    service: normalizeListing(service),
+    business,
+    provider,
+    relatedServices: relatedServices.map(normalizeListing),
+  });
+});
+
+router.get("/favorites", requireAuth, async (req, res) => {
+  const rows = await db.select().from(favorites).where(eq(favorites.userId, req.user!.id)).orderBy(desc(favorites.createdAt));
+  const items = await Promise.all(rows.map(async (favorite) => {
+    if (favorite.entityType === "business") {
+      const [business] = await db.select().from(businesses).where(eq(businesses.id, favorite.entityId)).limit(1);
+      return business ? { id: favorite.id, targetType: "business" as const, targetId: business.id, createdAt: favorite.createdAt, item: business } : null;
+    }
+    if (favorite.entityType === "product") {
+      const [product] = await db.select().from(products).where(eq(products.id, favorite.entityId)).limit(1);
+      return product ? { id: favorite.id, targetType: "product" as const, targetId: product.id, createdAt: favorite.createdAt, item: normalizeListing(product) } : null;
+    }
+    if (favorite.entityType === "service") {
+      const [service] = await db.select().from(services).where(eq(services.id, favorite.entityId)).limit(1);
+      return service ? { id: favorite.id, targetType: "service" as const, targetId: service.id, createdAt: favorite.createdAt, item: normalizeListing(service) } : null;
+    }
+    return null;
+  }));
+  res.json({ favorites: items.filter(Boolean) });
+});
+
+router.post("/favorites", requireAuth, async (req, res) => {
+  const parsed = favoriteInput.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid favorite target" });
+    return;
+  }
+  const { targetType, targetId } = parsed.data;
+  const target = await favoriteTarget(targetType, targetId);
+  if (!target) {
+    res.status(404).json({ error: "Listing not found" });
+    return;
+  }
+  const values = {
+    userId: req.user!.id,
+    entityType: targetType,
+    entityId: targetId,
+  };
+  const [favorite] = await db.insert(favorites).values(values).onConflictDoNothing().returning();
+  if (favorite && targetType === "product") {
+    await db.update(products).set({ favoriteCount: sql`${products.favoriteCount} + 1` }).where(eq(products.id, targetId));
+  }
+  if (favorite && targetType === "service") {
+    await db.update(services).set({ favoriteCount: sql`${services.favoriteCount} + 1` }).where(eq(services.id, targetId));
+  }
+  await audit(req, favorite ? "favorite.created" : "favorite.exists", targetType, targetId);
+  res.status(favorite ? 201 : 200).json({ favorite: favorite ?? values, targetType, targetId });
+});
+
+router.delete("/favorites/:targetType/:targetId", requireAuth, async (req, res) => {
+  const targetType = req.params.targetType === "business" || req.params.targetType === "product" || req.params.targetType === "service"
+    ? req.params.targetType
+    : null;
+  const targetId = String(req.params.targetId);
+  if (!targetType || !z.string().uuid().safeParse(targetId).success) {
+    res.status(400).json({ error: "Invalid favorite target" });
+    return;
+  }
+  const where = and(
+    eq(favorites.userId, req.user!.id),
+    eq(favorites.entityType, targetType),
+    eq(favorites.entityId, targetId),
+  );
+  const [favorite] = await db.delete(favorites).where(where).returning();
+  if (!favorite) {
+    res.status(404).json({ error: "Favorite not found" });
+    return;
+  }
+  if (targetType === "product") {
+    await db.update(products).set({ favoriteCount: sql`greatest(${products.favoriteCount} - 1, 0)` }).where(eq(products.id, targetId));
+  }
+  if (targetType === "service") {
+    await db.update(services).set({ favoriteCount: sql`greatest(${services.favoriteCount} - 1, 0)` }).where(eq(services.id, targetId));
+  }
+  await audit(req, "favorite.deleted", targetType, targetId);
+  res.json({ message: "Favorite removed" });
 });
 
 router.get("/admin/categories", requireAuth, requireRole("admin"), async (req, res) => {

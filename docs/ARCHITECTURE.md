@@ -37,3 +37,7 @@ Roles are `customer`, `business`, `service_provider`, and `admin`. Role guards r
 ## New on ShopNear
 
 Approved businesses and service providers are eligible when their `approved_at` timestamp is within the configured duration. The duration lives in an application settings row and defaults to 30 days.
+
+## Phase 4 customer marketplace
+
+Public detail routes expose only approved businesses and published, visible, available listings. Detail responses include related listings and increment product/service view counters. Favorites remain customer-owned records in the existing entity-based table; product and service favorite counters are updated only when a save is created or removed.

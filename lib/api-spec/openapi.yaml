@@ -219,6 +219,21 @@ paths:
         "404":
           description: Business not registered
   /businesses/{id}:
+    get:
+      operationId: getBusinessDetail
+      tags: [marketplace]
+      summary: Read a public business detail page
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Business detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDetail"
+        "404":
+          description: Business not found
     put:
       operationId: updateBusiness
       tags: [businesses]
@@ -389,6 +404,95 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketplaceSearch"
+  /products/{id}:
+    get:
+      operationId: getProductDetail
+      tags: [marketplace]
+      summary: Read a public product detail page
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetail"
+        "404":
+          description: Product not found
+  /services/{id}:
+    get:
+      operationId: getServiceDetail
+      tags: [marketplace]
+      summary: Read a public service detail page
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Service detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceDetail"
+        "404":
+          description: Service not found
+  /favorites:
+    get:
+      operationId: getFavorites
+      tags: [marketplace]
+      summary: List the authenticated customer's favorites
+      responses:
+        "200":
+          description: Favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Favorites"
+        "401":
+          description: Authentication required
+    post:
+      operationId: addFavorite
+      tags: [marketplace]
+      summary: Save a business, product, or service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteInput"
+      responses:
+        "201":
+          description: Favorite created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteMutation"
+        "200":
+          description: Favorite already existed
+        "404":
+          description: Listing not found
+  /favorites/{targetType}/{targetId}:
+    delete:
+      operationId: removeFavorite
+      tags: [marketplace]
+      summary: Remove a saved marketplace item
+      parameters:
+        - name: targetType
+          in: path
+          required: true
+          schema: { type: string, enum: [business, product, service] }
+        - name: targetId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Favorite removed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "404":
+          description: Favorite not found
   /business/dashboard:
     get:
       operationId: getBusinessDashboard
@@ -1030,6 +1134,64 @@ components:
         page: { type: integer }
         limit: { type: integer }
       required: [businesses, serviceProviders, products, services, page, limit]
+    FavoriteInput:
+      type: object
+      properties:
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+      required: [targetType, targetId]
+    FavoriteMutation:
+      type: object
+      properties:
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+      required: [targetType, targetId]
+    FavoriteItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        item: { type: object, additionalProperties: true }
+      required: [id, targetType, targetId, createdAt, item]
+    Favorites:
+      type: object
+      properties:
+        favorites:
+          type: array
+          items: { $ref: "#/components/schemas/FavoriteItem" }
+      required: [favorites]
+    BusinessDetail:
+      type: object
+      properties:
+        business: { $ref: "#/components/schemas/Business" }
+        products: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        services: { type: array, items: { $ref: "#/components/schemas/Service" } }
+        relatedBusinesses: { type: array, items: { $ref: "#/components/schemas/Business" } }
+      required: [business, products, services, relatedBusinesses]
+    ProductDetail:
+      type: object
+      properties:
+        product: { $ref: "#/components/schemas/Product" }
+        business: { $ref: "#/components/schemas/Business" }
+        relatedProducts: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        relatedServices: { type: array, items: { $ref: "#/components/schemas/Service" } }
+      required: [product, business, relatedProducts, relatedServices]
+    ServiceDetail:
+      type: object
+      properties:
+        service: { $ref: "#/components/schemas/Service" }
+        business:
+          anyOf:
+            - $ref: "#/components/schemas/Business"
+            - type: "null"
+        provider:
+          anyOf:
+            - $ref: "#/components/schemas/ServiceProvider"
+            - type: "null"
+        relatedServices: { type: array, items: { $ref: "#/components/schemas/Service" } }
+      required: [service, business, provider, relatedServices]
     AdminCategories:
       type: object
       properties:

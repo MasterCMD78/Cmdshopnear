@@ -29,6 +29,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - `lib/api-spec/openapi.yaml` — REST contract source of truth
 - `docs` — project, API, database, security, deployment, and phase documentation
 - `PROJECT_MEMORY.md` — durable implementation decisions for this project
+- `HANDOFF.md` — current phase, verification, limitations, and exact next task
 
 ## Architecture decisions
 
@@ -47,6 +48,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Customer, Business, Service Provider, and Administrator roles
 - Business and service provider registration with verification-ready status
 - Automatically surfaced newly approved businesses and service providers
+- Phase 4 customer marketplace detail pages, related listings, API-backed discovery, and persistent favorites
 
 ## User preferences
 
@@ -59,6 +61,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - `SESSION_SECRET` is required for signing tokens; never commit or print its value.
 - Run API codegen after changing `lib/api-spec/openapi.yaml`.
 - Run database push only against the development database.
+- The existing development database already contains the entity-based `favorites` table (`user_id`, `entity_type`, `entity_id`); preserve that shape when extending favorites.
 - The current development database is Neon PostgreSQL configured through the Replit `DATABASE_URL` secret. Run `pnpm --filter @workspace/db run push` to reconcile it with the Drizzle schema.
 
 ## Pointers

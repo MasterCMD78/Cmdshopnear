@@ -26,9 +26,13 @@ import type {
   AuthResult,
   Business,
   BusinessDashboard,
+  BusinessDetail,
   BusinessInput,
   BusinessUpdate,
   Category,
+  FavoriteInput,
+  FavoriteMutation,
+  Favorites,
   FeaturedMarketplace,
   GetAdminCategoriesParams,
   GetMarketplaceCatalogParams,
@@ -43,11 +47,13 @@ import type {
   OtpRequest,
   OtpVerification,
   Product,
+  ProductDetail,
   ProductInput,
   ProfileUpdate,
   Registration,
   SearchMarketplaceParams,
   Service,
+  ServiceDetail,
   ServiceInput,
   ServiceProvider,
   ServiceProviderInput,
@@ -1082,6 +1088,83 @@ export function useGetMyBusiness<TData = Awaited<ReturnType<typeof getMyBusiness
 
 
 
+export const getGetBusinessDetailUrl = (id: string,) => {
+
+
+
+
+  return `/api/businesses/${id}`
+}
+
+/**
+ * @summary Read a public business detail page
+ */
+export const getBusinessDetail = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDetail> => {
+
+  return customFetch<BusinessDetail>(getGetBusinessDetailUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBusinessDetailQueryKey = (id: string,) => {
+    return [
+    `/api/businesses/${id}`
+    ] as const;
+    }
+
+
+export const getGetBusinessDetailQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessDetail>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBusinessDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBusinessDetailQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessDetail>>> = ({ signal }) => getBusinessDetail(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBusinessDetail>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBusinessDetailQueryResult = NonNullable<Awaited<ReturnType<typeof getBusinessDetail>>>
+export type GetBusinessDetailQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read a public business detail page
+ */
+
+export function useGetBusinessDetail<TData = Awaited<ReturnType<typeof getBusinessDetail>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBusinessDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBusinessDetailQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getUpdateBusinessUrl = (id: string,) => {
 
 
@@ -1823,6 +1906,401 @@ export function useSearchMarketplace<TData = Awaited<ReturnType<typeof searchMar
 
 
 
+
+export const getGetProductDetailUrl = (id: string,) => {
+
+
+
+
+  return `/api/products/${id}`
+}
+
+/**
+ * @summary Read a public product detail page
+ */
+export const getProductDetail = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ProductDetail> => {
+
+  return customFetch<ProductDetail>(getGetProductDetailUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProductDetailQueryKey = (id: string,) => {
+    return [
+    `/api/products/${id}`
+    ] as const;
+    }
+
+
+export const getGetProductDetailQueryOptions = <TData = Awaited<ReturnType<typeof getProductDetail>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProductDetailQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProductDetail>>> = ({ signal }) => getProductDetail(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProductDetailQueryResult = NonNullable<Awaited<ReturnType<typeof getProductDetail>>>
+export type GetProductDetailQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read a public product detail page
+ */
+
+export function useGetProductDetail<TData = Awaited<ReturnType<typeof getProductDetail>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProductDetailQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetServiceDetailUrl = (id: string,) => {
+
+
+
+
+  return `/api/services/${id}`
+}
+
+/**
+ * @summary Read a public service detail page
+ */
+export const getServiceDetail = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ServiceDetail> => {
+
+  return customFetch<ServiceDetail>(getGetServiceDetailUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetServiceDetailQueryKey = (id: string,) => {
+    return [
+    `/api/services/${id}`
+    ] as const;
+    }
+
+
+export const getGetServiceDetailQueryOptions = <TData = Awaited<ReturnType<typeof getServiceDetail>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getServiceDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetServiceDetailQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getServiceDetail>>> = ({ signal }) => getServiceDetail(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getServiceDetail>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetServiceDetailQueryResult = NonNullable<Awaited<ReturnType<typeof getServiceDetail>>>
+export type GetServiceDetailQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read a public service detail page
+ */
+
+export function useGetServiceDetail<TData = Awaited<ReturnType<typeof getServiceDetail>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getServiceDetail>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetServiceDetailQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFavoritesUrl = () => {
+
+
+
+
+  return `/api/favorites`
+}
+
+/**
+ * @summary List the authenticated customer's favorites
+ */
+export const getFavorites = async ( options?: Parameters<typeof customFetch>[1]): Promise<Favorites> => {
+
+  return customFetch<Favorites>(getGetFavoritesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFavoritesQueryKey = () => {
+    return [
+    `/api/favorites`
+    ] as const;
+    }
+
+
+export const getGetFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof getFavorites>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavorites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFavoritesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFavorites>>> = ({ signal }) => getFavorites({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavorites>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof getFavorites>>>
+export type GetFavoritesQueryError = ErrorType<void>
+
+
+/**
+ * @summary List the authenticated customer's favorites
+ */
+
+export function useGetFavorites<TData = Awaited<ReturnType<typeof getFavorites>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavorites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFavoritesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAddFavoriteUrl = () => {
+
+
+
+
+  return `/api/favorites`
+}
+
+/**
+ * @summary Save a business, product, or service
+ */
+export const addFavorite = async (favoriteInput: FavoriteInput, options?: Parameters<typeof customFetch>[1]): Promise<void | FavoriteMutation> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void | FavoriteMutation>(getAddFavoriteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(favoriteInput)
+  }
+);}
+
+
+
+
+
+export const getAddFavoriteMutationKey = () => ['addFavorite'] as const;
+
+export const getAddFavoriteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext> => {
+
+const mutationKey = getAddFavoriteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addFavorite>>, AddFavoriteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  addFavorite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof addFavorite>>>
+    export type AddFavoriteMutationBody = BodyType<FavoriteInput>
+    export type AddFavoriteMutationError = ErrorType<void>
+    export type AddFavoriteMutationVariables = {data: BodyType<FavoriteInput>}
+
+    /**
+ * @summary Save a business, product, or service
+ */
+export const useAddFavorite = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addFavorite>>, TError,AddFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addFavorite>>,
+        TError,
+        AddFavoriteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddFavoriteMutationOptions(options));
+    }
+
+export const getRemoveFavoriteUrl = (targetType: 'business' | 'product' | 'service',
+    targetId: string,) => {
+
+
+
+
+  return `/api/favorites/${targetType}/${targetId}`
+}
+
+/**
+ * @summary Remove a saved marketplace item
+ */
+export const removeFavorite = async (targetType: 'business' | 'product' | 'service',
+    targetId: string, options?: Parameters<typeof customFetch>[1]): Promise<Message> => {
+
+  return customFetch<Message>(getRemoveFavoriteUrl(targetType,targetId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveFavoriteMutationKey = () => ['removeFavorite'] as const;
+
+export const getRemoveFavoriteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext> => {
+
+const mutationKey = getRemoveFavoriteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeFavorite>>, RemoveFavoriteMutationVariables> = (props) => {
+          const {targetType,targetId} = props ?? {};
+
+          return  removeFavorite(targetType,targetId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveFavoriteMutationResult = NonNullable<Awaited<ReturnType<typeof removeFavorite>>>
+
+    export type RemoveFavoriteMutationError = ErrorType<void>
+    export type RemoveFavoriteMutationVariables = {targetType: 'business' | 'product' | 'service';targetId: string}
+
+    /**
+ * @summary Remove a saved marketplace item
+ */
+export const useRemoveFavorite = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavorite>>, TError,RemoveFavoriteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeFavorite>>,
+        TError,
+        RemoveFavoriteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveFavoriteMutationOptions(options));
+    }
 
 export const getGetBusinessDashboardUrl = () => {
 

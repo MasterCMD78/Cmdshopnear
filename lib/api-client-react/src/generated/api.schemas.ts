@@ -628,6 +628,78 @@ export interface MarketplaceSearch {
   limit: number;
 }
 
+export type FavoriteInputTargetType = typeof FavoriteInputTargetType[keyof typeof FavoriteInputTargetType];
+
+
+export const FavoriteInputTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface FavoriteInput {
+  targetType: FavoriteInputTargetType;
+  targetId: string;
+}
+
+export type FavoriteMutationTargetType = typeof FavoriteMutationTargetType[keyof typeof FavoriteMutationTargetType];
+
+
+export const FavoriteMutationTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface FavoriteMutation {
+  targetType: FavoriteMutationTargetType;
+  targetId: string;
+}
+
+export type FavoriteItemTargetType = typeof FavoriteItemTargetType[keyof typeof FavoriteItemTargetType];
+
+
+export const FavoriteItemTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export type FavoriteItemItem = { [key: string]: unknown };
+
+export interface FavoriteItem {
+  id: string;
+  targetType: FavoriteItemTargetType;
+  targetId: string;
+  createdAt: string;
+  item: FavoriteItemItem;
+}
+
+export interface Favorites {
+  favorites: FavoriteItem[];
+}
+
+export interface BusinessDetail {
+  business: Business;
+  products: Product[];
+  services: Service[];
+  relatedBusinesses: Business[];
+}
+
+export interface ProductDetail {
+  product: Product;
+  business: Business;
+  relatedProducts: Product[];
+  relatedServices: Service[];
+}
+
+export interface ServiceDetail {
+  service: Service;
+  business: Business | null;
+  provider: ServiceProvider | null;
+  relatedServices: Service[];
+}
+
 export type AdminCategoriesType = typeof AdminCategoriesType[keyof typeof AdminCategoriesType];
 
 

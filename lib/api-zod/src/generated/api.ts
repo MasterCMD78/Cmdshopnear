@@ -413,6 +413,237 @@ export const GetMyBusinessResponse = zod.object({
 
 
 /**
+ * @summary Read a public business detail page
+ */
+export const GetBusinessDetailParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getBusinessDetailResponseBusinessOneBusinessNameMin = 2;
+export const getBusinessDetailResponseBusinessOneBusinessNameMax = 160;
+
+export const getBusinessDetailResponseBusinessOneCategoryMin = 2;
+export const getBusinessDetailResponseBusinessOneCategoryMax = 100;
+
+export const getBusinessDetailResponseBusinessOneBusinessLogoMax = 500;
+
+export const getBusinessDetailResponseBusinessOneCoverPhotoMax = 500;
+
+export const getBusinessDetailResponseBusinessOneDescriptionMax = 2000;
+
+export const getBusinessDetailResponseBusinessOneBusinessAddressMax = 250;
+
+export const getBusinessDetailResponseBusinessOneWhatsappMax = 20;
+
+export const getBusinessDetailResponseBusinessOnePhoneMax = 20;
+
+export const getBusinessDetailResponseBusinessOneWebsiteMax = 500;
+
+export const getBusinessDetailResponseProductsItemOneNameMin = 2;
+export const getBusinessDetailResponseProductsItemOneNameMax = 120;
+
+export const getBusinessDetailResponseProductsItemOneDescriptionMax = 2000;
+
+export const getBusinessDetailResponseProductsItemOneImagePathsItemMax = 500;
+
+export const getBusinessDetailResponseProductsItemOneImagePathsMax = 10;
+
+export const getBusinessDetailResponseProductsItemOnePrimaryImagePathMax = 500;
+
+export const getBusinessDetailResponseProductsItemOnePriceCentsMin = 0;
+
+export const getBusinessDetailResponseProductsItemOneRegularPriceCentsMin = 0;
+
+export const getBusinessDetailResponseProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getBusinessDetailResponseProductsItemOneBrandMax = 120;
+
+export const getBusinessDetailResponseProductsItemOneConditionMax = 80;
+
+export const getBusinessDetailResponseProductsItemOneLocationMax = 250;
+
+export const getBusinessDetailResponseProductsItemOneTagsItemMax = 40;
+
+export const getBusinessDetailResponseProductsItemOneTagsMax = 30;
+
+export const getBusinessDetailResponseServicesItemOneNameMin = 2;
+export const getBusinessDetailResponseServicesItemOneNameMax = 120;
+
+export const getBusinessDetailResponseServicesItemOneDescriptionMax = 2000;
+
+export const getBusinessDetailResponseServicesItemOneImagePathsItemMax = 500;
+
+export const getBusinessDetailResponseServicesItemOneImagePathsMax = 10;
+
+export const getBusinessDetailResponseServicesItemOnePrimaryImagePathMax = 500;
+
+export const getBusinessDetailResponseServicesItemOnePriceFromCentsMin = 0;
+
+export const getBusinessDetailResponseServicesItemOnePricingOptionsMax = 20;
+
+export const getBusinessDetailResponseServicesItemOneServiceRadiusMin = 0;
+export const getBusinessDetailResponseServicesItemOneServiceRadiusMax = 1000;
+
+export const getBusinessDetailResponseServicesItemOneEstimatedDurationMin = 0;
+
+export const getBusinessDetailResponseServicesItemOneLocationMax = 250;
+
+export const getBusinessDetailResponseServicesItemOneTagsItemMax = 40;
+
+export const getBusinessDetailResponseServicesItemOneTagsMax = 30;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneBusinessNameMin = 2;
+export const getBusinessDetailResponseRelatedBusinessesItemOneBusinessNameMax = 160;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneCategoryMin = 2;
+export const getBusinessDetailResponseRelatedBusinessesItemOneCategoryMax = 100;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneBusinessLogoMax = 500;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneCoverPhotoMax = 500;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneDescriptionMax = 2000;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneBusinessAddressMax = 250;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneWhatsappMax = 20;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOnePhoneMax = 20;
+
+export const getBusinessDetailResponseRelatedBusinessesItemOneWebsiteMax = 500;
+
+
+
+export const GetBusinessDetailResponse = zod.object({
+  "business": zod.object({
+  "businessName": zod.string().min(getBusinessDetailResponseBusinessOneBusinessNameMin).max(getBusinessDetailResponseBusinessOneBusinessNameMax),
+  "category": zod.string().min(getBusinessDetailResponseBusinessOneCategoryMin).max(getBusinessDetailResponseBusinessOneCategoryMax),
+  "businessLogo": zod.string().max(getBusinessDetailResponseBusinessOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getBusinessDetailResponseBusinessOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getBusinessDetailResponseBusinessOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getBusinessDetailResponseBusinessOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getBusinessDetailResponseBusinessOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getBusinessDetailResponseBusinessOnePhoneMax).nullish(),
+  "website": zod.string().max(getBusinessDetailResponseBusinessOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "products": zod.array(zod.object({
+  "name": zod.string().min(getBusinessDetailResponseProductsItemOneNameMin).max(getBusinessDetailResponseProductsItemOneNameMax),
+  "description": zod.string().max(getBusinessDetailResponseProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getBusinessDetailResponseProductsItemOneImagePathsItemMax)).max(getBusinessDetailResponseProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getBusinessDetailResponseProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getBusinessDetailResponseProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getBusinessDetailResponseProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getBusinessDetailResponseProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getBusinessDetailResponseProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getBusinessDetailResponseProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getBusinessDetailResponseProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getBusinessDetailResponseProductsItemOneTagsItemMax)).max(getBusinessDetailResponseProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "services": zod.array(zod.object({
+  "name": zod.string().min(getBusinessDetailResponseServicesItemOneNameMin).max(getBusinessDetailResponseServicesItemOneNameMax),
+  "description": zod.string().max(getBusinessDetailResponseServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getBusinessDetailResponseServicesItemOneImagePathsItemMax)).max(getBusinessDetailResponseServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getBusinessDetailResponseServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getBusinessDetailResponseServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getBusinessDetailResponseServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getBusinessDetailResponseServicesItemOneServiceRadiusMin).max(getBusinessDetailResponseServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getBusinessDetailResponseServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getBusinessDetailResponseServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getBusinessDetailResponseServicesItemOneTagsItemMax)).max(getBusinessDetailResponseServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "relatedBusinesses": zod.array(zod.object({
+  "businessName": zod.string().min(getBusinessDetailResponseRelatedBusinessesItemOneBusinessNameMin).max(getBusinessDetailResponseRelatedBusinessesItemOneBusinessNameMax),
+  "category": zod.string().min(getBusinessDetailResponseRelatedBusinessesItemOneCategoryMin).max(getBusinessDetailResponseRelatedBusinessesItemOneCategoryMax),
+  "businessLogo": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOnePhoneMax).nullish(),
+  "website": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})))
+})
+
+
+/**
  * @summary Update an owned business
  */
 export const UpdateBusinessParams = zod.object({
@@ -1764,6 +1995,530 @@ export const SearchMarketplaceResponse = zod.object({
 }))),
   "page": zod.number().int(),
   "limit": zod.number().int()
+})
+
+
+/**
+ * @summary Read a public product detail page
+ */
+export const GetProductDetailParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getProductDetailResponseProductOneNameMin = 2;
+export const getProductDetailResponseProductOneNameMax = 120;
+
+export const getProductDetailResponseProductOneDescriptionMax = 2000;
+
+export const getProductDetailResponseProductOneImagePathsItemMax = 500;
+
+export const getProductDetailResponseProductOneImagePathsMax = 10;
+
+export const getProductDetailResponseProductOnePrimaryImagePathMax = 500;
+
+export const getProductDetailResponseProductOnePriceCentsMin = 0;
+
+export const getProductDetailResponseProductOneRegularPriceCentsMin = 0;
+
+export const getProductDetailResponseProductOneDiscountPriceCentsMin = 0;
+
+export const getProductDetailResponseProductOneBrandMax = 120;
+
+export const getProductDetailResponseProductOneConditionMax = 80;
+
+export const getProductDetailResponseProductOneLocationMax = 250;
+
+export const getProductDetailResponseProductOneTagsItemMax = 40;
+
+export const getProductDetailResponseProductOneTagsMax = 30;
+
+export const getProductDetailResponseBusinessOneBusinessNameMin = 2;
+export const getProductDetailResponseBusinessOneBusinessNameMax = 160;
+
+export const getProductDetailResponseBusinessOneCategoryMin = 2;
+export const getProductDetailResponseBusinessOneCategoryMax = 100;
+
+export const getProductDetailResponseBusinessOneBusinessLogoMax = 500;
+
+export const getProductDetailResponseBusinessOneCoverPhotoMax = 500;
+
+export const getProductDetailResponseBusinessOneDescriptionMax = 2000;
+
+export const getProductDetailResponseBusinessOneBusinessAddressMax = 250;
+
+export const getProductDetailResponseBusinessOneWhatsappMax = 20;
+
+export const getProductDetailResponseBusinessOnePhoneMax = 20;
+
+export const getProductDetailResponseBusinessOneWebsiteMax = 500;
+
+export const getProductDetailResponseRelatedProductsItemOneNameMin = 2;
+export const getProductDetailResponseRelatedProductsItemOneNameMax = 120;
+
+export const getProductDetailResponseRelatedProductsItemOneDescriptionMax = 2000;
+
+export const getProductDetailResponseRelatedProductsItemOneImagePathsItemMax = 500;
+
+export const getProductDetailResponseRelatedProductsItemOneImagePathsMax = 10;
+
+export const getProductDetailResponseRelatedProductsItemOnePrimaryImagePathMax = 500;
+
+export const getProductDetailResponseRelatedProductsItemOnePriceCentsMin = 0;
+
+export const getProductDetailResponseRelatedProductsItemOneRegularPriceCentsMin = 0;
+
+export const getProductDetailResponseRelatedProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getProductDetailResponseRelatedProductsItemOneBrandMax = 120;
+
+export const getProductDetailResponseRelatedProductsItemOneConditionMax = 80;
+
+export const getProductDetailResponseRelatedProductsItemOneLocationMax = 250;
+
+export const getProductDetailResponseRelatedProductsItemOneTagsItemMax = 40;
+
+export const getProductDetailResponseRelatedProductsItemOneTagsMax = 30;
+
+export const getProductDetailResponseRelatedServicesItemOneNameMin = 2;
+export const getProductDetailResponseRelatedServicesItemOneNameMax = 120;
+
+export const getProductDetailResponseRelatedServicesItemOneDescriptionMax = 2000;
+
+export const getProductDetailResponseRelatedServicesItemOneImagePathsItemMax = 500;
+
+export const getProductDetailResponseRelatedServicesItemOneImagePathsMax = 10;
+
+export const getProductDetailResponseRelatedServicesItemOnePrimaryImagePathMax = 500;
+
+export const getProductDetailResponseRelatedServicesItemOnePriceFromCentsMin = 0;
+
+export const getProductDetailResponseRelatedServicesItemOnePricingOptionsMax = 20;
+
+export const getProductDetailResponseRelatedServicesItemOneServiceRadiusMin = 0;
+export const getProductDetailResponseRelatedServicesItemOneServiceRadiusMax = 1000;
+
+export const getProductDetailResponseRelatedServicesItemOneEstimatedDurationMin = 0;
+
+export const getProductDetailResponseRelatedServicesItemOneLocationMax = 250;
+
+export const getProductDetailResponseRelatedServicesItemOneTagsItemMax = 40;
+
+export const getProductDetailResponseRelatedServicesItemOneTagsMax = 30;
+
+
+
+export const GetProductDetailResponse = zod.object({
+  "product": zod.object({
+  "name": zod.string().min(getProductDetailResponseProductOneNameMin).max(getProductDetailResponseProductOneNameMax),
+  "description": zod.string().max(getProductDetailResponseProductOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getProductDetailResponseProductOneImagePathsItemMax)).max(getProductDetailResponseProductOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getProductDetailResponseProductOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getProductDetailResponseProductOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getProductDetailResponseProductOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getProductDetailResponseProductOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getProductDetailResponseProductOneBrandMax).nullish(),
+  "condition": zod.string().max(getProductDetailResponseProductOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getProductDetailResponseProductOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getProductDetailResponseProductOneTagsItemMax)).max(getProductDetailResponseProductOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "business": zod.object({
+  "businessName": zod.string().min(getProductDetailResponseBusinessOneBusinessNameMin).max(getProductDetailResponseBusinessOneBusinessNameMax),
+  "category": zod.string().min(getProductDetailResponseBusinessOneCategoryMin).max(getProductDetailResponseBusinessOneCategoryMax),
+  "businessLogo": zod.string().max(getProductDetailResponseBusinessOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getProductDetailResponseBusinessOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getProductDetailResponseBusinessOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getProductDetailResponseBusinessOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getProductDetailResponseBusinessOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getProductDetailResponseBusinessOnePhoneMax).nullish(),
+  "website": zod.string().max(getProductDetailResponseBusinessOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "relatedProducts": zod.array(zod.object({
+  "name": zod.string().min(getProductDetailResponseRelatedProductsItemOneNameMin).max(getProductDetailResponseRelatedProductsItemOneNameMax),
+  "description": zod.string().max(getProductDetailResponseRelatedProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getProductDetailResponseRelatedProductsItemOneImagePathsItemMax)).max(getProductDetailResponseRelatedProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getProductDetailResponseRelatedProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getProductDetailResponseRelatedProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getProductDetailResponseRelatedProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getProductDetailResponseRelatedProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getProductDetailResponseRelatedProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getProductDetailResponseRelatedProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getProductDetailResponseRelatedProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getProductDetailResponseRelatedProductsItemOneTagsItemMax)).max(getProductDetailResponseRelatedProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "relatedServices": zod.array(zod.object({
+  "name": zod.string().min(getProductDetailResponseRelatedServicesItemOneNameMin).max(getProductDetailResponseRelatedServicesItemOneNameMax),
+  "description": zod.string().max(getProductDetailResponseRelatedServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getProductDetailResponseRelatedServicesItemOneImagePathsItemMax)).max(getProductDetailResponseRelatedServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getProductDetailResponseRelatedServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getProductDetailResponseRelatedServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getProductDetailResponseRelatedServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getProductDetailResponseRelatedServicesItemOneServiceRadiusMin).max(getProductDetailResponseRelatedServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getProductDetailResponseRelatedServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getProductDetailResponseRelatedServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getProductDetailResponseRelatedServicesItemOneTagsItemMax)).max(getProductDetailResponseRelatedServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})))
+})
+
+
+/**
+ * @summary Read a public service detail page
+ */
+export const GetServiceDetailParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getServiceDetailResponseServiceOneNameMin = 2;
+export const getServiceDetailResponseServiceOneNameMax = 120;
+
+export const getServiceDetailResponseServiceOneDescriptionMax = 2000;
+
+export const getServiceDetailResponseServiceOneImagePathsItemMax = 500;
+
+export const getServiceDetailResponseServiceOneImagePathsMax = 10;
+
+export const getServiceDetailResponseServiceOnePrimaryImagePathMax = 500;
+
+export const getServiceDetailResponseServiceOnePriceFromCentsMin = 0;
+
+export const getServiceDetailResponseServiceOnePricingOptionsMax = 20;
+
+export const getServiceDetailResponseServiceOneServiceRadiusMin = 0;
+export const getServiceDetailResponseServiceOneServiceRadiusMax = 1000;
+
+export const getServiceDetailResponseServiceOneEstimatedDurationMin = 0;
+
+export const getServiceDetailResponseServiceOneLocationMax = 250;
+
+export const getServiceDetailResponseServiceOneTagsItemMax = 40;
+
+export const getServiceDetailResponseServiceOneTagsMax = 30;
+
+export const getServiceDetailResponseBusinessOneOneBusinessNameMin = 2;
+export const getServiceDetailResponseBusinessOneOneBusinessNameMax = 160;
+
+export const getServiceDetailResponseBusinessOneOneCategoryMin = 2;
+export const getServiceDetailResponseBusinessOneOneCategoryMax = 100;
+
+export const getServiceDetailResponseBusinessOneOneBusinessLogoMax = 500;
+
+export const getServiceDetailResponseBusinessOneOneCoverPhotoMax = 500;
+
+export const getServiceDetailResponseBusinessOneOneDescriptionMax = 2000;
+
+export const getServiceDetailResponseBusinessOneOneBusinessAddressMax = 250;
+
+export const getServiceDetailResponseBusinessOneOneWhatsappMax = 20;
+
+export const getServiceDetailResponseBusinessOneOnePhoneMax = 20;
+
+export const getServiceDetailResponseBusinessOneOneWebsiteMax = 500;
+
+export const getServiceDetailResponseProviderOneOneProfessionMin = 2;
+export const getServiceDetailResponseProviderOneOneProfessionMax = 120;
+
+export const getServiceDetailResponseProviderOneOneExperienceMax = 120;
+
+export const getServiceDetailResponseProviderOneOneSkillsMax = 20;
+
+export const getServiceDetailResponseProviderOneOneServiceRadiusMin = 0;
+export const getServiceDetailResponseProviderOneOneServiceRadiusMax = 500;
+
+export const getServiceDetailResponseProviderOneOnePortfolioImagesItemMax = 500;
+
+export const getServiceDetailResponseProviderOneOnePortfolioImagesMax = 12;
+
+export const getServiceDetailResponseProviderOneOnePhoneMax = 20;
+
+export const getServiceDetailResponseProviderOneOneWhatsappMax = 20;
+
+export const getServiceDetailResponseProviderOneOneLocationMax = 250;
+
+export const getServiceDetailResponseRelatedServicesItemOneNameMin = 2;
+export const getServiceDetailResponseRelatedServicesItemOneNameMax = 120;
+
+export const getServiceDetailResponseRelatedServicesItemOneDescriptionMax = 2000;
+
+export const getServiceDetailResponseRelatedServicesItemOneImagePathsItemMax = 500;
+
+export const getServiceDetailResponseRelatedServicesItemOneImagePathsMax = 10;
+
+export const getServiceDetailResponseRelatedServicesItemOnePrimaryImagePathMax = 500;
+
+export const getServiceDetailResponseRelatedServicesItemOnePriceFromCentsMin = 0;
+
+export const getServiceDetailResponseRelatedServicesItemOnePricingOptionsMax = 20;
+
+export const getServiceDetailResponseRelatedServicesItemOneServiceRadiusMin = 0;
+export const getServiceDetailResponseRelatedServicesItemOneServiceRadiusMax = 1000;
+
+export const getServiceDetailResponseRelatedServicesItemOneEstimatedDurationMin = 0;
+
+export const getServiceDetailResponseRelatedServicesItemOneLocationMax = 250;
+
+export const getServiceDetailResponseRelatedServicesItemOneTagsItemMax = 40;
+
+export const getServiceDetailResponseRelatedServicesItemOneTagsMax = 30;
+
+
+
+export const GetServiceDetailResponse = zod.object({
+  "service": zod.object({
+  "name": zod.string().min(getServiceDetailResponseServiceOneNameMin).max(getServiceDetailResponseServiceOneNameMax),
+  "description": zod.string().max(getServiceDetailResponseServiceOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getServiceDetailResponseServiceOneImagePathsItemMax)).max(getServiceDetailResponseServiceOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getServiceDetailResponseServiceOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getServiceDetailResponseServiceOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getServiceDetailResponseServiceOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getServiceDetailResponseServiceOneServiceRadiusMin).max(getServiceDetailResponseServiceOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getServiceDetailResponseServiceOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getServiceDetailResponseServiceOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getServiceDetailResponseServiceOneTagsItemMax)).max(getServiceDetailResponseServiceOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "business": zod.union([zod.object({
+  "businessName": zod.string().min(getServiceDetailResponseBusinessOneOneBusinessNameMin).max(getServiceDetailResponseBusinessOneOneBusinessNameMax),
+  "category": zod.string().min(getServiceDetailResponseBusinessOneOneCategoryMin).max(getServiceDetailResponseBusinessOneOneCategoryMax),
+  "businessLogo": zod.string().max(getServiceDetailResponseBusinessOneOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getServiceDetailResponseBusinessOneOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getServiceDetailResponseBusinessOneOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getServiceDetailResponseBusinessOneOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "whatsapp": zod.string().max(getServiceDetailResponseBusinessOneOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getServiceDetailResponseBusinessOneOnePhoneMax).nullish(),
+  "website": zod.string().max(getServiceDetailResponseBusinessOneOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),zod.null()]),
+  "provider": zod.union([zod.object({
+  "profession": zod.string().min(getServiceDetailResponseProviderOneOneProfessionMin).max(getServiceDetailResponseProviderOneOneProfessionMax),
+  "experience": zod.string().max(getServiceDetailResponseProviderOneOneExperienceMax).nullish(),
+  "skills": zod.array(zod.string()).max(getServiceDetailResponseProviderOneOneSkillsMax).optional(),
+  "serviceRadius": zod.number().int().min(getServiceDetailResponseProviderOneOneServiceRadiusMin).max(getServiceDetailResponseProviderOneOneServiceRadiusMax).nullish(),
+  "portfolioImages": zod.array(zod.string().max(getServiceDetailResponseProviderOneOnePortfolioImagesItemMax)).max(getServiceDetailResponseProviderOneOnePortfolioImagesMax).optional(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "phone": zod.string().max(getServiceDetailResponseProviderOneOnePhoneMax).nullish(),
+  "whatsapp": zod.string().max(getServiceDetailResponseProviderOneOneWhatsappMax).nullish(),
+  "location": zod.string().max(getServiceDetailResponseProviderOneOneLocationMax).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),zod.null()]),
+  "relatedServices": zod.array(zod.object({
+  "name": zod.string().min(getServiceDetailResponseRelatedServicesItemOneNameMin).max(getServiceDetailResponseRelatedServicesItemOneNameMax),
+  "description": zod.string().max(getServiceDetailResponseRelatedServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getServiceDetailResponseRelatedServicesItemOneImagePathsItemMax)).max(getServiceDetailResponseRelatedServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getServiceDetailResponseRelatedServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getServiceDetailResponseRelatedServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getServiceDetailResponseRelatedServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getServiceDetailResponseRelatedServicesItemOneServiceRadiusMin).max(getServiceDetailResponseRelatedServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getServiceDetailResponseRelatedServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getServiceDetailResponseRelatedServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getServiceDetailResponseRelatedServicesItemOneTagsItemMax)).max(getServiceDetailResponseRelatedServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})))
+})
+
+
+/**
+ * @summary List the authenticated customer's favorites
+ */
+export const GetFavoritesResponse = zod.object({
+  "favorites": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "createdAt": zod.coerce.date(),
+  "item": zod.record(zod.string(), zod.unknown())
+}))
+})
+
+
+/**
+ * @summary Save a business, product, or service
+ */
+export const AddFavoriteBody = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid()
+})
+
+export const AddFavoriteResponse = zod.unknown()
+
+
+/**
+ * @summary Remove a saved marketplace item
+ */
+export const RemoveFavoriteParams = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.coerce.string().uuid()
+})
+
+export const RemoveFavoriteResponse = zod.object({
+  "message": zod.string()
 })
 
 

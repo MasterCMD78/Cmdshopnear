@@ -37,6 +37,12 @@ The upload endpoint accepts metadata only. The client uploads the file directly 
 - `GET /marketplace/catalog?query=&categoryId=&featured=&newest=&location=&tag=&page=&limit=` — list visible, available, published products and services with discovery filters
 - `GET /marketplace/featured` — return featured, trending/newest products and services plus approved businesses/providers
 - `GET /marketplace/search?query=&verified=&page=&limit=` — search businesses, service providers, products, and services
+- `GET /businesses/:id` — public approved business detail with products, services, and related businesses
+- `GET /products/:id` — public published product detail with its business and related listings
+- `GET /services/:id` — public published service detail with its business/provider and related services
+- `GET /favorites` — list the authenticated user's saved businesses, products, and services
+- `POST /favorites` — save a public business, product, or service using `{ targetType, targetId }`
+- `DELETE /favorites/:targetType/:targetId` — remove an authenticated user's saved listing
 - `GET /business/dashboard` — return business marketplace metrics
 - `GET /business/products` — list the authenticated business's products
 - `POST /business/products` — create a product

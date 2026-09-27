@@ -21,3 +21,9 @@ The local provider is for development only. In development, the API returns a `d
 ## Future work
 
 Password hashing, external social login, production SMS delivery, object ACL review, distributed rate limiting, and stronger operational monitoring remain planned hardening work. App Storage still needs a runtime resource-authorization check before uploads can be considered operationally verified.
+
+## Phase 4 marketplace boundaries
+
+- Detail routes do not expose pending businesses or unpublished/hidden/unavailable listings.
+- Favorite reads, writes, and deletes require the authenticated session; the API validates both the target type and UUID.
+- Favorite mutations are audit logged and scoped to the current user.

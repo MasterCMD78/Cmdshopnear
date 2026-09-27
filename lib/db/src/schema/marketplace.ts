@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { businesses, serviceProviders } from "./accounts";
@@ -104,5 +105,17 @@ export const services = pgTable("services", {
   ownerIdx: index("services_owner_idx").on(table.ownerId),
 }));
 
+export const favorites = pgTable("favorites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  entityType: text("entity_type").notNull(),
+  entityId: uuid("entity_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  entityIdx: index("favorites_entity_idx").on(table.entityType, table.entityId),
+  userEntityIdx: uniqueIndex("favorites_user_entity_idx").on(table.userId, table.entityType, table.entityId),
+}));
+
 export type Product = typeof products.$inferSelect;
 export type Service = typeof services.$inferSelect;
+export type Favorite = typeof favorites.$inferSelect;

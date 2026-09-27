@@ -1,0 +1,325 @@
+🚀 SHOPNEAR PHASE 4 CONTINUATION PROMPT
+Customer Experience Completion & Handoff System
+
+IMPORTANT
+
+This project already contains completed work.
+
+DO NOT rebuild the project.
+DO NOT redesign the UI.
+DO NOT replace existing architecture.
+DO NOT recreate database tables.
+
+Continue ONLY from the existing codebase.
+
+Before writing any code:
+
+1. Read the attached ShopNear specifications.
+2. Read every project document.
+3. Read the current codebase.
+4. Read the API.
+5. Read the database schema.
+6. Read the existing routes.
+7. Read replit.md
+8. Read PROJECT_MEMORY.md
+9. Read HANDOFF.md (if it already exists).
+
+If HANDOFF.md does not exist, create it before making any code changes.
+
+--------------------------------------------------
+
+CURRENT PROJECT STATUS
+
+Completed:
+
+✅ Phase 1
+Architecture
+Documentation
+Project structure
+
+✅ Phase 2
+Authentication
+OTP
+JWT
+Sessions
+Roles
+Customer
+Business
+Provider
+Admin
+Profile editing
+
+✅ Phase 3
+Business management
+Product CRUD
+Service CRUD
+Categories
+Marketplace search
+Dashboard
+Ownership validation
+Featured listings
+Documentation
+
+Phase 4 has already STARTED.
+
+The previous implementation already began:
+
+• Favorites API
+• Detail routes
+• Business detail page
+• Product detail page
+• Service detail page
+• Database-backed favorites
+• Home discovery improvements
+• API contract updates
+• OpenAPI generation
+• Database reconciliation
+
+DO NOT repeat this work.
+
+Instead:
+
+Recover the current implementation and finish ONLY the missing Phase 4 work.
+
+--------------------------------------------------
+
+PHASE 4 GOAL
+
+Complete the customer marketplace experience.
+
+This includes:
+
+Persistent favorites
+
+Business detail pages
+
+Product detail pages
+
+Service detail pages
+
+Rich Home discovery
+
+Public listing pages
+
+API-backed search
+
+Loading states
+
+Empty states
+
+Verification badges
+
+Related businesses
+
+Related products
+
+Related services
+
+Recent listings
+
+Newest businesses
+
+Featured businesses
+
+Featured products
+
+Featured services
+
+Verified filters
+
+Improved customer browsing
+
+Maintain the existing ShopNear UI.
+
+Do NOT redesign navigation.
+
+Do NOT modify branding.
+
+Do NOT change the five bottom tabs.
+
+--------------------------------------------------
+
+DATABASE
+
+Use the existing Neon PostgreSQL database.
+
+Never recreate existing tables.
+
+Only apply additive migrations if necessary.
+
+Never destroy existing data.
+
+--------------------------------------------------
+
+API
+
+Only extend existing REST endpoints.
+
+Synchronize OpenAPI.
+
+Regenerate client types.
+
+Document every endpoint.
+
+--------------------------------------------------
+
+TESTING
+
+Before completion:
+
+Run:
+
+• Database migration verification
+
+• Typecheck
+
+• Production build
+
+• API tests
+
+• Favorites tests
+
+• Detail page tests
+
+• Search tests
+
+• Browser verification
+
+Fix only genuine issues.
+
+--------------------------------------------------
+
+DOCUMENTATION
+
+Keep documentation synchronized.
+
+Update:
+
+docs/README.md
+
+docs/API.md
+
+docs/DATABASE.md
+
+docs/ARCHITECTURE.md
+
+docs/SECURITY.md
+
+docs/AI.md
+
+docs/ROADMAP.md
+
+docs/CHANGELOG.md
+
+replit.md
+
+PROJECT_MEMORY.md
+
+--------------------------------------------------
+
+NEW PERMANENT REQUIREMENT
+
+Maintain a file called:
+
+HANDOFF.md
+
+This file must ALWAYS be updated whenever work finishes.
+
+Include:
+
+Current Phase
+
+Last Completed Task
+
+Database Migrations Applied
+
+API Endpoints Added
+
+Files Modified
+
+Documentation Updated
+
+Verification Results
+
+Known Limitations
+
+Open Bugs
+
+Environment Requirements
+
+Exact Next Task
+
+Next Prompt Context
+
+This file becomes the official handoff document for future Replit Agent sessions.
+
+Never leave HANDOFF.md outdated.
+
+--------------------------------------------------
+
+IMPORTANT
+
+Never restart completed phases.
+
+Never redesign existing pages.
+
+Never remove existing functionality.
+
+Never replace architecture.
+
+Only extend the existing implementation.
+
+If you find unfinished work left by previous sessions:
+
+Recover it.
+
+Verify it.
+
+Complete it.
+
+Document it.
+
+--------------------------------------------------
+
+DEFINITION OF DONE
+
+Phase 4 is complete only when:
+
+✓ Favorites persist correctly
+
+✓ Business detail pages work
+
+✓ Product detail pages work
+
+✓ Service detail pages work
+
+✓ Related listings work
+
+✓ Featured discovery works
+
+✓ Search uses the API
+
+✓ Home uses real database data
+
+✓ Loading states work
+
+✓ Empty states work
+
+✓ OpenAPI is synchronized
+
+✓ Typecheck passes
+
+✓ Production build passes
+
+✓ Documentation is updated
+
+✓ replit.md is updated
+
+✓ PROJECT_MEMORY.md is updated
+
+✓ HANDOFF.md is updated with the exact next task (Phase 5 GPS & Maps preparation)
+
+After Phase 4 is fully complete, STOP.
+
+Do NOT begin Phase 5 automatically.
+Wait for explicit approval before starting GPS, Maps, Distance, Directions, or Nearby features.

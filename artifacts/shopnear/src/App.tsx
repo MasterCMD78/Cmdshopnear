@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock3, Compass, Heart, Home as HomeIcon, MapPin, Menu, MessageCircle, Pencil, Plus, Search, Send, Settings2, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Tag, Trash2, UserRound, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
-import { deleteProduct, deleteService, getBusinessDashboard, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getSession, logout, registerAccount, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, updateProfile, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type ServiceProviderRecord } from '@/lib/auth-api';
+import { Link, Route, Switch, Router as WouterRouter, useLocation, useRoute } from 'wouter';
+import { addFavorite, deleteProduct, deleteService, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, logout, registerAccount, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, updateProfile, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type ServiceProviderRecord } from '@/lib/auth-api';
 
 const queryClient = new QueryClient();
 const logoPath = '/assets/shopnear-logo.png';
@@ -192,12 +192,69 @@ function ProductCard({ item, onSave }: { item: typeof products[number]; onSave: 
   );
 }
 
+function LoadingState({ label = 'Loading nearby listings…' }: { label?: string }) {
+  return <div className="rounded-[24px] border border-[#e5eee5] bg-[#f8fbf6] px-5 py-10 text-center text-sm text-[#6f8878]" data-testid="loading-state"><span className="mx-auto mb-3 block h-7 w-7 animate-spin rounded-full border-2 border-[#cfe5d3] border-t-[#087044]" />{label}</div>;
+}
+
+function FavoriteButton({ targetType, targetId, saved, onChange, light = false }: { targetType: FavoriteItem["targetType"]; targetId: string; saved: boolean; onChange: (saved: boolean) => void; light?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const toggle = async () => {
+    if (busy) return;
+    setBusy(true); setMessage('');
+    try {
+      if (saved) await removeFavorite(targetType, targetId);
+      else await addFavorite(targetType, targetId);
+      onChange(!saved);
+    } catch (error) {
+      setMessage(error instanceof Error && error.message.includes('Authentication') ? 'Sign in to save' : 'Could not save');
+    } finally { setBusy(false); }
+  };
+  return <span className="relative">
+    <button type="button" onClick={toggle} disabled={busy} aria-label={saved ? 'Remove from favorites' : 'Add to favorites'} className={`focus-ring flex h-9 w-9 items-center justify-center rounded-full ${saved ? 'bg-[#f47716] text-white' : light ? 'bg-white/90 text-[#216046]' : 'border border-[#dce8dc] bg-white text-[#216046]'} disabled:opacity-60`} data-testid={`button-favorite-${targetType}-${targetId}`}><Heart size={16} fill={saved ? 'currentColor' : 'none'} /></button>
+    {message && <span className="absolute right-0 top-10 z-10 whitespace-nowrap rounded-lg bg-[#164d38] px-2 py-1 text-[10px] text-white">{message}</span>}
+  </span>;
+}
+
+function RemoteBusinessCard({ business, savedIds, onSaved }: { business: BusinessRecord; savedIds: Set<string>; onSaved: (id: string, saved: boolean) => void }) {
+  const [, setLocation] = useLocation();
+  return <article className="tap overflow-hidden rounded-[23px] border border-[#ece7dd] bg-white shadow-[0_6px_20px_rgba(16,72,50,.06)]" data-testid={`card-business-${business.id}`}>
+    <button type="button" onClick={() => setLocation(`/businesses/${business.id}`)} className="block w-full text-left">
+      <div className="relative h-28 overflow-hidden bg-[#dcefe2]"><div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_35%,#6ca66a_0_9%,transparent_10%),radial-gradient(circle_at_68%_70%,#ef9f54_0_12%,transparent_13%),linear-gradient(135deg,#d8efd8,#a8d4ae)] opacity-60" /><span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-[#216046]">{business.verificationStatus === 'approved' ? 'Verified' : 'Pending'}</span></div>
+      <div className="p-3.5"><div className="flex items-center gap-1.5"><h3 className="truncate text-sm font-bold text-[#174d37]">{business.businessName}</h3>{business.verificationStatus === 'approved' && <ShieldCheck size={14} className="shrink-0 text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 truncate text-[11px] text-[#89918a]">{business.category} · {business.businessAddress || 'Local business'}</p><div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-[#775d27]"><Star size={13} fill="#f3a820" className="text-[#f3a820]" /> {business.averageRating || 'New'} <span className="font-normal text-[#a1a49f]">({business.totalReviews ?? 0})</span></div></div>
+    </button>
+    <div className="flex justify-end px-3.5 pb-3.5"><FavoriteButton targetType="business" targetId={business.id} saved={savedIds.has(business.id)} onChange={(saved) => onSaved(business.id, saved)} /></div>
+  </article>;
+}
+
+function RemoteProductCard({ item, savedIds, onSaved }: { item: MarketplaceProduct; savedIds: Set<string>; onSaved: (id: string, saved: boolean) => void }) {
+  const [, setLocation] = useLocation();
+  return <article className="tap overflow-hidden rounded-[21px] border border-[#ece7dd] bg-white p-2.5 shadow-[0_6px_20px_rgba(16,72,50,.05)]" data-testid={`card-product-${item.id}`}>
+    <button type="button" onClick={() => setLocation(`/products/${item.id}`)} className="block w-full text-left"><div className="relative flex h-32 items-center justify-center overflow-hidden rounded-[16px] bg-[#eedacb]"><div className="h-20 w-16 rounded-[12px_12px_17px_17px] bg-[#bb714e] shadow-[inset_-8px_-8px_12px_rgba(0,0,0,.10),4px_7px_10px_rgba(52,43,23,.12)]" /></div><div className="px-1 pb-1 pt-2"><h3 className="truncate text-xs font-bold text-[#174d37]">{item.name}</h3><p className="mt-1 truncate text-[10px] text-[#89918a]">{item.brand || item.location || 'Local find'}</p><p className="mt-2 text-sm font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p></div></button>
+    <div className="flex justify-end px-1 pb-1"><FavoriteButton targetType="product" targetId={item.id} saved={savedIds.has(item.id)} onChange={(saved) => onSaved(item.id, saved)} /></div>
+  </article>;
+}
+
+function RemoteServiceCard({ item, savedIds, onSaved }: { item: MarketplaceService; savedIds: Set<string>; onSaved: (id: string, saved: boolean) => void }) {
+  const [, setLocation] = useLocation();
+  return <button type="button" onClick={() => setLocation(`/services/${item.id}`)} className="focus-ring tap flex items-center gap-3 rounded-[18px] border border-[#eee8dd] bg-white p-3.5 text-left shadow-[0_4px_13px_rgba(16,72,50,.04)]" data-testid={`card-service-${item.id}`}>
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={18} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs font-bold text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[10px] text-[#8a968d]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}</span></span><span className="text-right text-[10px] font-bold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}<ChevronRight size={14} className="ml-auto mt-1" /></span>
+  </button>;
+}
+
 function HomePage() {
   const [, setLocation] = useLocation();
   const [toast, setToast] = useState('');
-  const [saved, setSaved] = useState<string[]>(['product-2']);
+  const [discovery, setDiscovery] = useState<Awaited<ReturnType<typeof getFeaturedMarketplace>> | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200); };
-  const toggleSave = (id: string, name: string) => { setSaved((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]); notify(saved.includes(id) ? `${name} removed from favorites` : `${name} saved to favorites`); };
+  useEffect(() => {
+    getFeaturedMarketplace().then(async (next) => {
+      setDiscovery(next);
+    }).catch(() => setDiscovery(null)).finally(() => setLoading(false));
+  }, []);
+  const onSaved = (id: string, saved: boolean) => setSavedIds((current) => { const next = new Set(current); saved ? next.add(id) : next.delete(id); return next; });
   return (
     <Shell active="home" toast={toast}>
       <div className="px-5 md:px-10">
@@ -214,28 +271,25 @@ function HomePage() {
           <SectionHeading eyebrow="Browse nearby" title="What are you in the mood for?" action="See all" onAction={() => setLocation('/search')} />
           <CategoryStrip onSelect={(label) => { setLocation('/search'); notify(`Showing ${label.toLowerCase()} nearby`); }} />
         </section>
-        <section className="animate-rise delay-2 pb-7">
-          <SectionHeading eyebrow="Trusted by neighbors" title="Places worth the walk" action="View map" onAction={() => notify('Map view is being prepared')} />
+        {loading ? <div className="pb-8"><LoadingState /></div> : discovery && <><section className="animate-rise delay-2 pb-7">
+          <SectionHeading eyebrow="Trusted by neighbors" title="Places worth the walk" action="See all" onAction={() => setLocation('/search')} />
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-            {places.map((place) => <PlaceCard key={place.id} place={place} saved={saved.includes(place.id)} onSave={() => toggleSave(place.id, place.name)} />)}
+            {discovery.featuredBusinesses.length ? discovery.featuredBusinesses.slice(0, 6).map((business) => <RemoteBusinessCard key={business.id} business={business} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={Store} title="Local businesses are on their way" detail="Approved businesses will appear here as the marketplace grows." action="Browse search" onAction={() => setLocation('/search')} />}
           </div>
         </section>
         <section className="pb-8">
           <SectionHeading eyebrow="Local finds" title="Small things, good stories" action="See all" onAction={() => setLocation('/search')} />
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-            {products.map((item) => <ProductCard key={item.id} item={{ ...item, saved: saved.includes(item.id) }} onSave={() => toggleSave(item.id, item.name)} />)}
+            {discovery.featuredProducts.length ? discovery.featuredProducts.slice(0, 6).map((item) => <RemoteProductCard key={item.id} item={item} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={ShoppingBag} title="No featured products yet" detail="Published products from verified businesses will appear here." action="Search products" onAction={() => setLocation('/search')} />}
           </div>
         </section>
         <section className="pb-8">
           <SectionHeading eyebrow="Help around the corner" title="Services nearby" action="Browse all" onAction={() => setLocation('/search')} />
           <div className="grid gap-2.5 md:grid-cols-3">
-            {serviceRows.map((service) => <button type="button" key={service.id} onClick={() => notify(`Opening ${service.name}`)} className="focus-ring tap flex items-center gap-3 rounded-[18px] border border-[#eee8dd] bg-white p-3.5 text-left shadow-[0_4px_13px_rgba(16,72,50,.04)]" data-testid={`button-service-${service.id}`}>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={18} /></span>
-              <span className="min-w-0 flex-1"><strong className="block truncate text-xs font-bold text-[#174d37]">{service.name}</strong><span className="mt-1 block text-[10px] text-[#8a968d]">{service.detail}</span></span>
-              <span className="text-right text-[10px] font-bold text-[#087044]">{service.price}<ChevronRight size={14} className="ml-auto mt-1" /></span>
-            </button>)}
+            {discovery.featuredServices.length ? discovery.featuredServices.slice(0, 6).map((service) => <RemoteServiceCard key={service.id} item={service} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={BriefcaseBusiness} title="No featured services yet" detail="Verified local providers will appear here as they publish services." action="Search services" onAction={() => setLocation('/search')} />}
           </div>
         </section>
+        </>}
       </div>
     </Shell>
   );
@@ -263,13 +317,11 @@ function SearchPage() {
     }, 220);
     return () => { active = false; window.clearTimeout(timer); };
   }, [query]);
-  const results = useMemo(() => {
-    const normalized = query.toLowerCase();
-    return places.filter((place) => !normalized || `${place.name} ${place.type} ${place.note}`.toLowerCase().includes(normalized));
-  }, [query]);
   const filters = ['All', 'Open now', 'Top rated', 'Products', 'Services'];
   const showProducts = activeFilter === 'All' || activeFilter === 'Products';
   const showServices = activeFilter === 'All' || activeFilter === 'Services';
+  const showBusinesses = activeFilter === 'All' || activeFilter === 'Top rated' || activeFilter === 'Open now';
+  const resultCount = (showProducts ? liveResults?.products.length ?? 0 : 0) + (showServices ? liveResults?.services.length ?? 0 : 0) + (showBusinesses ? liveResults?.businesses.length ?? 0 : 0);
   return (
     <Shell active="search" toast={toast}>
       <div className="px-5 py-5 md:px-10 md:py-8">
@@ -284,13 +336,12 @@ function SearchPage() {
           {filters.map((filter) => <button type="button" key={filter} onClick={() => setActiveFilter(filter)} className={`focus-ring whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${activeFilter === filter ? 'bg-[#087044] text-white' : 'border border-[#ebe4d9] bg-white text-[#658071]'}`} data-testid={`button-filter-${filter.toLowerCase().replaceAll(' ', '-')}`}>{filter}</button>)}
         </div>
         <section className="mt-8">
-           <SectionHeading eyebrow={loadingResults ? 'Searching the marketplace' : query ? `${results.length + (liveResults?.products.length ?? 0) + (liveResults?.services.length ?? 0)} results nearby` : 'Curated for you'} title={query ? `Results for “${query}”` : 'Popular near you'} />
-           {liveResults && (liveResults.products.length > 0 || liveResults.services.length > 0 || liveResults.businesses.length > 0 || liveResults.serviceProviders.length > 0) && <div className="mb-5 space-y-2">
-             {showProducts && liveResults.products.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1df] text-[#e8781a]"><ShoppingBag size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.brand || item.location || 'Local product'} · {item.tags?.join(', ') || 'Marketplace find'}</span></span><span className="text-xs font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</span></div>)}
-             {showServices && liveResults.services.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}</span></span><span className="text-xs font-extrabold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</span></div>)}
-             {activeFilter === 'All' && liveResults.businesses.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><Store size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.businessName}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.category} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></div>)}
-           </div>}
-           {results.length ? <div className="grid gap-3 md:grid-cols-2">{results.map((place) => <PlaceCard key={place.id} place={place} saved={false} onSave={() => notify(`${place.name} saved to favorites`)} />)}</div> : !liveResults?.products.length && !liveResults?.services.length ? <EmptyState icon={Search} title="No nearby matches yet" detail="Try a broader search or browse one of the categories below." action="Browse categories" onAction={() => setQuery('')} /> : null}
+           <SectionHeading eyebrow={loadingResults ? 'Searching the marketplace' : query ? `${resultCount} results nearby` : 'Curated for you'} title={query ? `Results for “${query}”` : 'Popular near you'} />
+           {loadingResults ? <LoadingState label="Searching the marketplace…" /> : liveResults && resultCount > 0 ? <div className="space-y-3">
+             {showBusinesses && liveResults.businesses.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/businesses/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><Store size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.businessName}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.category} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}
+             {showProducts && liveResults.products.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/products/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1df] text-[#e8781a]"><ShoppingBag size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.brand || item.location || 'Local product'} · {item.tags?.join(', ') || 'Marketplace find'}</span></span><span className="text-xs font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</span></button>)}
+             {showServices && liveResults.services.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/services/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}</span></span><span className="text-xs font-extrabold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</span></button>)}
+           </div> : <EmptyState icon={Search} title="No nearby matches yet" detail="Try a broader search or browse one of the categories below." action="Browse categories" onAction={() => setQuery('')} />}
         </section>
         <section className="mt-9">
           <SectionHeading title="Browse by category" />
@@ -313,22 +364,68 @@ function EmptyState({ icon: Icon, title, detail, action, onAction }: { icon: typ
 }
 
 function FavoritesPage() {
-  const [saved, setSaved] = useState(true);
+  const [favorites, setFavorites] = useState<FavoriteItem[] | null>(null);
   const [toast, setToast] = useState('');
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200); };
+  const load = () => getSession().then((session) => session.user ? getFavorites().then((value) => setFavorites(value.favorites)) : setFavorites([])).catch(() => setFavorites([]));
+  useEffect(() => { void load(); }, []);
+  const savedIds = new Set((favorites ?? []).map((item) => item.targetId));
+  const onSaved = (id: string, saved: boolean) => {
+    if (!saved) setFavorites((current) => current?.filter((item) => item.targetId !== id) ?? []);
+  };
   return (
     <Shell active="favorites" toast={toast}>
       <div className="px-5 py-6 md:px-10 md:py-9">
         <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Your shortlist</p>
-        <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Favorites</h1><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5 text-[11px] font-bold text-[#087044]">3 saved</span></div>
+        <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Favorites</h1><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5 text-[11px] font-bold text-[#087044]">{favorites?.length ?? 0} saved</span></div>
         <p className="mt-2 text-sm text-[#7a897f]">Keep the local places and finds you want to come back to.</p>
-        {saved ? <div className="mt-7 grid gap-3 md:grid-cols-3">{places.map((place) => <PlaceCard key={place.id} place={place} saved onSave={() => { setSaved(false); notify(`${place.name} removed from favorites`); }} />)}</div> : <div className="mt-7"><EmptyState icon={Heart} title="Your favorites are waiting" detail="Tap the heart on a place or product to keep it close." action="Discover nearby" onAction={() => notify('Browse from Search')} /></div>}
+        {favorites === null ? <div className="mt-7"><LoadingState label="Loading your favorites…" /></div> : favorites.length ? <div className="mt-7 grid gap-3 md:grid-cols-3">
+          {favorites.map((favorite) => favorite.targetType === 'business'
+            ? <RemoteBusinessCard key={favorite.id} business={favorite.item as BusinessRecord} savedIds={savedIds} onSaved={onSaved} />
+            : favorite.targetType === 'product'
+              ? <RemoteProductCard key={favorite.id} item={favorite.item as MarketplaceProduct} savedIds={savedIds} onSaved={onSaved} />
+              : <RemoteServiceCard key={favorite.id} item={favorite.item as MarketplaceService} savedIds={savedIds} onSaved={onSaved} />)}
+        </div> : <div className="mt-7"><EmptyState icon={Heart} title="Your favorites are waiting" detail="Tap the heart on a place or product to keep it close." action="Discover nearby" onAction={() => window.location.assign('/search')} /></div>}
         <div className="mt-8 rounded-[23px] bg-[#fff1df] p-5">
           <div className="flex gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#f47716] text-white"><MapPin size={19} /></span><div><h3 className="text-sm font-bold text-[#78441d]">A little local tip</h3><p className="mt-1 text-xs leading-relaxed text-[#9c6945]">Saved places are sorted by what’s closest to you, so your shortlist stays useful.</p></div></div>
         </div>
       </div>
     </Shell>
   );
+}
+
+function DetailBack({ label = 'Back to Search' }: { label?: string }) {
+  return <Link href="/search" className="focus-ring inline-flex items-center gap-1 text-xs font-bold text-[#087044]"><ChevronRight size={15} className="rotate-180" />{label}</Link>;
+}
+
+function BusinessDetailPage() {
+  const [, params] = useRoute('/businesses/:id');
+  const [data, setData] = useState<Awaited<ReturnType<typeof getBusinessDetail>> | null>(null);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { if (params?.id) { getBusinessDetail(params.id).then(setData); } }, [params?.id]);
+  if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading business details…" /></div></Shell>;
+  const { business } = data;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 overflow-hidden rounded-[26px] border border-[#e8e3d8] bg-white shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="h-36 bg-[#dcefe2]"><div className="h-full bg-[radial-gradient(circle_at_25%_35%,#6ca66a_0_9%,transparent_10%),radial-gradient(circle_at_68%_70%,#ef9f54_0_12%,transparent_13%),linear-gradient(135deg,#d8efd8,#a8d4ae)] opacity-60" /></div><div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1.5"><h1 className="font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{business.businessName}</h1>{business.verificationStatus === 'approved' && <ShieldCheck size={17} className="text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 text-sm text-[#78897e]">{business.category} · {business.businessAddress || 'Local business'}</p></div><FavoriteButton targetType="business" targetId={business.id} saved={saved} onChange={setSaved} /></div><p className="mt-4 text-sm leading-relaxed text-[#61776a]">{business.description || 'A trusted local business on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{business.verificationStatus === 'approved' ? 'Verified business' : 'Verification pending'}</span><span className="rounded-full bg-[#fff1df] px-3 py-1.5"><Star size={12} className="mr-1 inline text-[#f3a820]" fill="#f3a820" />{business.averageRating || 'New'} ({business.totalReviews ?? 0})</span></div></div></section><section className="mt-8"><SectionHeading eyebrow="From this business" title="Products" />{data.products.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.products.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No products listed yet" detail="Check back soon for new local finds." action="Browse search" onAction={() => window.location.assign('/search')} />}</section><section className="mt-8"><SectionHeading title="Services" />{data.services.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.services.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No services listed yet" detail="This business has not published services." action="Browse search" onAction={() => window.location.assign('/search')} />}</section>{data.relatedBusinesses.length > 0 && <section className="mt-8"><SectionHeading eyebrow="You may also like" title="Related businesses" /><div className="grid gap-3 md:grid-cols-3">{data.relatedBusinesses.map((item) => <RemoteBusinessCard key={item.id} business={item} savedIds={new Set()} onSaved={() => undefined} />)}</div></section>}</div></Shell>;
+}
+
+function ProductDetailPage() {
+  const [, params] = useRoute('/products/:id');
+  const [data, setData] = useState<Awaited<ReturnType<typeof getProductDetail>> | null>(null);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { if (params?.id) { getProductDetail(params.id).then(setData); } }, [params?.id]);
+  if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading product details…" /></div></Shell>;
+  const { product, business } = data;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex flex-col gap-5 md:flex-row"><div className="flex h-56 items-center justify-center rounded-[20px] bg-[#eedacb] md:w-1/2"><div className="h-32 w-24 rounded-[18px_18px_26px_26px] bg-[#bb714e] shadow-[inset_-10px_-10px_15px_rgba(0,0,0,.1),5px_8px_12px_rgba(52,43,23,.12)]" /></div><div className="flex-1"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Product</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{product.name}</h1></div><FavoriteButton targetType="product" targetId={product.id} saved={saved} onChange={setSaved} /></div><p className="mt-3 text-2xl font-extrabold text-[#e56e12]">{(product.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p><p className="mt-4 text-sm leading-relaxed text-[#61776a]">{product.description || 'A local marketplace find from a verified ShopNear business.'}</p><Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link></div></div></section><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related products" />{data.relatedProducts.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.relatedProducts.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No related products yet" detail="Browse more local products from Search." action="Browse products" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
+}
+
+function ServiceDetailPage() {
+  const [, params] = useRoute('/services/:id');
+  const [data, setData] = useState<Awaited<ReturnType<typeof getServiceDetail>> | null>(null);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { if (params?.id) { getServiceDetail(params.id).then(setData); } }, [params?.id]);
+  if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading service details…" /></div></Shell>;
+  const { service, business, provider } = data;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Service</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{service.name}</h1><p className="mt-1 text-sm text-[#78897e]">{service.location || 'Nearby service'} · {service.bookingReady ? 'Booking ready' : 'Contact provider'}</p></div><FavoriteButton targetType="service" targetId={service.id} saved={saved} onChange={setSaved} /></div><p className="mt-4 text-2xl font-extrabold text-[#087044]">{service.priceFromCents == null ? 'Request a quote' : `from ${(service.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</p><p className="mt-3 text-sm leading-relaxed text-[#61776a]">{service.description || 'A trusted local service on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{provider ? 'Verified provider' : 'Verified business'}</span>{service.serviceRadius != null && <span className="rounded-full bg-[#fff1df] px-3 py-1.5">Serves {service.serviceRadius} mi</span>}{service.estimatedDuration != null && <span className="rounded-full bg-[#edf0f4] px-3 py-1.5">{service.estimatedDuration} min</span>}</div>{business && <Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link>}</section><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related services" />{data.relatedServices.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.relatedServices.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No related services yet" detail="Browse more local services from Search." action="Browse services" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
 }
 
 function MessagesPage() {
@@ -592,7 +689,7 @@ function AuthPage() {
 }
 
 function Router() {
-  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/auth" component={AuthPage} /><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/auth" component={AuthPage} /><Route path="/businesses/:id" component={BusinessDetailPage} /><Route path="/products/:id" component={ProductDetailPage} /><Route path="/services/:id" component={ServiceDetailPage} /><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
 }
 
 function App() {

@@ -29,3 +29,12 @@ Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware acco
 - OpenAPI was updated and regenerated successfully.
 - The Profile management UI supports the expanded product/service fields, while Search uses the marketplace API and the business dashboard displays the expanded metrics.
 - Production-style workspace build and API marketplace smoke checks passed.
+
+## Phase 4 completion status
+
+- Added persistent entity-based customer favorites using the existing database table and unique user/entity index.
+- Added public business, product, and service detail endpoints with related listings and view counters.
+- Home discovery now reads featured businesses, products, and services from the API with loading and empty states.
+- Search links API-backed businesses, products, and services to their public detail pages.
+- Favorites now load from the authenticated API and preserve the existing five-tab navigation and ShopNear visual language.
+- OpenAPI and generated client/Zod types are synchronized. Phase 5 GPS, maps, distance, and directions work is intentionally not started.

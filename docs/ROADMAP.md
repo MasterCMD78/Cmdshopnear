@@ -7,10 +7,10 @@
 - Phase 2 finalization audit: Neon verification, role/account smoke coverage, response compatibility fix, and documentation
 - Phase 3 foundation: persistent products/services, owner-scoped CRUD, availability/visibility controls, categories, catalog, and business metrics
 - Phase 3 follow-through: richer listing fields, featured/trending/newest discovery, marketplace search, category administration API, expanded dashboard metrics, OpenAPI synchronization, and verification
+- Phase 4: persistent favorites, public business/product/service details, related listings, API-backed home/search discovery, loading/empty states, and verification badges
 
 ## Next
 
-- Phase 4: production-grade business/product/service detail screens
 - Phase 5: GPS, maps, distance, and directions
 - Phase 6: full ShopNear AI recommendations
 - Phase 7: chat, notifications, reviews, and ratings

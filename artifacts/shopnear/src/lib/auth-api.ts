@@ -74,11 +74,18 @@ export function updateProfile(input: Record<string, unknown>) {
 
 export type BusinessRecord = {
   id: string;
+  ownerId?: string;
   businessName: string;
   category: string;
   description: string | null;
   businessAddress: string | null;
   phone: string | null;
+  businessLogo?: string | null;
+  coverPhoto?: string | null;
+  workingHours?: Record<string, unknown> | null;
+  website?: string | null;
+  averageRating?: string;
+  totalReviews?: number;
   verificationStatus: string;
 };
 
@@ -109,6 +116,7 @@ export function saveServiceProvider(input: Record<string, unknown>, id?: string)
 
 export type MarketplaceProduct = {
   id: string;
+  businessId?: string;
   name: string;
   description: string | null;
   imagePaths?: string[];
@@ -125,10 +133,15 @@ export type MarketplaceProduct = {
   isVisible: boolean;
   status: string;
   isFeatured?: boolean;
+  favoriteCount?: number;
+  viewCount?: number;
+  createdAt?: string;
 };
 
 export type MarketplaceService = {
   id: string;
+  businessId?: string | null;
+  providerId?: string | null;
   name: string;
   description: string | null;
   imagePaths?: string[];
@@ -147,6 +160,9 @@ export type MarketplaceService = {
   isVisible: boolean;
   status: string;
   isFeatured?: boolean;
+  favoriteCount?: number;
+  viewCount?: number;
+  createdAt?: string;
 };
 
 export type BusinessDashboard = {
@@ -219,4 +235,76 @@ export function searchMarketplace(query: string, verified = false) {
   const params = new URLSearchParams({ query });
   if (verified) params.set('verified', 'true');
   return request<MarketplaceSearchResult>(`/api/marketplace/search?${params.toString()}`);
+}
+
+export type FeaturedMarketplace = {
+  featuredBusinesses: BusinessRecord[];
+  featuredProducts: MarketplaceProduct[];
+  featuredServices: MarketplaceService[];
+  trendingProducts: MarketplaceProduct[];
+  trendingServices: MarketplaceService[];
+  newestBusinesses: BusinessRecord[];
+  newestProviders: ServiceProviderRecord[];
+  newestProducts: MarketplaceProduct[];
+  newestServices: MarketplaceService[];
+};
+
+export function getFeaturedMarketplace() {
+  return request<FeaturedMarketplace>("/api/marketplace/featured");
+}
+
+export type BusinessDetail = {
+  business: BusinessRecord;
+  products: MarketplaceProduct[];
+  services: MarketplaceService[];
+  relatedBusinesses: BusinessRecord[];
+};
+
+export type ProductDetail = {
+  product: MarketplaceProduct;
+  business: BusinessRecord;
+  relatedProducts: MarketplaceProduct[];
+  relatedServices: MarketplaceService[];
+};
+
+export type ServiceDetail = {
+  service: MarketplaceService;
+  business: BusinessRecord | null;
+  provider: ServiceProviderRecord | null;
+  relatedServices: MarketplaceService[];
+};
+
+export function getBusinessDetail(id: string) {
+  return request<BusinessDetail>(`/api/businesses/${id}`);
+}
+
+export function getProductDetail(id: string) {
+  return request<ProductDetail>(`/api/products/${id}`);
+}
+
+export function getServiceDetail(id: string) {
+  return request<ServiceDetail>(`/api/services/${id}`);
+}
+
+export type FavoriteItem = {
+  id: string;
+  targetType: "business" | "product" | "service";
+  targetId: string;
+  createdAt: string;
+  item: BusinessRecord | MarketplaceProduct | MarketplaceService;
+};
+
+export function getFavorites() {
+  return request<{ favorites: FavoriteItem[] }>("/api/favorites");
+}
+
+export function addFavorite(targetType: FavoriteItem["targetType"], targetId: string) {
+  return request<{ targetType: FavoriteItem["targetType"]; targetId: string }>("/api/favorites", {
+    method: "POST",
+    body: JSON.stringify({ targetType, targetId }),
+  });
+}
+
+export function removeFavorite(targetType: FavoriteItem["targetType"], targetId: string) {
+  return request<{ message: string }>(`/api/favorites/${targetType}/${targetId}`, { method: "DELETE" });
 }
