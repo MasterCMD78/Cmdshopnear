@@ -45,3 +45,11 @@
 - Connected Home and Search to browser location with radius selection; added manual city/state controls and business/provider location sharing controls in Profile.
 - Added a provider-neutral map/routing adapter with nullable road-distance/time fields because no external map provider is configured.
 - Regenerated OpenAPI client and Zod schemas.
+
+## Phase 6 — ShopNear AI
+
+- Added the mock `AIProvider`, natural-language intent parsing, typo correction, category suggestions, and follow-up context.
+- Added public-listing recommendation ranking and additive AI search, recommendation, suggestion, history, and preference routes.
+- Added per-user AI controls and history clearing to Profile, recent search chips to Search, and recommendation sections to Home.
+- Added additive `ai_preferences` and `ai_search_history` tables; preserved existing marketplace and location tables.
+- Documented unsupported opening-hours/gender filters and the absence of weekly engagement and recently viewed events.

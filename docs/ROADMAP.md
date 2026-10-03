@@ -12,8 +12,8 @@
 
 ## Next
 
-- Phase 6: full ShopNear AI recommendations
-- Phase 7: chat, notifications, reviews, and ratings
+- Phase 6 is complete.
+- Phase 7: chat, notifications, reviews, and ratings — wait for explicit approval before starting.
 - Phase 8: verification and admin operations
 - Phase 9: security hardening and performance
 - Phase 10: production release
@@ -27,3 +27,15 @@
 ## Phase 5 follow-up
 
 - Select a concrete map/routing provider before enabling map-pin selection and road travel estimates; straight-line distances work without one.
+
+## Phase 6 status
+
+- Complete: provider-independent mock AI, natural-language marketplace search, intent and category detection, suggestions, corrections, recommendations, conversation context, user preferences, saved-history controls, API contracts, and documentation.
+- Not started: Phase 7 messaging, notifications, reviews, and ratings. Wait for explicit approval before beginning it.
+
+## Future AI improvements
+
+- Add a real model adapter only when a provider and credentials are explicitly selected; keep the mock provider available for local and deterministic testing.
+- Add structured opening-hours and public demographic fields only after the product and privacy requirements are defined.
+- Add event-level view/favorite analytics before claiming true week-over-week popularity, and add a privacy-reviewed view event before implementing recently viewed.
+- Add translation, voice transcription, or image embeddings behind the provider/input adapters when those capabilities are in scope.

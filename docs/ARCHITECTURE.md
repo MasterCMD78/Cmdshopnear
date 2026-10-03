@@ -47,3 +47,9 @@ Public detail routes expose only approved businesses and published, visible, ava
 GPS permission and the customer's location are managed through authenticated location routes; users can also provide a manual city/state. Business and service-provider locations are separately owner-scoped and require an explicit public-sharing action. Nearby search uses validated coordinates, Haversine distance, radius filtering, and city/state, verification, featured, and newest filters.
 
 Map and routing behavior stays behind a provider-neutral `MapProvider` interface. The active adapter currently returns no road distance/time, so those response fields are `null`; straight-line distance remains available without a third-party service. Choosing a routing/map vendor can replace the adapter without changing marketplace search logic.
+
+## Phase 6 AI search and recommendations
+
+`AIProvider` is a separate adapter boundary from marketplace data access. The initial mock implementation interprets English text using normalized terms, category rules, price/location parsing, typo correction, and prior intent. The service layer applies validated intent to existing Drizzle tables, scores eligible listings, and returns a stable result shape. REST routes own validation, session-scoped history, preferences, and rate limiting; the existing marketplace endpoints and pages remain in place.
+
+Recommendation ranking is shared and supports nearby, featured, newest, verified, popularity, and preferred-category signals. Nearby distance is computed only against approved listings whose owners enabled public location. The search boundary includes modality and language fields so future voice-transcription, image-query, multilingual, and external-model adapters can be added without changing the marketplace contract.

@@ -4,8 +4,9 @@ import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { AIListingCard, AIListingRail, AISuggestionChips } from '@/components/ai-marketplace';
 import { Link, Route, Switch, Router as WouterRouter, useLocation, useRoute } from 'wouter';
-import { addFavorite, deleteProduct, deleteService, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getLocation, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, getNearbyMarketplace, logout, registerAccount, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, updateBusinessLocation as saveBusinessLocation, updateLocation, updateProfile, updateServiceProviderLocation, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type NearbyMarketplace, type ServiceProviderRecord, type UserLocation } from '@/lib/auth-api';
+import { addFavorite, clearAIHistory, clearAIConversation, deleteProduct, deleteService, getAIConversationId, getAIHistory, getAIPreferences, getAIRecommendations, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getLocation, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, getNearbyMarketplace, logout, registerAccount, rememberAIConversationId, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, searchWithAI, updateAIPreferences, updateBusinessLocation as saveBusinessLocation, updateLocation, updateProfile, updateServiceProviderLocation, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type NearbyMarketplace, type ServiceProviderRecord, type UserLocation } from '@/lib/auth-api';
 
 const queryClient = new QueryClient();
 const logoPath = '/assets/shopnear-logo.png';
@@ -264,6 +265,8 @@ function HomePage() {
   const [, setLocation] = useLocation();
   const [toast, setToast] = useState('');
   const [discovery, setDiscovery] = useState<Awaited<ReturnType<typeof getFeaturedMarketplace>> | null>(null);
+  const [aiRecommendations, setAiRecommendations] = useState<Awaited<ReturnType<typeof getAIRecommendations>> | null>(null);
+  const [aiRecommendationError, setAiRecommendationError] = useState('');
   const [nearby, setNearby] = useState<NearbyMarketplace | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -275,9 +278,14 @@ function HomePage() {
       const point = await readBrowserLocation();
       const results = await getNearbyMarketplace({ latitude: point.latitude, longitude: point.longitude, radiusKm: 25 });
       setNearby(results);
+      const recommendations = await getAIRecommendations({ latitude: point.latitude, longitude: point.longitude, radiusKm: 25 });
+      setAiRecommendations(recommendations);
+      setAiRecommendationError('');
       notify('Location enabled for nearby search');
     } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not read your location');
+      const message = error instanceof Error ? error.message : 'Could not read your location';
+      setAiRecommendationError(message);
+      notify(message);
     } finally {
       setLocating(false);
     }
@@ -286,6 +294,7 @@ function HomePage() {
     getFeaturedMarketplace().then(async (next) => {
       setDiscovery(next);
     }).catch(() => setDiscovery(null)).finally(() => setLoading(false));
+    getAIRecommendations().then((next) => setAiRecommendations(next)).catch(() => setAiRecommendationError('AI recommendations are unavailable right now.'));
   }, []);
   const onSaved = (id: string, saved: boolean) => setSavedIds((current) => { const next = new Set(current); saved ? next.add(id) : next.delete(id); return next; });
   return (
@@ -299,11 +308,30 @@ function HomePage() {
           </div>
           <div className="hidden h-20 w-20 rounded-[24px] bg-[#e5f3e8] p-3 md:flex md:items-center md:justify-center"><Compass size={42} strokeWidth={1.25} className="text-[#087044]" /></div>
         </section>
-        <div className="animate-rise delay-1"><AiSearch onSearch={(value) => { setLocation('/search'); notify(`Searching for ${value}`); }} /></div>
+        <div className="animate-rise delay-1"><AiSearch onSearch={(value) => { setLocation(`/search?q=${encodeURIComponent(value)}`); notify(`Searching for ${value}`); }} /></div>
         <section className="animate-rise delay-2 py-7">
           <SectionHeading eyebrow="Browse nearby" title="What are you in the mood for?" action="See all" onAction={() => setLocation('/search')} />
           <CategoryStrip onSelect={(label) => { setLocation('/search'); notify(`Showing ${label.toLowerCase()} nearby`); }} />
         </section>
+        {aiRecommendationError && <p className="mb-5 rounded-xl bg-[#fff0ed] p-3 text-xs text-[#a24430]" role="status">{aiRecommendationError}</p>}
+        {aiRecommendations?.recommendationsEnabled && <>
+          <AIListingRail eyebrow="Picked with ShopNear AI" title="Recommended For You" items={aiRecommendations.recommendedForYou} />
+          <AIListingRail eyebrow={aiRecommendations.locationAware ? "Based on public nearby locations" : "Popular marketplace listings"} title={aiRecommendations.locationAware ? "Trending Near You" : "Trending on ShopNear"} items={aiRecommendations.trendingNearYou} />
+          <AIListingRail eyebrow="Recent listings with available engagement signals" title="Popular This Week" items={aiRecommendations.popularThisWeek} />
+          <section className="pb-7">
+            <SectionHeading eyebrow="Try a natural-language search" title="AI Suggestions" />
+            <AISuggestionChips items={aiRecommendations.aiSuggestions.slice(0, 5)} onSelect={(value) => setLocation(`/search?q=${encodeURIComponent(value)}`)} />
+          </section>
+          <section className="pb-7">
+            <SectionHeading eyebrow="Future-ready" title="Recently Viewed" />
+            <p className="rounded-2xl border border-dashed border-[#dce6dc] bg-[#f9fbf8] p-4 text-xs leading-relaxed text-[#78867d]">Recently viewed listings will appear here once visit tracking is added. ShopNear does not track views for this section yet.</p>
+          </section>
+          {aiRecommendations.continueBrowsing.length > 0 && <section className="pb-7">
+            <SectionHeading eyebrow="Your recent searches" title="Continue Browsing" />
+            <AISuggestionChips items={aiRecommendations.continueBrowsing} onSelect={(value) => setLocation(`/search?q=${encodeURIComponent(value)}`)} />
+          </section>}
+          {aiRecommendations.message && <p className="pb-5 text-[10px] leading-relaxed text-[#89948c]">{aiRecommendations.message}</p>}
+        </>}
         {loading ? <div className="pb-8"><LoadingState /></div> : discovery && <><section className="animate-rise delay-2 pb-7">
           <SectionHeading eyebrow={nearby ? "Businesses near you" : "Trusted by neighbors"} title={nearby ? "Places worth the walk" : "Places worth the walk"} action="See all" onAction={() => setLocation('/search')} />
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
@@ -329,17 +357,29 @@ function HomePage() {
 }
 
 function SearchPage() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
   const [activeFilter, setActiveFilter] = useState('All');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [toast, setToast] = useState('');
   const [liveResults, setLiveResults] = useState<MarketplaceSearchResult | null>(null);
+  const [aiResults, setAiResults] = useState<Awaited<ReturnType<typeof searchWithAI>> | null>(null);
+  const [aiError, setAiError] = useState('');
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [conversationId, setConversationId] = useState(() => getAIConversationId());
   const [loadingResults, setLoadingResults] = useState(false);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState(25);
   const [locating, setLocating] = useState(false);
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2000); };
+  useEffect(() => {
+    getSession().then((session) => {
+      if (session.user) return getAIHistory();
+      return null;
+    }).then((response) => {
+      if (response) setRecentSearches(response.history.map((entry) => entry.question).slice(0, 5));
+    }).catch(() => setRecentSearches([]));
+  }, []);
   const useCurrentLocation = async () => {
     setLocating(true);
     try {
@@ -363,27 +403,77 @@ function SearchPage() {
         featured: activeFilter === 'Featured' ? true : undefined,
         newest: activeFilter === 'Newest' ? true : undefined,
       };
+      const value = query.trim();
+      if (value) {
+        setAiError('');
+        setLiveResults(null);
+        const aiRequest = searchWithAI({
+          query: value,
+          conversationId: conversationId ?? getAIConversationId(),
+          ...(coordinates ?? {}),
+          radiusKm,
+          city: searchOptions.city,
+          state: searchOptions.state,
+          verified: searchOptions.verified,
+          featured: searchOptions.featured,
+          newest: searchOptions.newest,
+          entityType: activeFilter === 'Products' ? 'products' : activeFilter === 'Services' ? 'services' : undefined,
+        });
+        aiRequest.then((response) => {
+          if (!active) return;
+          setConversationId(response.conversationId);
+          rememberAIConversationId(response.conversationId);
+          setAiResults(response);
+          if (response.historySaved) setRecentSearches((current) => [value, ...current.filter((item) => item !== value)].slice(0, 5));
+        }).catch(async (error) => {
+          if (!active) return;
+          const detail = error instanceof Error ? error.message : 'The AI search could not be completed.';
+          setAiResults(null);
+          setAiError(`${detail} Showing standard marketplace results instead.`);
+          try {
+            const fallback = coordinates
+              ? await getNearbyMarketplace({
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                radiusKm,
+                query: value,
+                city: searchOptions.city,
+                state: searchOptions.state,
+                verified: searchOptions.verified,
+                newest: searchOptions.newest,
+                featured: searchOptions.featured,
+              })
+              : await searchMarketplace(value, searchOptions);
+            if (active) setLiveResults(fallback);
+          } catch {
+            if (active) setLiveResults(null);
+          }
+        }).finally(() => { if (active) setLoadingResults(false); });
+        return;
+      }
+
+      setAiResults(null);
+      setAiError('');
       const request = coordinates
         ? getNearbyMarketplace({
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
           radiusKm,
-          query: query.trim() || undefined,
           city: searchOptions.city,
           state: searchOptions.state,
           verified: searchOptions.verified,
-          newest: activeFilter === 'Newest' ? true : undefined,
-          featured: activeFilter === 'Featured' ? true : undefined,
+          newest: searchOptions.newest,
+          featured: searchOptions.featured,
         })
-        : query.trim() || searchOptions.city || searchOptions.state || searchOptions.verified || searchOptions.featured || searchOptions.newest
-        ? searchMarketplace(query.trim(), searchOptions)
-        : Promise.all([getMarketplaceCatalog({ limit: 12 }), searchMarketplace('')]).then(([catalog, discovery]) => ({
-          ...discovery,
-          products: catalog.products,
-          services: catalog.services,
-        }));
-      request.then((value) => { if (active) setLiveResults(value); }).catch(() => { if (active) setLiveResults(null); }).finally(() => { if (active) setLoadingResults(false); });
-    }, 220);
+        : searchOptions.city || searchOptions.state || searchOptions.verified || searchOptions.featured || searchOptions.newest
+          ? searchMarketplace('', searchOptions)
+          : Promise.all([getMarketplaceCatalog({ limit: 12 }), searchMarketplace('')]).then(([catalog, discovery]) => ({
+            ...discovery,
+            products: catalog.products,
+            services: catalog.services,
+          }));
+      request.then((result) => { if (active) setLiveResults(result); }).catch(() => { if (active) setLiveResults(null); }).finally(() => { if (active) setLoadingResults(false); });
+    }, 420);
     return () => { active = false; window.clearTimeout(timer); };
   }, [query, coordinates, radiusKm, activeFilter, city, state]);
   const filters = ['All', 'Verified', 'Newest', 'Featured', 'Products', 'Services'];
@@ -391,7 +481,13 @@ function SearchPage() {
   const showServices = ['All', 'Newest', 'Featured', 'Services'].includes(activeFilter);
   const showBusinesses = ['All', 'Verified', 'Newest'].includes(activeFilter);
   const showProviders = ['All', 'Verified', 'Newest', 'Services'].includes(activeFilter);
-  const resultCount = (showProducts ? liveResults?.products.length ?? 0 : 0)
+  const aiResultCount = aiResults
+    ? (showProducts ? aiResults.results.products.length : 0)
+      + (showServices ? aiResults.results.services.length : 0)
+      + (showBusinesses ? aiResults.results.businesses.length : 0)
+      + (showProviders ? aiResults.results.serviceProviders.length : 0)
+    : 0;
+  const resultCount = aiResults ? aiResultCount : (showProducts ? liveResults?.products.length ?? 0 : 0)
     + (showServices ? liveResults?.services.length ?? 0 : 0)
     + (showBusinesses ? liveResults?.businesses.length ?? 0 : 0)
     + (showProviders ? liveResults?.serviceProviders.length ?? 0 : 0);
@@ -402,7 +498,7 @@ function SearchPage() {
         <h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Find your next local favorite.</h1>
         <div className="mt-5 flex items-center gap-3 rounded-[19px] border border-[#e8e1d6] bg-white px-4 py-3 shadow-[0_6px_20px_rgba(16,72,50,.06)]">
           <Search size={19} className="text-[#087044]" />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search shops, products, services..." autoFocus className="min-w-0 flex-1 bg-transparent text-sm text-[#174d37] outline-none placeholder:text-[#a4aaa3]" data-testid="input-search" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try “cheap iPhone near me”..." maxLength={240} autoFocus className="min-w-0 flex-1 bg-transparent text-sm text-[#174d37] outline-none placeholder:text-[#a4aaa3]" data-testid="input-search" />
           {query && <button type="button" onClick={() => setQuery('')} className="focus-ring text-[#8a968d]" aria-label="Clear search" data-testid="button-clear-search"><X size={17} /></button>}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -419,14 +515,30 @@ function SearchPage() {
           {filters.map((filter) => <button type="button" key={filter} onClick={() => setActiveFilter(filter)} className={`focus-ring whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${activeFilter === filter ? 'bg-[#087044] text-white' : 'border border-[#ebe4d9] bg-white text-[#658071]'}`} data-testid={`button-filter-${filter.toLowerCase().replaceAll(' ', '-')}`}>{filter}</button>)}
         </div>
         <section className="mt-8">
-           <SectionHeading eyebrow={loadingResults ? 'Searching the marketplace' : query ? `${resultCount} results nearby` : 'Curated for you'} title={query ? `Results for “${query}”` : 'Popular near you'} />
-           {loadingResults ? <LoadingState label="Searching the marketplace…" /> : liveResults && resultCount > 0 ? <div className="space-y-3">
+           <SectionHeading eyebrow={loadingResults ? 'Understanding your search' : query ? `${resultCount} results` : 'Curated for you'} title={query ? `Results for “${query}”` : 'Popular near you'} />
+           {aiError && <p className="mb-4 rounded-xl bg-[#fff0ed] p-3 text-xs leading-relaxed text-[#a24430]" role="status">{aiError}</p>}
+           {loadingResults ? <LoadingState label={query ? 'Understanding your request…' : 'Searching the marketplace…'} /> : aiResults ? <div className="space-y-4">
+             <div className="rounded-[18px] border border-[#dce9de] bg-[#f5faf5] p-4">
+               <div className="flex items-start gap-2.5"><Sparkles size={16} className="mt-0.5 shrink-0 text-[#e8781a]" /><div><p className="text-xs leading-relaxed text-[#426b55]">{aiResults.answer}</p><p className="mt-2 text-[10px] text-[#78867d]">{aiResults.intent.category ?? 'Marketplace discovery'}{aiResults.intent.location ? ` · ${aiResults.intent.location}` : ''} · {Math.round(aiResults.intent.confidence * 100)}% intent confidence</p></div></div>
+               {aiResults.correction && <p className="mt-3 text-[11px] text-[#78867d]">Did you mean <button type="button" onClick={() => setQuery(aiResults.correction!)} className="font-bold text-[#087044] underline underline-offset-2">{aiResults.correction}</button>?</p>}
+             </div>
+             {aiResults.intent.unsupportedFilters.length > 0 && <div className="rounded-xl bg-[#fff7eb] p-3 text-[11px] leading-relaxed text-[#8e5b2d]" role="status">{aiResults.intent.unsupportedFilters.join(' ')}</div>}
+             {aiResultCount > 0 ? <div className="space-y-3">
+               {showBusinesses && aiResults.results.businesses.map((item) => <AIListingCard key={`business-${item.id}`} item={item} />)}
+               {showProviders && aiResults.results.serviceProviders.map((item) => <AIListingCard key={`provider-${item.id}`} item={item} />)}
+               {showProducts && aiResults.results.products.map((item) => <AIListingCard key={`product-${item.id}`} item={item} />)}
+               {showServices && aiResults.results.services.map((item) => <AIListingCard key={`service-${item.id}`} item={item} />)}
+             </div> : <EmptyState icon={Search} title="No matching public listings yet" detail="Try a broader category or refine your search. Results include only approved, publicly visible listings." action="Browse categories" onAction={() => setQuery('')} />}
+             <AISuggestionChips items={aiResults.relatedSearches.slice(0, 5)} onSelect={setQuery} />
+             <p className="text-[10px] leading-relaxed text-[#89948c]">{aiResults.disclaimer}</p>
+           </div> : liveResults && resultCount > 0 ? <div className="space-y-3">
              {showBusinesses && liveResults.businesses.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/businesses/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><Store size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.businessName}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.category} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}
              {showProviders && liveResults.serviceProviders.map((item) => <div key={item.id} className="flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.profession}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Local service provider'} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span></div>)}
              {showProducts && liveResults.products.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/products/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1df] text-[#e8781a]"><ShoppingBag size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.brand || item.location || 'Local product'} · {item.tags?.join(', ') || 'Marketplace find'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><span className="text-xs font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</span></button>)}
              {showServices && liveResults.services.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/services/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><span className="text-xs font-extrabold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</span></button>)}
-           </div> : <EmptyState icon={Search} title="No nearby matches yet" detail="Try a broader search or browse one of the categories below." action="Browse categories" onAction={() => setQuery('')} />}
+            </div> : <EmptyState icon={Search} title="No nearby matches yet" detail="Try a broader search or browse one of the categories below." action="Browse categories" onAction={() => setQuery('')} />}
         </section>
+         {!query.trim() && recentSearches.length > 0 && <section className="mt-7"><SectionHeading eyebrow="Your account history" title="Recent AI searches" /><AISuggestionChips items={recentSearches} onSelect={setQuery} /></section>}
         <section className="mt-9">
           <SectionHeading title="Browse by category" />
           <CategoryStrip onSelect={(label) => { setQuery(label); notify(`Searching ${label}`); }} />
@@ -783,6 +895,85 @@ function LocationSettings({ onNotice }: { onNotice: (message: string) => void })
   </section>;
 }
 
+function AIPreferencesPanel({ onNotice }: { onNotice: (message: string) => void }) {
+  const [preferences, setPreferences] = useState<Awaited<ReturnType<typeof getAIPreferences>> | null>(null);
+  const [categoryText, setCategoryText] = useState('');
+  const [history, setHistory] = useState<Awaited<ReturnType<typeof getAIHistory>>['history']>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    Promise.all([getAIPreferences(), getAIHistory()]).then(([nextPreferences, nextHistory]) => {
+      setPreferences(nextPreferences);
+      setCategoryText(nextPreferences.preferredCategories.join(', '));
+      setHistory(nextHistory.history);
+    }).catch((reason) => setError(reason instanceof Error ? reason.message : 'Could not load AI preferences.'));
+  }, []);
+  const save = async () => {
+    if (!preferences) return;
+    setBusy(true);
+    setError('');
+    try {
+      const preferredCategories = categoryText.split(',').map((value) => value.trim()).filter(Boolean).slice(0, 12);
+      const saved = await updateAIPreferences({ ...preferences, preferredCategories });
+      setPreferences(saved);
+      setCategoryText(saved.preferredCategories.join(', '));
+      onNotice('AI preferences saved');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not save AI preferences.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const clearHistory = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await clearAIHistory();
+      setHistory([]);
+      clearAIConversation();
+      onNotice('AI search history cleared');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not clear AI search history.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const toggle = (key: 'recommendationsEnabled' | 'personalizedRecommendations' | 'saveSearchHistory') => {
+    setPreferences((current) => current ? { ...current, [key]: !current[key] } : current);
+  };
+  return <section className="mt-8">
+    <SectionHeading eyebrow="Private to your account" title="AI preferences" />
+    <div className="space-y-4 rounded-[22px] border border-[#ebe5da] bg-white p-4 shadow-[0_6px_20px_rgba(16,72,50,.04)]">
+      {preferences ? <>
+        <label className="flex items-start gap-3 text-xs text-[#426b55]">
+          <input type="checkbox" checked={preferences.recommendationsEnabled} onChange={() => toggle('recommendationsEnabled')} className="mt-0.5 accent-[#087044]" />
+          <span><strong className="block text-[#174d37]">Enable AI recommendations</strong><span className="mt-1 block text-[10px] leading-relaxed text-[#89948c]">Show recommended, trending, and popular public listings on Home.</span></span>
+        </label>
+        <label className="flex items-start gap-3 text-xs text-[#426b55]">
+          <input type="checkbox" checked={preferences.personalizedRecommendations} onChange={() => toggle('personalizedRecommendations')} className="mt-0.5 accent-[#087044]" />
+          <span><strong className="block text-[#174d37]">Personalize recommendations</strong><span className="mt-1 block text-[10px] leading-relaxed text-[#89948c]">Use your saved category preferences and recent AI searches. Turn this off to use general marketplace ranking.</span></span>
+        </label>
+        <label className="flex items-start gap-3 text-xs text-[#426b55]">
+          <input type="checkbox" checked={preferences.saveSearchHistory} onChange={() => toggle('saveSearchHistory')} className="mt-0.5 accent-[#087044]" />
+          <span><strong className="block text-[#174d37]">Save AI search history</strong><span className="mt-1 block text-[10px] leading-relaxed text-[#89948c]">History is used only for your account and can be cleared here.</span></span>
+        </label>
+        <label className="block text-[11px] font-semibold text-[#426b55]" htmlFor="ai-preferred-categories">
+          Preferred categories
+          <input id="ai-preferred-categories" value={categoryText} onChange={(event) => setCategoryText(event.target.value)} maxLength={1000} placeholder="For example: Fashion, Home Services" className="mt-2 w-full rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-xs text-[#174d37] outline-none focus:border-[#087044]" data-testid="input-ai-preferences-categories" />
+          <span className="mt-1 block text-[10px] font-normal text-[#89948c]">Separate up to 12 categories with commas.</span>
+        </label>
+        {error && <p className="rounded-xl bg-[#fff0ed] p-3 text-[11px] text-[#a24430]" role="alert">{error}</p>}
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" onClick={save} disabled={busy} className="focus-ring rounded-full bg-[#087044] px-4 py-2.5 text-[11px] font-bold text-white disabled:opacity-60" data-testid="button-save-ai-preferences">{busy ? 'Saving…' : 'Save preferences'}</button>
+          <button type="button" onClick={clearHistory} disabled={busy} className="focus-ring rounded-full border border-[#eadfd2] px-4 py-2.5 text-[11px] font-bold text-[#9a6241] disabled:opacity-60" data-testid="button-clear-ai-history">Clear AI search history ({history.length})</button>
+        </div>
+        {history.length > 0 && <div className="border-t border-[#f0ece4] pt-3"><p className="mb-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#89948c]">Recent searches</p><ul className="space-y-1.5">{history.slice(0, 3).map((entry) => <li key={entry.id} className="truncate text-[11px] text-[#5f806e]">{entry.question}</li>)}</ul></div>}
+        <p className="border-t border-[#f0ece4] pt-3 text-[10px] leading-relaxed text-[#89948c]">Search location coordinates are used only for that request. They are not saved to AI search history.</p>
+      </> : <p className="text-xs text-[#89948c]">Loading AI preferences…</p>}
+    </div>
+  </section>;
+}
+
 function ProfilePage() {
   const [toast, setToast] = useState('');
   const [notifications, setNotifications] = useState(true);
@@ -822,6 +1013,7 @@ function ProfilePage() {
         </section> : <section className="mt-6 rounded-[24px] bg-[#e4f3e7] p-5"><div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#087044] text-white"><ShieldCheck size={22} /></span><div><h2 className="font-display text-xl font-extrabold text-[#164d38]">Make ShopNear yours.</h2><p className="mt-1 text-xs leading-relaxed text-[#5f806e]">Sign in to sync your profile, save your details, and register as a local business or service provider.</p><button type="button" onClick={() => setLocation('/auth')} className="focus-ring mt-3 rounded-full bg-[#f47716] px-4 py-2 text-xs font-bold text-white" data-testid="button-sign-in">Sign in with phone</button></div></div></section>}
         {user && editingProfile && <ProfileEditor user={user} onSaved={(next) => { setUser(next); setEditingProfile(false); notify('Profile saved'); }} onCancel={() => setEditingProfile(false)} />}
         {user && <LocationSettings onNotice={notify} />}
+         {user && <AIPreferencesPanel onNotice={notify} />}
         {user?.accountType === 'business' && <BusinessEditor />}
         {user?.accountType === 'service_provider' && <ServiceProviderEditor />}
          {user?.accountType === 'business' && <BusinessDashboardPanel />}
@@ -857,7 +1049,7 @@ function AuthPage() {
   };
   const submitProfile = async (event: FormEvent) => {
     event.preventDefault(); setError(''); setBusy(true);
-    try { await registerAccount({ fullName, accountType, city: city || undefined, state: state || undefined }); setLocation('/'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to create account'); } finally { setBusy(false); }
+    try { await registerAccount({ fullName, accountType, city: city || undefined, state: state || undefined }); clearAIConversation(); setLocation('/'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to create account'); } finally { setBusy(false); }
   };
   const inputClass = "mt-2 w-full rounded-2xl border border-[#e5dfd3] bg-white px-4 py-3 text-sm text-[#174d37] outline-none focus:border-[#087044] focus:ring-2 focus:ring-[#d8efdf]";
   return <div className="min-h-[100dvh] bg-[#f5f1e9] px-5 py-7 md:px-10 md:py-10"><div className="mx-auto max-w-xl rounded-[30px] bg-[#fffdf9] p-6 shadow-[0_18px_50px_rgba(16,72,50,.10)] md:p-10"><div className="flex items-center justify-between"><Logo compact /><button type="button" onClick={() => setLocation('/')} className="focus-ring text-xs font-bold text-[#087044]">Back to ShopNear</button></div><p className="mt-10 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Secure phone access</p><h1 className="mt-2 font-display text-[32px] font-extrabold leading-tight tracking-[-.05em] text-[#164d38]">{step === 'phone' ? 'Welcome to your neighborhood.' : step === 'otp' ? 'Enter your code.' : 'Tell us about you.'}</h1><p className="mt-3 text-sm leading-relaxed text-[#77867c]">{step === 'phone' ? 'Use your phone number to sign in or create a ShopNear account.' : step === 'otp' ? `We sent a six-digit code to ${phone}.` : 'One quick step, then your ShopNear account is ready.'}</p>{developmentOtp && step === 'otp' && <div className="mt-5 rounded-2xl border border-[#f8d5b9] bg-[#fff1df] p-3 text-xs text-[#8c572f]">Development code: <strong className="tracking-[.2em]">{developmentOtp}</strong></div>}{error && <div className="mt-5 rounded-2xl bg-[#fff0ed] p-3 text-xs font-semibold text-[#b34b32]" role="alert">{error}</div>}{step === 'phone' && <form onSubmit={submitPhone} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Phone number<input required value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+234 801 234 5678" inputMode="tel" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Sending code…' : 'Send verification code'}</button></form>}{step === 'otp' && <form onSubmit={submitCode} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Six-digit code<input required minLength={6} maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))} className={`${inputClass} text-center text-xl tracking-[.35em]`} placeholder="123456" inputMode="numeric" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Verifying…' : 'Verify phone'}</button><button type="button" onClick={() => { setStep('phone'); setDevelopmentOtp(null); }} className="focus-ring w-full text-xs font-bold text-[#087044]">Use a different number</button></form>}{step === 'profile' && <form onSubmit={submitProfile} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Full name<input required minLength={2} value={fullName} onChange={(event) => setFullName(event.target.value)} className={inputClass} placeholder="Your name" /></label><fieldset><legend className="text-xs font-bold text-[#4d715f]">I’m joining as</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{([['customer', 'Customer'], ['business', 'Business'], ['service_provider', 'Service provider']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setAccountType(value)} className={`focus-ring rounded-2xl border px-3 py-3 text-xs font-bold ${accountType === value ? 'border-[#087044] bg-[#e4f3e7] text-[#087044]' : 'border-[#e5dfd3] bg-white text-[#718278]'}`}>{label}</button>)}</div></fieldset><div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-[#4d715f]">City<input value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Lagos" /></label><label className="block text-xs font-bold text-[#4d715f]">State<input value={state} onChange={(event) => setState(event.target.value)} className={inputClass} placeholder="Lagos" /></label></div><button disabled={busy} className="focus-ring w-full rounded-full bg-[#f47716] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Creating account…' : 'Finish account setup'}</button></form>}</div></div>;

@@ -72,3 +72,14 @@ Product and service mutations are owner-scoped in the API. The UI provides the f
 Protected routes return `401` when there is no valid session and `403` when the role is not allowed.
 
 Nearby results include straight-line `distanceKm` for radius filtering and sorting. `travelDistanceMeters` and `travelTimeSeconds` are nullable until a routing provider is configured. The current map provider is `none`; no provider-specific key or map SDK is required for GPS and straight-line discovery.
+
+## Phase 6 AI routes
+
+- `POST /ai/search` — interpret a natural-language marketplace query and return intent, approved public results, filters, corrections, and related searches. The optional `conversationId` enables follow-up queries; latitude and longitude must be supplied together.
+- `GET /ai/recommendations` — return recommended, trending, and recent-popular listing groups. Optional coordinates are used only for that request.
+- `GET /ai/suggestions?query=...` — return spelling corrections, related searches, suggested categories, and next searches.
+- `GET /ai/history` — list the authenticated user's recent AI searches. History is saved only when that user's preference permits it.
+- `DELETE /ai/history` — delete the authenticated user's saved AI searches.
+- `GET /ai/preferences` and `PUT /ai/preferences` — read or update recommendation, personalization, history-saving, and category preferences.
+
+The AI routes use a 30-request-per-minute in-memory rate limit. Preferences and history require the existing session cookie. Search and recommendation responses omit raw coordinates and return only eligible public listing data. The mock provider currently supports English text queries; unsupported opening-hours and provider-gender filters are reported rather than claimed as applied.

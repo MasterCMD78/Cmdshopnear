@@ -964,6 +964,206 @@ export interface UploadResponse {
   metadata: UploadResponseMetadata;
 }
 
+export type AISearchInputEntityType = typeof AISearchInputEntityType[keyof typeof AISearchInputEntityType];
+
+
+export const AISearchInputEntityType = {
+  businesses: 'businesses',
+  products: 'products',
+  services: 'services',
+} as const;
+
+export interface AISearchInput {
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  query: string;
+  conversationId?: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  latitude?: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  longitude?: number;
+  /**
+     * @minimum 0.1
+     * @maximum 100
+     */
+  radiusKm?: number;
+  /** @maxLength 80 */
+  city?: string;
+  /** @maxLength 80 */
+  state?: string;
+  verified?: boolean;
+  featured?: boolean;
+  newest?: boolean;
+  entityType?: AISearchInputEntityType;
+}
+
+export interface AIIntentFilters {
+  nearMe: boolean;
+  verified: boolean;
+  featured: boolean;
+  newest: boolean;
+  openNow: boolean;
+  /** @nullable */
+  minPriceCents: number | null;
+  /** @nullable */
+  maxPriceCents: number | null;
+}
+
+export type AIIntentKind = typeof AIIntentKind[keyof typeof AIIntentKind];
+
+
+export const AIIntentKind = {
+  marketplace_discovery: 'marketplace_discovery',
+  business_search: 'business_search',
+  product_search: 'product_search',
+  service_search: 'service_search',
+} as const;
+
+export interface AIIntent {
+  kind: AIIntentKind;
+  normalizedQuery: string;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  location: string | null;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  confidence: number;
+  filters: AIIntentFilters;
+  unsupportedFilters: string[];
+}
+
+export type AIResultCardType = typeof AIResultCardType[keyof typeof AIResultCardType];
+
+
+export const AIResultCardType = {
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface AIResultCard {
+  id: string;
+  type: AIResultCardType;
+  title: string;
+  /** @nullable */
+  description: string | null;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  location: string | null;
+  verified: boolean;
+  featured: boolean;
+  /** @nullable */
+  rating: number | null;
+  /** @nullable */
+  reviewCount: number | null;
+  /** @nullable */
+  priceCents: number | null;
+  /** @nullable */
+  distanceKm: number | null;
+  href: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface AIResults {
+  businesses: AIResultCard[];
+  serviceProviders: AIResultCard[];
+  products: AIResultCard[];
+  services: AIResultCard[];
+}
+
+export interface AISearchResponse {
+  provider: string;
+  conversationId: string;
+  answer: string;
+  intent: AIIntent;
+  results: AIResults;
+  suggestedFilters: string[];
+  suggestedCategories: string[];
+  suggestedNextSearches: string[];
+  relatedSearches: string[];
+  /** @nullable */
+  correction: string | null;
+  disclaimer: string;
+  historySaved: boolean;
+}
+
+export interface AISuggestions {
+  /** @nullable */
+  correction: string | null;
+  relatedSearches: string[];
+  suggestedCategories: string[];
+  suggestedNextSearches: string[];
+}
+
+export interface AIRecommendations {
+  recommendationsEnabled: boolean;
+  personalized: boolean;
+  locationAware: boolean;
+  recommendedForYou: AIResultCard[];
+  trendingNearYou: AIResultCard[];
+  popularThisWeek: AIResultCard[];
+  aiSuggestions: string[];
+  recentlyViewed: AIResultCard[];
+  continueBrowsing: string[];
+  /** @nullable */
+  message: string | null;
+}
+
+export interface AIHistoryEntry {
+  id: string;
+  conversationId: string;
+  question: string;
+  intent: string;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  location: string | null;
+  createdAt: string;
+}
+
+export interface AIHistory {
+  history: AIHistoryEntry[];
+}
+
+export interface AIHistoryDelete {
+  /** @minimum 0 */
+  deleted: number;
+}
+
+export interface AIPreferences {
+  recommendationsEnabled: boolean;
+  personalizedRecommendations: boolean;
+  saveSearchHistory: boolean;
+  /** @items.maxLength 80 */
+  preferredCategories: string[];
+}
+
+export interface AIPreferencesUpdate {
+  recommendationsEnabled?: boolean;
+  personalizedRecommendations?: boolean;
+  saveSearchHistory?: boolean;
+  /**
+     * @maxItems 12
+     * @items.minLength 1
+     * @items.maxLength 80
+     */
+  preferredCategories?: string[];
+}
+
 export type GetMarketplaceCatalogParams = {
 /**
  * @maxLength 120
@@ -1058,6 +1258,31 @@ page?: number;
  * @maximum 50
  */
 limit?: number;
+};
+
+export type GetAIRecommendationsParams = {
+/**
+ * @minimum -90
+ * @maximum 90
+ */
+latitude?: number;
+/**
+ * @minimum -180
+ * @maximum 180
+ */
+longitude?: number;
+/**
+ * @minimum 0.1
+ * @maximum 100
+ */
+radiusKm?: number;
+};
+
+export type GetAISuggestionsParams = {
+/**
+ * @maxLength 240
+ */
+query?: string;
 };
 
 export type GetAdminCategoriesParams = {

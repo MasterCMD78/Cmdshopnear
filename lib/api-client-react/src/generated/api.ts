@@ -20,6 +20,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AIHistory,
+  AIHistoryDelete,
+  AIPreferences,
+  AIPreferencesUpdate,
+  AIRecommendations,
+  AISearchInput,
+  AISearchResponse,
+  AISuggestions,
   AdminCategories,
   AdminCategoryInput,
   AdminCategoryUpdate,
@@ -34,6 +42,8 @@ import type {
   FavoriteMutation,
   Favorites,
   FeaturedMarketplace,
+  GetAIRecommendationsParams,
+  GetAISuggestionsParams,
   GetAdminCategoriesParams,
   GetMarketplaceCatalogParams,
   GetNearbyMarketplaceParams,
@@ -2337,6 +2347,578 @@ export function useGetNearbyMarketplace<TData = Awaited<ReturnType<typeof getNea
 
 
 
+
+export const getAiSearchUrl = () => {
+
+
+
+
+  return `/api/ai/search`
+}
+
+/**
+ * @summary Interpret a natural-language request and search public marketplace listings
+ */
+export const aiSearch = async (aISearchInput: AISearchInput, options?: Parameters<typeof customFetch>[1]): Promise<AISearchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AISearchResponse>(getAiSearchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(aISearchInput)
+  }
+);}
+
+
+
+
+
+export const getAiSearchMutationKey = () => ['aiSearch'] as const;
+
+export const getAiSearchMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiSearch>>, TError,AiSearchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aiSearch>>, TError,AiSearchMutationVariables, TContext> => {
+
+const mutationKey = getAiSearchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiSearch>>, AiSearchMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  aiSearch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AiSearchMutationResult = NonNullable<Awaited<ReturnType<typeof aiSearch>>>
+    export type AiSearchMutationBody = BodyType<AISearchInput>
+    export type AiSearchMutationError = ErrorType<void>
+    export type AiSearchMutationVariables = {data: BodyType<AISearchInput>}
+
+    /**
+ * @summary Interpret a natural-language request and search public marketplace listings
+ */
+export const useAiSearch = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiSearch>>, TError,AiSearchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aiSearch>>,
+        TError,
+        AiSearchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAiSearchMutationOptions(options));
+    }
+
+export const getGetAIRecommendationsUrl = (params?: GetAIRecommendationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ai/recommendations?${stringifiedParams}` : `/api/ai/recommendations`
+}
+
+/**
+ * @summary Rank approved marketplace listings for discovery
+ */
+export const getAIRecommendations = async (params?: GetAIRecommendationsParams, options?: Parameters<typeof customFetch>[1]): Promise<AIRecommendations> => {
+
+  return customFetch<AIRecommendations>(getGetAIRecommendationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAIRecommendationsQueryKey = (params?: GetAIRecommendationsParams,) => {
+    return [
+    `/api/ai/recommendations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAIRecommendationsQueryOptions = <TData = Awaited<ReturnType<typeof getAIRecommendations>>, TError = ErrorType<void>>(params?: GetAIRecommendationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIRecommendations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAIRecommendationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAIRecommendations>>> = ({ signal }) => getAIRecommendations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAIRecommendations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAIRecommendationsQueryResult = NonNullable<Awaited<ReturnType<typeof getAIRecommendations>>>
+export type GetAIRecommendationsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Rank approved marketplace listings for discovery
+ */
+
+export function useGetAIRecommendations<TData = Awaited<ReturnType<typeof getAIRecommendations>>, TError = ErrorType<void>>(
+ params?: GetAIRecommendationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIRecommendations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAIRecommendationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAISuggestionsUrl = (params?: GetAISuggestionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ai/suggestions?${stringifiedParams}` : `/api/ai/suggestions`
+}
+
+/**
+ * @summary Generate query corrections, related searches, and category suggestions
+ */
+export const getAISuggestions = async (params?: GetAISuggestionsParams, options?: Parameters<typeof customFetch>[1]): Promise<AISuggestions> => {
+
+  return customFetch<AISuggestions>(getGetAISuggestionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAISuggestionsQueryKey = (params?: GetAISuggestionsParams,) => {
+    return [
+    `/api/ai/suggestions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAISuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof getAISuggestions>>, TError = ErrorType<void>>(params?: GetAISuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAISuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAISuggestionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAISuggestions>>> = ({ signal }) => getAISuggestions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAISuggestions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAISuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAISuggestions>>>
+export type GetAISuggestionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Generate query corrections, related searches, and category suggestions
+ */
+
+export function useGetAISuggestions<TData = Awaited<ReturnType<typeof getAISuggestions>>, TError = ErrorType<void>>(
+ params?: GetAISuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAISuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAISuggestionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAIHistoryUrl = () => {
+
+
+
+
+  return `/api/ai/history`
+}
+
+/**
+ * @summary List the authenticated user's recent AI searches
+ */
+export const getAIHistory = async ( options?: Parameters<typeof customFetch>[1]): Promise<AIHistory> => {
+
+  return customFetch<AIHistory>(getGetAIHistoryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAIHistoryQueryKey = () => {
+    return [
+    `/api/ai/history`
+    ] as const;
+    }
+
+
+export const getGetAIHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getAIHistory>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAIHistoryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAIHistory>>> = ({ signal }) => getAIHistory({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAIHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAIHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getAIHistory>>>
+export type GetAIHistoryQueryError = ErrorType<void>
+
+
+/**
+ * @summary List the authenticated user's recent AI searches
+ */
+
+export function useGetAIHistory<TData = Awaited<ReturnType<typeof getAIHistory>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAIHistoryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getClearAIHistoryUrl = () => {
+
+
+
+
+  return `/api/ai/history`
+}
+
+/**
+ * @summary Delete the authenticated user's AI search history
+ */
+export const clearAIHistory = async ( options?: Parameters<typeof customFetch>[1]): Promise<AIHistoryDelete> => {
+
+  return customFetch<AIHistoryDelete>(getClearAIHistoryUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getClearAIHistoryMutationKey = () => ['clearAIHistory'] as const;
+
+export const getClearAIHistoryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearAIHistory>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearAIHistory>>, TError,void, TContext> => {
+
+const mutationKey = getClearAIHistoryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearAIHistory>>, void> = () => {
+
+
+          return  clearAIHistory(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearAIHistoryMutationResult = NonNullable<Awaited<ReturnType<typeof clearAIHistory>>>
+
+    export type ClearAIHistoryMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Delete the authenticated user's AI search history
+ */
+export const useClearAIHistory = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearAIHistory>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearAIHistory>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearAIHistoryMutationOptions(options));
+    }
+
+export const getGetAIPreferencesUrl = () => {
+
+
+
+
+  return `/api/ai/preferences`
+}
+
+/**
+ * @summary Get the authenticated user's AI preferences
+ */
+export const getAIPreferences = async ( options?: Parameters<typeof customFetch>[1]): Promise<AIPreferences> => {
+
+  return customFetch<AIPreferences>(getGetAIPreferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAIPreferencesQueryKey = () => {
+    return [
+    `/api/ai/preferences`
+    ] as const;
+    }
+
+
+export const getGetAIPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof getAIPreferences>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAIPreferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAIPreferences>>> = ({ signal }) => getAIPreferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAIPreferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAIPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getAIPreferences>>>
+export type GetAIPreferencesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the authenticated user's AI preferences
+ */
+
+export function useGetAIPreferences<TData = Awaited<ReturnType<typeof getAIPreferences>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAIPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAIPreferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAIPreferencesUrl = () => {
+
+
+
+
+  return `/api/ai/preferences`
+}
+
+/**
+ * @summary Update the authenticated user's AI preferences
+ */
+export const updateAIPreferences = async (aIPreferencesUpdate: AIPreferencesUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AIPreferences> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AIPreferences>(getUpdateAIPreferencesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(aIPreferencesUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAIPreferencesMutationKey = () => ['updateAIPreferences'] as const;
+
+export const getUpdateAIPreferencesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAIPreferences>>, TError,UpdateAIPreferencesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAIPreferences>>, TError,UpdateAIPreferencesMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAIPreferencesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAIPreferences>>, UpdateAIPreferencesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateAIPreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAIPreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof updateAIPreferences>>>
+    export type UpdateAIPreferencesMutationBody = BodyType<AIPreferencesUpdate>
+    export type UpdateAIPreferencesMutationError = ErrorType<void>
+    export type UpdateAIPreferencesMutationVariables = {data: BodyType<AIPreferencesUpdate>}
+
+    /**
+ * @summary Update the authenticated user's AI preferences
+ */
+export const useUpdateAIPreferences = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAIPreferences>>, TError,UpdateAIPreferencesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAIPreferences>>,
+        TError,
+        UpdateAIPreferencesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAIPreferencesMutationOptions(options));
+    }
 
 export const getGetProductDetailUrl = (id: string,) => {
 

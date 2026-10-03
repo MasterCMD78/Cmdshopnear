@@ -61,3 +61,10 @@ The schema uses the names and concepts from the official specification. Nullable
 - API: `GET /api/healthz` returns `{"status":"ok"}`
 - Marketplace smoke checks: categories, catalog, featured discovery, and search return valid empty-state envelopes with the current unseeded database
 - Phase 4 reconciliation: the existing entity-based `favorites` table was matched in Drizzle; no destructive migration or table recreation was performed.
+
+## Phase 6 additions
+
+- `ai_preferences`: one row per user for recommendation, personalization, history-saving, and preferred-category settings.
+- `ai_search_history`: user-owned questions and compact intent context, indexed by user/date and user/conversation/date. Foreign keys cascade when an account is deleted.
+- Search coordinates are not stored. History can be disabled per account or cleared through the API.
+- Schema changes are additive; existing marketplace, account, authentication, and location tables are unchanged.

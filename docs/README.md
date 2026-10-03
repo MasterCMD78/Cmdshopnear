@@ -45,3 +45,11 @@ Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware acco
 - Nearby Home/Search results include radius filtering, straight-line distances, and verified/featured/newest filters.
 - Public business/provider coordinates require owner opt-in and approval; customer coordinates are never public.
 - OpenAPI and generated client/Zod types are synchronized. Road travel distance/time remain nullable until a map provider is selected.
+
+## Phase 6 — ShopNear AI
+
+- Added a provider-independent `AIProvider` boundary with a rule-based mock provider; no paid AI service or vendor credential is required.
+- Search interprets natural-language intent, category, city, price bounds, and supported filters, then ranks only approved public listings.
+- Added recommendation, suggestion, conversation-history, and per-user preference endpoints. AI search remains additive to the existing marketplace search.
+- AI search history is optional and user-scoped. Request GPS coordinates are used for distance ranking only and are not stored in search history or logs.
+- See `AI.md`, `API.md`, `DATABASE.md`, `ARCHITECTURE.md`, and `DECISIONS.md` for contracts, limitations, and future integration boundaries.

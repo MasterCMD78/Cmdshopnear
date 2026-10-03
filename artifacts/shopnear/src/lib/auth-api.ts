@@ -1,3 +1,13 @@
+import type {
+  AIHistory,
+  AIHistoryDelete,
+  AIRecommendations,
+  AISearchInput,
+  AISearchResponse,
+  AIPreferences,
+  AIPreferencesUpdate,
+} from "@workspace/api-client-react";
+
 export type AccountType = "customer" | "business" | "service_provider" | "admin";
 
 export type AuthUser = {
@@ -47,7 +57,10 @@ export function requestOtp(phone: string) {
 }
 
 export function verifyOtp(phone: string, code: string) {
-  return request<AuthResult>("/api/auth/verify-otp", { method: "POST", body: JSON.stringify({ phone, code }) });
+  return request<AuthResult>("/api/auth/verify-otp", { method: "POST", body: JSON.stringify({ phone, code }) }).then((result) => {
+    if (result.authenticated) clearAIConversation();
+    return result;
+  });
 }
 
 export function registerAccount(input: {
@@ -68,8 +81,62 @@ export async function getSession() {
   }
 }
 
-export function logout() {
-  return request<{ message: string }>("/api/auth/logout", { method: "POST" });
+export async function logout() {
+  const result = await request<{ message: string }>("/api/auth/logout", { method: "POST" });
+  clearAIConversation();
+  return result;
+}
+
+const AI_CONVERSATION_STORAGE_KEY = "shopnear:ai:conversation";
+
+export function getAIConversationId() {
+  try {
+    return window.sessionStorage.getItem(AI_CONVERSATION_STORAGE_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function rememberAIConversationId(conversationId: string) {
+  try {
+    window.sessionStorage.setItem(AI_CONVERSATION_STORAGE_KEY, conversationId);
+  } catch {
+    // Session storage can be disabled; the current page can still use the response.
+  }
+}
+
+export function clearAIConversation() {
+  try {
+    window.sessionStorage.removeItem(AI_CONVERSATION_STORAGE_KEY);
+  } catch {
+    // Ignore unavailable session storage.
+  }
+}
+
+export function searchWithAI(input: AISearchInput) {
+  return request<AISearchResponse>("/api/ai/search", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function getAIRecommendations(params: { latitude?: number; longitude?: number; radiusKm?: number } = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value !== undefined && query.set(key, String(value)));
+  return request<AIRecommendations>(`/api/ai/recommendations${query.size ? `?${query.toString()}` : ""}`);
+}
+
+export function getAIHistory() {
+  return request<AIHistory>("/api/ai/history");
+}
+
+export function clearAIHistory() {
+  return request<AIHistoryDelete>("/api/ai/history", { method: "DELETE" });
+}
+
+export function getAIPreferences() {
+  return request<AIPreferences>("/api/ai/preferences");
+}
+
+export function updateAIPreferences(input: AIPreferencesUpdate) {
+  return request<AIPreferences>("/api/ai/preferences", { method: "PUT", body: JSON.stringify(input) });
 }
 
 export function updateProfile(input: Record<string, unknown>) {

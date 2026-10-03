@@ -2732,6 +2732,336 @@ export const GetNearbyMarketplaceResponse = zod.object({
 
 
 /**
+ * @summary Interpret a natural-language request and search public marketplace listings
+ */
+export const aiSearchBodyQueryMax = 240;
+
+export const aiSearchBodyLatitudeMin = -90;
+export const aiSearchBodyLatitudeMax = 90;
+
+export const aiSearchBodyLongitudeMin = -180;
+export const aiSearchBodyLongitudeMax = 180;
+
+export const aiSearchBodyRadiusKmDefault = 25;
+export const aiSearchBodyRadiusKmMin = 0.1;
+export const aiSearchBodyRadiusKmMax = 100;
+
+export const aiSearchBodyCityMax = 80;
+
+export const aiSearchBodyStateMax = 80;
+
+
+
+export const AiSearchBody = zod.object({
+  "query": zod.string().min(1).max(aiSearchBodyQueryMax),
+  "conversationId": zod.string().uuid().optional(),
+  "latitude": zod.number().min(aiSearchBodyLatitudeMin).max(aiSearchBodyLatitudeMax).optional(),
+  "longitude": zod.number().min(aiSearchBodyLongitudeMin).max(aiSearchBodyLongitudeMax).optional(),
+  "radiusKm": zod.number().min(aiSearchBodyRadiusKmMin).max(aiSearchBodyRadiusKmMax).default(aiSearchBodyRadiusKmDefault),
+  "city": zod.string().max(aiSearchBodyCityMax).optional(),
+  "state": zod.string().max(aiSearchBodyStateMax).optional(),
+  "verified": zod.boolean().optional(),
+  "featured": zod.boolean().optional(),
+  "newest": zod.boolean().optional(),
+  "entityType": zod.enum(['businesses', 'products', 'services']).optional()
+})
+
+export const aiSearchResponseIntentConfidenceMin = 0;
+export const aiSearchResponseIntentConfidenceMax = 1;
+
+
+
+export const AiSearchResponse = zod.object({
+  "provider": zod.string(),
+  "conversationId": zod.string().uuid(),
+  "answer": zod.string(),
+  "intent": zod.object({
+  "kind": zod.enum(['marketplace_discovery', 'business_search', 'product_search', 'service_search']),
+  "normalizedQuery": zod.string(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "confidence": zod.number().min(aiSearchResponseIntentConfidenceMin).max(aiSearchResponseIntentConfidenceMax),
+  "filters": zod.object({
+  "nearMe": zod.boolean(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "newest": zod.boolean(),
+  "openNow": zod.boolean(),
+  "minPriceCents": zod.number().int().nullable(),
+  "maxPriceCents": zod.number().int().nullable()
+}),
+  "unsupportedFilters": zod.array(zod.string())
+}),
+  "results": zod.object({
+  "businesses": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "serviceProviders": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "products": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "services": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+}),
+  "suggestedFilters": zod.array(zod.string()),
+  "suggestedCategories": zod.array(zod.string()),
+  "suggestedNextSearches": zod.array(zod.string()),
+  "relatedSearches": zod.array(zod.string()),
+  "correction": zod.string().nullable(),
+  "disclaimer": zod.string(),
+  "historySaved": zod.boolean()
+})
+
+
+/**
+ * @summary Rank approved marketplace listings for discovery
+ */
+export const getAIRecommendationsQueryLatitudeMin = -90;
+export const getAIRecommendationsQueryLatitudeMax = 90;
+
+export const getAIRecommendationsQueryLongitudeMin = -180;
+export const getAIRecommendationsQueryLongitudeMax = 180;
+
+export const getAIRecommendationsQueryRadiusKmDefault = 25;
+export const getAIRecommendationsQueryRadiusKmMin = 0.1;
+export const getAIRecommendationsQueryRadiusKmMax = 100;
+
+
+
+export const GetAIRecommendationsQueryParams = zod.object({
+  "latitude": zod.coerce.number().min(getAIRecommendationsQueryLatitudeMin).max(getAIRecommendationsQueryLatitudeMax).optional(),
+  "longitude": zod.coerce.number().min(getAIRecommendationsQueryLongitudeMin).max(getAIRecommendationsQueryLongitudeMax).optional(),
+  "radiusKm": zod.coerce.number().min(getAIRecommendationsQueryRadiusKmMin).max(getAIRecommendationsQueryRadiusKmMax).default(getAIRecommendationsQueryRadiusKmDefault)
+})
+
+export const GetAIRecommendationsResponse = zod.object({
+  "recommendationsEnabled": zod.boolean(),
+  "personalized": zod.boolean(),
+  "locationAware": zod.boolean(),
+  "recommendedForYou": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "trendingNearYou": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "popularThisWeek": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "aiSuggestions": zod.array(zod.string()),
+  "recentlyViewed": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['business', 'service_provider', 'product', 'service']),
+  "title": zod.string(),
+  "description": zod.string().nullable(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "verified": zod.boolean(),
+  "featured": zod.boolean(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number().int().nullable(),
+  "priceCents": zod.number().int().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "href": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "continueBrowsing": zod.array(zod.string()),
+  "message": zod.string().nullable()
+})
+
+
+/**
+ * @summary Generate query corrections, related searches, and category suggestions
+ */
+export const getAISuggestionsQueryQueryMax = 240;
+
+
+
+export const GetAISuggestionsQueryParams = zod.object({
+  "query": zod.coerce.string().max(getAISuggestionsQueryQueryMax).optional()
+})
+
+export const GetAISuggestionsResponse = zod.object({
+  "correction": zod.string().nullable(),
+  "relatedSearches": zod.array(zod.string()),
+  "suggestedCategories": zod.array(zod.string()),
+  "suggestedNextSearches": zod.array(zod.string())
+})
+
+
+/**
+ * @summary List the authenticated user's recent AI searches
+ */
+export const GetAIHistoryResponse = zod.object({
+  "history": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "conversationId": zod.string().uuid(),
+  "question": zod.string(),
+  "intent": zod.string(),
+  "category": zod.string().nullable(),
+  "location": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Delete the authenticated user's AI search history
+ */
+export const clearAIHistoryResponseDeletedMin = 0;
+
+
+
+export const ClearAIHistoryResponse = zod.object({
+  "deleted": zod.number().int().min(clearAIHistoryResponseDeletedMin)
+})
+
+
+/**
+ * @summary Get the authenticated user's AI preferences
+ */
+export const getAIPreferencesResponsePreferredCategoriesItemMax = 80;
+
+
+
+export const GetAIPreferencesResponse = zod.object({
+  "recommendationsEnabled": zod.boolean(),
+  "personalizedRecommendations": zod.boolean(),
+  "saveSearchHistory": zod.boolean(),
+  "preferredCategories": zod.array(zod.string().max(getAIPreferencesResponsePreferredCategoriesItemMax))
+})
+
+
+/**
+ * @summary Update the authenticated user's AI preferences
+ */
+export const updateAIPreferencesBodyPreferredCategoriesItemMax = 80;
+
+export const updateAIPreferencesBodyPreferredCategoriesMax = 12;
+
+
+
+export const UpdateAIPreferencesBody = zod.object({
+  "recommendationsEnabled": zod.boolean().optional(),
+  "personalizedRecommendations": zod.boolean().optional(),
+  "saveSearchHistory": zod.boolean().optional(),
+  "preferredCategories": zod.array(zod.string().min(1).max(updateAIPreferencesBodyPreferredCategoriesItemMax)).max(updateAIPreferencesBodyPreferredCategoriesMax).optional()
+})
+
+export const updateAIPreferencesResponsePreferredCategoriesItemMax = 80;
+
+
+
+export const UpdateAIPreferencesResponse = zod.object({
+  "recommendationsEnabled": zod.boolean(),
+  "personalizedRecommendations": zod.boolean(),
+  "saveSearchHistory": zod.boolean(),
+  "preferredCategories": zod.array(zod.string().max(updateAIPreferencesResponsePreferredCategoriesItemMax))
+})
+
+
+/**
  * @summary Read a public product detail page
  */
 export const GetProductDetailParams = zod.object({

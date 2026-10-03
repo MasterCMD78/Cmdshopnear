@@ -70,3 +70,12 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+
+## Phase 6 AI conventions
+
+- Keep ShopNear's AI provider-independent. The initial provider is a deterministic mock; do not add paid APIs or credentials unless explicitly requested.
+- AI search is additive to marketplace search and must return only approved, publicly visible listings.
+- Customer GPS is request-scoped. Never write exact request coordinates into AI history, preferences, or logs; public listing distance requires owner opt-in and approval.
+- Saved AI history is user-owned, optional, and clearable. Use the existing session boundary and additive Drizzle schema changes only.
+- Do not claim open-now, provider-gender, weekly-engagement, or recently-viewed behavior when the existing data model cannot support it; communicate limitations in the UI/API.
+- Phase 6 is complete. Do not begin Phase 7 without explicit approval.

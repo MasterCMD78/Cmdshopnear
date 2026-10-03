@@ -5,6 +5,7 @@ import accountRouter from "./accounts";
 import storageRouter from "./storage";
 import marketplaceRouter from "./marketplace";
 import locationRouter from "./location";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(accountRouter);
 router.use(storageRouter);
 router.use(marketplaceRouter);
 router.use(locationRouter);
+router.use(aiRouter);
 
 export default router;

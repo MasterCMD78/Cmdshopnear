@@ -1,0 +1,534 @@
+🚀 SHOPNEAR PHASE 6 MASTER CONTINUATION PROMPT
+AI Assistant, Intelligent Search & Recommendation Engine
+
+IMPORTANT
+
+This project already contains completed work.
+
+DO NOT rebuild the project.
+
+DO NOT redesign the UI.
+
+DO NOT replace the architecture.
+
+DO NOT modify completed phases.
+
+Continue ONLY from the existing ShopNear codebase.
+
+--------------------------------------------------
+
+BEFORE WRITING ANY CODE
+
+Read completely before implementation:
+
+• ShopNear Functional Specification
+• ShopNear Screen-by-Screen Specification
+• ShopNear Database & API Specification
+
+Read every project document:
+
+docs/
+replit.md
+PROJECT_MEMORY.md
+HANDOFF.md
+docs/DECISIONS.md
+
+These documents are the project's source of truth.
+
+If documentation differs from implementation:
+
+1. Verify the implementation.
+2. Update the documentation.
+3. Never silently replace working architecture.
+
+--------------------------------------------------
+
+CURRENT PROJECT STATUS
+
+Completed
+
+✅ Phase 1
+Architecture
+Documentation
+Project Structure
+
+✅ Phase 2
+Authentication
+OTP
+JWT
+Sessions
+Role System
+Customer
+Business
+Service Provider
+Administrator
+
+✅ Phase 3
+Marketplace Management
+Business Dashboard
+Products
+Services
+Categories
+Search
+Featured Listings
+Ownership Validation
+
+✅ Phase 4
+Favorites
+Business Details
+Product Details
+Service Details
+Customer Discovery
+Real Search
+Public Pages
+
+✅ Phase 5
+GPS
+Nearby Discovery
+Location Privacy
+Radius Search
+Location APIs
+Map Provider Interface
+Location Management
+
+Phase 6 begins now.
+
+--------------------------------------------------
+
+PHASE 6 OBJECTIVE
+
+Implement ShopNear AI.
+
+The AI must become the intelligent assistant for the marketplace.
+
+The AI architecture must be modular and provider-independent.
+
+Do NOT permanently couple ShopNear to a specific AI vendor.
+
+--------------------------------------------------
+
+CREATE AN AI PROVIDER ABSTRACTION
+
+Design an interface such as:
+
+AIProvider
+
+The implementation must allow future providers like:
+
+OpenAI
+
+Gemini
+
+Anthropic Claude
+
+Local LLMs
+
+Custom Models
+
+Mock Provider
+
+Switching providers must require minimal code changes.
+
+--------------------------------------------------
+
+FIRST IMPLEMENTATION
+
+Implement a Mock AI Provider first.
+
+The mock provider should behave like a real AI service using marketplace data.
+
+No paid AI API is required.
+
+The architecture must be ready for future OpenAI integration.
+
+--------------------------------------------------
+
+SHOPNEAR AI FEATURES
+
+Implement:
+
+Natural Language Search
+
+Business Recommendation
+
+Product Recommendation
+
+Service Recommendation
+
+Nearby Recommendation
+
+Featured Recommendation
+
+Category Recommendation
+
+Trending Recommendation
+
+Conversation Memory
+
+Search Intent Detection
+
+AI Suggestion Cards
+
+Smart Empty-State Suggestions
+
+Future-ready Voice Assistant support
+
+Future-ready Image Search support
+
+Future-ready Multilingual support
+
+--------------------------------------------------
+
+EXAMPLES
+
+Users should be able to search naturally:
+
+"Cheap iPhone near me"
+
+"Tailor in Jalingo"
+
+"Best restaurant nearby"
+
+"Verified plumber"
+
+"Female makeup artist"
+
+"Laptop below ₦500,000"
+
+"Electrician open now"
+
+The AI should understand intent rather than exact keywords.
+
+--------------------------------------------------
+
+AI RESPONSE FORMAT
+
+The AI should return structured responses.
+
+Example:
+
+Intent
+
+Detected Category
+
+Detected Location
+
+Confidence Score
+
+Recommended Businesses
+
+Recommended Products
+
+Recommended Services
+
+Suggested Filters
+
+Suggested Categories
+
+Suggested Next Searches
+
+--------------------------------------------------
+
+AI RECOMMENDATION ENGINE
+
+Build reusable recommendation services.
+
+Support:
+
+Nearby ranking
+
+Featured ranking
+
+Newest ranking
+
+Verified ranking
+
+Popularity ranking
+
+Future analytics ranking
+
+--------------------------------------------------
+
+SEARCH
+
+Extend the existing search.
+
+Do NOT replace it.
+
+Add:
+
+Semantic search
+
+Intent matching
+
+Category inference
+
+Suggestion generation
+
+Search correction
+
+Related searches
+
+Recent searches
+
+--------------------------------------------------
+
+HOME
+
+Without redesigning the UI:
+
+Extend the Home page with:
+
+Recommended For You
+
+Trending Near You
+
+Popular This Week
+
+AI Suggestions
+
+Recently Viewed (future-ready)
+
+Continue Browsing
+
+--------------------------------------------------
+
+PROFILE
+
+Allow users to:
+
+Enable AI recommendations
+
+Disable personalized recommendations
+
+Clear AI search history
+
+Manage AI preferences
+
+--------------------------------------------------
+
+DATABASE
+
+Use the existing PostgreSQL database.
+
+Never recreate tables.
+
+Only apply additive migrations.
+
+Possible additions:
+
+AI search history
+
+Recommendation cache
+
+Conversation sessions
+
+User AI preferences
+
+--------------------------------------------------
+
+API
+
+Create additive REST endpoints only.
+
+Possible endpoints:
+
+/api/ai/search
+
+/api/ai/recommendations
+
+/api/ai/suggestions
+
+/api/ai/history
+
+/api/ai/preferences
+
+Document every endpoint.
+
+Regenerate OpenAPI.
+
+Regenerate shared client types.
+
+--------------------------------------------------
+
+SECURITY
+
+Never expose private user information.
+
+Respect customer location privacy.
+
+Respect business visibility settings.
+
+Validate AI input.
+
+Rate-limit AI endpoints.
+
+Log AI requests appropriately.
+
+--------------------------------------------------
+
+TESTING
+
+Before completion run:
+
+Database migration verification
+
+Typecheck
+
+Production build
+
+AI endpoint tests
+
+Natural language search tests
+
+Recommendation tests
+
+Browser verification
+
+Workflow verification
+
+Fix only genuine issues.
+
+--------------------------------------------------
+
+DOCUMENTATION
+
+Update:
+
+docs/README.md
+
+docs/API.md
+
+docs/DATABASE.md
+
+docs/ARCHITECTURE.md
+
+docs/AI.md
+
+docs/SECURITY.md
+
+docs/ROADMAP.md
+
+docs/CHANGELOG.md
+
+docs/DECISIONS.md
+
+replit.md
+
+PROJECT_MEMORY.md
+
+HANDOFF.md
+
+--------------------------------------------------
+
+HANDOFF.md
+
+Update after every completed milestone.
+
+Include:
+
+Current Phase
+
+Completed Features
+
+Database Migrations
+
+API Endpoints Added
+
+Files Modified
+
+Documentation Updated
+
+Verification Results
+
+Known Limitations
+
+Environment Requirements
+
+Exact Next Task
+
+--------------------------------------------------
+
+DECISIONS.md
+
+Record every important architectural decision.
+
+Explain WHY decisions were made.
+
+Include:
+
+Why AIProvider abstraction exists
+
+Why Mock AI is used initially
+
+Why AI endpoints are modular
+
+Why recommendation services are separated
+
+Future OpenAI integration strategy
+
+Future multilingual strategy
+
+Future image search strategy
+
+--------------------------------------------------
+
+IMPORTANT
+
+Never redesign completed pages.
+
+Never remove completed functionality.
+
+Never replace existing architecture.
+
+Only extend the existing implementation.
+
+Recover any unfinished work before adding new code.
+
+--------------------------------------------------
+
+DEFINITION OF DONE
+
+This phase is complete only when:
+
+✓ Natural language search works.
+
+✓ AI recommendations work.
+
+✓ Suggestion engine works.
+
+✓ Intent detection works.
+
+✓ AI preferences work.
+
+✓ AI endpoints are documented.
+
+✓ OpenAPI is synchronized.
+
+✓ Shared client types are regenerated.
+
+✓ Database migrations are complete.
+
+✓ Typecheck passes.
+
+✓ Production build passes.
+
+✓ Browser verification passes.
+
+✓ Documentation is fully updated.
+
+✓ docs/DECISIONS.md is updated.
+
+✓ replit.md is updated.
+
+✓ PROJECT_MEMORY.md is updated.
+
+✓ HANDOFF.md is updated with the exact starting point for Phase 7.
+
+After Phase 6 is completely finished:
+
+STOP.
+
+Do NOT begin Phase 7 (Chat, Notifications, Reviews, Ratings).
+
+Wait for explicit approval before continuing.

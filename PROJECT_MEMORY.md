@@ -13,3 +13,6 @@
 - Phase 4 customer favorites use the existing entity-based database table and unique user/entity index; do not replace it with per-entity nullable foreign-key columns.
 - Phase 5 stores location data additively on existing user, business, and provider records. Keep customer GPS private; public business/provider coordinates require explicit opt-in and approval.
 - Nearby discovery calculates straight-line distance with Haversine and filters by radius. Road distance/time remain nullable behind a provider-neutral map adapter until a vendor is selected.
+- ShopNear AI starts with a deterministic, provider-neutral mock. Preserve public-listing eligibility and never persist customer GPS coordinates from AI requests.
+- AI search history is optional and account-scoped; keep preference/history operations behind the existing authenticated session and retain a clear-history path.
+- Listing storage has lifetime engagement totals, not weekly event history; recently viewed and true weekly popularity remain explicit future work.

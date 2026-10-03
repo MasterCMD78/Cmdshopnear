@@ -35,3 +35,11 @@ Password hashing, external social login, production SMS delivery, object ACL rev
 - Location changes for businesses and service providers are owner-scoped; administrators retain their existing role-based access.
 - Public nearby search validates coordinate bounds and radius limits. It returns only records with eligible public coordinates and does not include the customer's location in result records.
 - Road distance and travel time are not fabricated: they are `null` until a real map/routing provider is configured.
+
+## Phase 6 AI handling
+
+- AI input is schema-validated and limited to 240 characters; coordinates must be supplied as a valid pair. AI routes have an in-memory rate limit.
+- Search logs record provider, intent type, result count, and whether location/history was used; they do not record the raw query or coordinates.
+- GPS coordinates are request-scoped and are not written to history, preferences, or result payloads. Distance is calculated only from public coordinates on eligible listings.
+- Saved history and preferences are restricted to the authenticated user. Users can disable history saving or delete their saved history.
+- Search results exclude unapproved businesses/providers and unpublished, hidden, unavailable, or unapproved listings. Unsupported gender and opening-hours filters are disclosed instead of being represented as applied.

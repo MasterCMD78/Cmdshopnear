@@ -20,6 +20,8 @@ tags:
     description: Service provider account registration and editing
   - name: marketplace
     description: Discovery surfaces
+  - name: ai
+    description: Provider-neutral ShopNear AI search, recommendations, and preferences
   - name: admin
     description: Administrator-only settings and category management
   - name: storage
@@ -533,6 +535,142 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NearbyMarketplace"
+  /ai/search:
+    post:
+      operationId: aiSearch
+      tags: [ai]
+      summary: Interpret a natural-language request and search public marketplace listings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AISearchInput"
+      responses:
+        "200":
+          description: Structured intent, public results, and next-search suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AISearchResponse"
+        "400":
+          description: Invalid search input
+        "429":
+          description: AI request rate limit exceeded
+  /ai/recommendations:
+    get:
+      operationId: getAIRecommendations
+      tags: [ai]
+      summary: Rank approved marketplace listings for discovery
+      parameters:
+        - name: latitude
+          in: query
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: longitude
+          in: query
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: radiusKm
+          in: query
+          schema: { type: number, minimum: 0.1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Recommendation groups and safe fallback suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIRecommendations"
+        "400":
+          description: Invalid coordinates or radius
+        "429":
+          description: AI request rate limit exceeded
+  /ai/suggestions:
+    get:
+      operationId: getAISuggestions
+      tags: [ai]
+      summary: Generate query corrections, related searches, and category suggestions
+      parameters:
+        - name: query
+          in: query
+          schema: { type: string, maxLength: 240 }
+      responses:
+        "200":
+          description: Search suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AISuggestions"
+        "429":
+          description: AI request rate limit exceeded
+  /ai/history:
+    get:
+      operationId: getAIHistory
+      tags: [ai]
+      summary: List the authenticated user's recent AI searches
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Recent searches, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIHistory"
+        "401":
+          description: Authentication required
+    delete:
+      operationId: clearAIHistory
+      tags: [ai]
+      summary: Delete the authenticated user's AI search history
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Number of history entries deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIHistoryDelete"
+        "401":
+          description: Authentication required
+  /ai/preferences:
+    get:
+      operationId: getAIPreferences
+      tags: [ai]
+      summary: Get the authenticated user's AI preferences
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: AI preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIPreferences"
+        "401":
+          description: Authentication required
+    put:
+      operationId: updateAIPreferences
+      tags: [ai]
+      summary: Update the authenticated user's AI preferences
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIPreferencesUpdate"
+      responses:
+        "200":
+          description: Updated AI preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIPreferences"
+        "400":
+          description: Invalid preference settings
+        "401":
+          description: Authentication required
   /products/{id}:
     get:
       operationId: getProductDetail
@@ -869,6 +1007,11 @@ components:
       schema:
         type: string
         format: uuid
+  securitySchemes:
+    cookieSession:
+      type: apiKey
+      in: cookie
+      name: shopnear_session
   schemas:
     HealthStatus:
       type: object
@@ -1452,4 +1595,145 @@ components:
             contentType: { type: string }
           required: [name, size, contentType]
       required: [uploadURL, objectPath, metadata]
+    AISearchInput:
+      type: object
+      properties:
+        query: { type: string, minLength: 1, maxLength: 240 }
+        conversationId: { type: string, format: uuid }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        radiusKm: { type: number, minimum: 0.1, maximum: 100, default: 25 }
+        city: { type: string, maxLength: 80 }
+        state: { type: string, maxLength: 80 }
+        verified: { type: boolean }
+        featured: { type: boolean }
+        newest: { type: boolean }
+        entityType: { type: string, enum: [businesses, products, services] }
+      required: [query]
+    AIIntentFilters:
+      type: object
+      properties:
+        nearMe: { type: boolean }
+        verified: { type: boolean }
+        featured: { type: boolean }
+        newest: { type: boolean }
+        openNow: { type: boolean }
+        minPriceCents: { type: ["integer", "null"] }
+        maxPriceCents: { type: ["integer", "null"] }
+      required: [nearMe, verified, featured, newest, openNow, minPriceCents, maxPriceCents]
+    AIIntent:
+      type: object
+      properties:
+        kind: { type: string, enum: [marketplace_discovery, business_search, product_search, service_search] }
+        normalizedQuery: { type: string }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        filters: { $ref: "#/components/schemas/AIIntentFilters" }
+        unsupportedFilters: { type: array, items: { type: string } }
+      required: [kind, normalizedQuery, category, location, confidence, filters, unsupportedFilters]
+    AIResultCard:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [business, service_provider, product, service] }
+        title: { type: string }
+        description: { type: ["string", "null"] }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        verified: { type: boolean }
+        featured: { type: boolean }
+        rating: { type: ["number", "null"] }
+        reviewCount: { type: ["integer", "null"] }
+        priceCents: { type: ["integer", "null"] }
+        distanceKm: { type: ["number", "null"] }
+        href: { type: string }
+        reason: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, type, title, description, category, location, verified, featured, rating, reviewCount, priceCents, distanceKm, href, reason, createdAt]
+    AIResults:
+      type: object
+      properties:
+        businesses: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        serviceProviders: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        products: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        services: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+      required: [businesses, serviceProviders, products, services]
+    AISearchResponse:
+      type: object
+      properties:
+        provider: { type: string }
+        conversationId: { type: string, format: uuid }
+        answer: { type: string }
+        intent: { $ref: "#/components/schemas/AIIntent" }
+        results: { $ref: "#/components/schemas/AIResults" }
+        suggestedFilters: { type: array, items: { type: string } }
+        suggestedCategories: { type: array, items: { type: string } }
+        suggestedNextSearches: { type: array, items: { type: string } }
+        relatedSearches: { type: array, items: { type: string } }
+        correction: { type: ["string", "null"] }
+        disclaimer: { type: string }
+        historySaved: { type: boolean }
+      required: [provider, conversationId, answer, intent, results, suggestedFilters, suggestedCategories, suggestedNextSearches, relatedSearches, correction, disclaimer, historySaved]
+    AISuggestions:
+      type: object
+      properties:
+        correction: { type: ["string", "null"] }
+        relatedSearches: { type: array, items: { type: string } }
+        suggestedCategories: { type: array, items: { type: string } }
+        suggestedNextSearches: { type: array, items: { type: string } }
+      required: [correction, relatedSearches, suggestedCategories, suggestedNextSearches]
+    AIRecommendations:
+      type: object
+      properties:
+        recommendationsEnabled: { type: boolean }
+        personalized: { type: boolean }
+        locationAware: { type: boolean }
+        recommendedForYou: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        trendingNearYou: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        popularThisWeek: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        aiSuggestions: { type: array, items: { type: string } }
+        recentlyViewed: { type: array, items: { $ref: "#/components/schemas/AIResultCard" } }
+        continueBrowsing: { type: array, items: { type: string } }
+        message: { type: ["string", "null"] }
+      required: [recommendationsEnabled, personalized, locationAware, recommendedForYou, trendingNearYou, popularThisWeek, aiSuggestions, recentlyViewed, continueBrowsing, message]
+    AIHistoryEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conversationId: { type: string, format: uuid }
+        question: { type: string }
+        intent: { type: string }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, conversationId, question, intent, category, location, createdAt]
+    AIHistory:
+      type: object
+      properties:
+        history: { type: array, items: { $ref: "#/components/schemas/AIHistoryEntry" } }
+      required: [history]
+    AIHistoryDelete:
+      type: object
+      properties:
+        deleted: { type: integer, minimum: 0 }
+      required: [deleted]
+    AIPreferences:
+      type: object
+      properties:
+        recommendationsEnabled: { type: boolean }
+        personalizedRecommendations: { type: boolean }
+        saveSearchHistory: { type: boolean }
+        preferredCategories: { type: array, items: { type: string, maxLength: 80 } }
+      required: [recommendationsEnabled, personalizedRecommendations, saveSearchHistory, preferredCategories]
+    AIPreferencesUpdate:
+      type: object
+      properties:
+        recommendationsEnabled: { type: boolean }
+        personalizedRecommendations: { type: boolean }
+        saveSearchHistory: { type: boolean }
+        preferredCategories:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 1, maxLength: 80 }
 
