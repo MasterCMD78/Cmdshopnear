@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ServiceProviderInputAvailability } from './serviceProviderInputAvailability';
+import type { ServiceProviderInputLocationVisibility } from './serviceProviderInputLocationVisibility';
 
 export interface ServiceProviderInput {
   /**
@@ -48,4 +49,26 @@ export interface ServiceProviderInput {
      * @nullable
      */
   location?: string | null;
+  /**
+     * @minimum -90
+     * @maximum 90
+     * @nullable
+     */
+  latitude?: number | null;
+  /**
+     * @minimum -180
+     * @maximum 180
+     * @nullable
+     */
+  longitude?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 100000
+     * @nullable
+     */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: Date | null;
+  locationEnabled?: boolean;
+  locationVisibility?: ServiceProviderInputLocationVisibility;
 }

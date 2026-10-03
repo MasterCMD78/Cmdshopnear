@@ -21,14 +21,27 @@ import { db } from "@workspace/db";
 import { appSettings, businesses, serviceProviders, users, type ServiceProvider } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
 import { requireAuth, requireRole, serializeUser } from "../lib/auth";
+import { parseCoordinates, safePublicCoordinates } from "../lib/location";
 
 const router: IRouter = Router();
 
 function serializeServiceProvider(provider: ServiceProvider) {
+  const coordinates = parseCoordinates(provider.latitude, provider.longitude);
   return {
     ...provider,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
     skills: provider.skills ?? [],
     portfolioImages: provider.portfolioImages ?? [],
+  };
+}
+
+function serializeBusiness(business: typeof businesses.$inferSelect) {
+  const coordinates = parseCoordinates(business.latitude, business.longitude);
+  return {
+    ...business,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
   };
 }
 
@@ -77,7 +90,7 @@ router.post("/businesses", requireAuth, requireRole("business"), async (req, res
     longitude: parsed.data.longitude == null ? parsed.data.longitude : String(parsed.data.longitude),
   }).returning();
   await audit(req, "business.created", "business", business.id);
-  res.status(201).json(CreateBusinessResponse.parse(business));
+  res.status(201).json(CreateBusinessResponse.parse(serializeBusiness(business)));
 });
 
 router.get("/businesses/mine", requireAuth, requireRole("business", "admin"), async (req, res) => {
@@ -86,7 +99,7 @@ router.get("/businesses/mine", requireAuth, requireRole("business", "admin"), as
     res.status(404).json({ error: "Business not registered" });
     return;
   }
-  res.json(CreateBusinessResponse.parse(business));
+  res.json(CreateBusinessResponse.parse(serializeBusiness(business)));
 });
 
 router.put("/businesses/:id", requireAuth, requireRole("business", "admin"), async (req, res) => {
@@ -110,7 +123,7 @@ router.put("/businesses/:id", requireAuth, requireRole("business", "admin"), asy
     return;
   }
   await audit(req, "business.updated", "business", business.id);
-  res.json(UpdateBusinessResponse.parse(business));
+  res.json(UpdateBusinessResponse.parse(serializeBusiness(business)));
 });
 
 router.post("/service-providers", requireAuth, requireRole("service_provider"), async (req, res) => {
@@ -124,7 +137,13 @@ router.post("/service-providers", requireAuth, requireRole("service_provider"), 
     res.status(409).json({ error: "You already have a service provider profile" });
     return;
   }
-  const [provider] = await db.insert(serviceProviders).values({ ...parsed.data, ownerId: req.user!.id }).returning();
+  const [provider] = await db.insert(serviceProviders).values({
+    ...parsed.data,
+    ownerId: req.user!.id,
+    latitude: parsed.data.latitude == null ? parsed.data.latitude : String(parsed.data.latitude),
+    longitude: parsed.data.longitude == null ? parsed.data.longitude : String(parsed.data.longitude),
+    locationAccuracy: parsed.data.locationAccuracy == null ? parsed.data.locationAccuracy : Math.round(parsed.data.locationAccuracy),
+  }).returning();
   await audit(req, "service_provider.created", "service_provider", provider.id);
   res.status(201).json(CreateServiceProviderResponse.parse(serializeServiceProvider(provider)));
 });
@@ -148,7 +167,13 @@ router.put("/service-providers/:id", requireAuth, requireRole("service_provider"
   const conditions = req.user!.accountType === "admin"
     ? eq(serviceProviders.id, providerId)
     : and(eq(serviceProviders.id, providerId), eq(serviceProviders.ownerId, req.user!.id));
-  const [provider] = await db.update(serviceProviders).set({ ...parsed.data, updatedAt: new Date() }).where(conditions).returning();
+  const [provider] = await db.update(serviceProviders).set({
+    ...parsed.data,
+    latitude: parsed.data.latitude == null ? parsed.data.latitude : String(parsed.data.latitude),
+    longitude: parsed.data.longitude == null ? parsed.data.longitude : String(parsed.data.longitude),
+    locationAccuracy: parsed.data.locationAccuracy == null ? parsed.data.locationAccuracy : Math.round(parsed.data.locationAccuracy),
+    updatedAt: new Date(),
+  }).where(conditions).returning();
   if (!provider) {
     res.status(404).json({ error: "Service provider not found" });
     return;
@@ -166,8 +191,8 @@ router.get("/new-on-shopnear", async (_req, res) => {
     db.select().from(serviceProviders).where(and(eq(serviceProviders.verificationStatus, "approved"), isNotNull(serviceProviders.approvedAt), gte(serviceProviders.approvedAt, cutoff))).orderBy(desc(serviceProviders.approvedAt)),
   ]);
   res.json(GetNewOnShopNearResponse.parse({
-    businesses: newBusinesses,
-    serviceProviders: newProviders.map(serializeServiceProvider),
+    businesses: newBusinesses.map(safePublicCoordinates),
+    serviceProviders: newProviders.map((provider) => safePublicCoordinates(serializeServiceProvider(provider))),
     days,
   }));
 });

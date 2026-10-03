@@ -10,6 +10,10 @@ export type AuthUser = {
   city: string | null;
   state: string | null;
   address: string | null;
+  locationAccuracy?: number | null;
+  locationUpdatedAt?: string | null;
+  locationEnabled?: boolean;
+  locationPermissionStatus?: string;
   preferredLanguage: string;
   notificationsEnabled: boolean;
   status: string;
@@ -72,6 +76,35 @@ export function updateProfile(input: Record<string, unknown>) {
   return request<AuthUser>("/api/profile", { method: "PUT", body: JSON.stringify(input) });
 }
 
+export type UserLocation = {
+  latitude: number | null;
+  longitude: number | null;
+  accuracy: number | null;
+  updatedAt: string | null;
+  enabled: boolean;
+  visibility: "public" | "private" | string;
+  permissionStatus: "prompt" | "granted" | "denied" | "unavailable" | string;
+  city?: string | null;
+  state?: string | null;
+};
+
+export function getLocation() {
+  return request<UserLocation>("/api/location");
+}
+
+export function updateLocation(input: {
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  enabled?: boolean;
+  visibility?: "public" | "private";
+  permissionStatus?: "prompt" | "granted" | "denied" | "unavailable";
+  city?: string | null;
+  state?: string | null;
+}) {
+  return request<UserLocation>("/api/location", { method: "PUT", body: JSON.stringify(input) });
+}
+
 export type BusinessRecord = {
   id: string;
   ownerId?: string;
@@ -87,6 +120,11 @@ export type BusinessRecord = {
   averageRating?: string;
   totalReviews?: number;
   verificationStatus: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationEnabled?: boolean;
+  locationVisibility?: string;
+  distanceKm?: number | null;
 };
 
 export type ServiceProviderRecord = {
@@ -96,6 +134,11 @@ export type ServiceProviderRecord = {
   skills: string[] | null;
   location: string | null;
   verificationStatus: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationEnabled?: boolean;
+  locationVisibility?: string;
+  distanceKm?: number | null;
 };
 
 export function getMyBusiness() {
@@ -106,12 +149,20 @@ export function saveBusiness(input: Record<string, unknown>, id?: string) {
   return request<BusinessRecord>(id ? `/api/businesses/${id}` : "/api/businesses", { method: id ? "PUT" : "POST", body: JSON.stringify(input) });
 }
 
+export function updateBusinessLocation(id: string, input: { latitude: number; longitude: number; accuracy: number; enabled: boolean; visibility: "public" | "private" }) {
+  return request<UserLocation>(`/api/businesses/${id}/location`, { method: "PUT", body: JSON.stringify(input) });
+}
+
 export function getMyServiceProvider() {
   return request<ServiceProviderRecord>("/api/service-providers/mine");
 }
 
 export function saveServiceProvider(input: Record<string, unknown>, id?: string) {
   return request<ServiceProviderRecord>(id ? `/api/service-providers/${id}` : "/api/service-providers", { method: id ? "PUT" : "POST", body: JSON.stringify(input) });
+}
+
+export function updateServiceProviderLocation(id: string, input: { latitude: number; longitude: number; accuracy: number; enabled: boolean; visibility: "public" | "private" }) {
+  return request<UserLocation>(`/api/service-providers/${id}/location`, { method: "PUT", body: JSON.stringify(input) });
 }
 
 export type MarketplaceProduct = {
@@ -136,6 +187,9 @@ export type MarketplaceProduct = {
   favoriteCount?: number;
   viewCount?: number;
   createdAt?: string;
+  distanceKm?: number | null;
+  travelDistanceMeters?: number | null;
+  travelTimeSeconds?: number | null;
 };
 
 export type MarketplaceService = {
@@ -163,6 +217,9 @@ export type MarketplaceService = {
   favoriteCount?: number;
   viewCount?: number;
   createdAt?: string;
+  distanceKm?: number | null;
+  travelDistanceMeters?: number | null;
+  travelTimeSeconds?: number | null;
 };
 
 export type BusinessDashboard = {
@@ -231,10 +288,36 @@ export type MarketplaceSearchResult = MarketplaceCatalog & {
   serviceProviders: ServiceProviderRecord[];
 };
 
-export function searchMarketplace(query: string, verified = false) {
+export function searchMarketplace(query: string, options: { verified?: boolean; city?: string; state?: string; featured?: boolean; newest?: boolean } = {}) {
   const params = new URLSearchParams({ query });
-  if (verified) params.set('verified', 'true');
+  Object.entries(options).forEach(([key, value]) => value !== undefined && value !== '' && params.set(key, String(value)));
   return request<MarketplaceSearchResult>(`/api/marketplace/search?${params.toString()}`);
+}
+
+export type NearbyMarketplace = MarketplaceSearchResult & {
+  center: { latitude: number; longitude: number };
+  radiusKm: number;
+  mapProvider: string;
+  businesses: (BusinessRecord & { distanceKm?: number | null; travelDistanceMeters?: number | null; travelTimeSeconds?: number | null })[];
+  serviceProviders: (ServiceProviderRecord & { distanceKm?: number | null; travelDistanceMeters?: number | null; travelTimeSeconds?: number | null })[];
+  products: (MarketplaceProduct & { distanceKm?: number | null; travelDistanceMeters?: number | null; travelTimeSeconds?: number | null })[];
+  services: (MarketplaceService & { distanceKm?: number | null; travelDistanceMeters?: number | null; travelTimeSeconds?: number | null })[];
+};
+
+export function getNearbyMarketplace(params: {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+  query?: string;
+  city?: string;
+  state?: string;
+  verified?: boolean;
+  featured?: boolean;
+  newest?: boolean;
+}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value !== undefined && query.set(key, String(value)));
+  return request<NearbyMarketplace>(`/api/marketplace/nearby?${query.toString()}`);
 }
 
 export type FeaturedMarketplace = {

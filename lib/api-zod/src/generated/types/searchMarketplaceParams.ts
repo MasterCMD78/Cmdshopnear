@@ -13,6 +13,16 @@ export type SearchMarketplaceParams = {
 query?: string;
 verified?: boolean;
 /**
+ * @maxLength 80
+ */
+city?: string;
+/**
+ * @maxLength 80
+ */
+state?: string;
+featured?: boolean;
+newest?: boolean;
+/**
  * @minimum 1
  */
 page?: number;

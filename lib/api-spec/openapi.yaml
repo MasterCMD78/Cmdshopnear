@@ -186,6 +186,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+  /location:
+    get:
+      operationId: getLocation
+      tags: [profile]
+      summary: Read the authenticated user's location state
+      responses:
+        "200":
+          description: Location state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+    put:
+      operationId: updateLocation
+      tags: [profile]
+      summary: Update the authenticated user's GPS location and permission state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated location state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
   /businesses:
     post:
       operationId: createBusiness
@@ -305,6 +334,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ServiceProvider"
+  /businesses/{id}/location:
+    put:
+      operationId: updateBusinessLocation
+      tags: [businesses]
+      summary: Update an owned business location
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated business location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+  /service-providers/{id}/location:
+    put:
+      operationId: updateServiceProviderLocation
+      tags: [service-providers]
+      summary: Update an owned service provider location
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated service provider location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
   /new-on-shopnear:
     get:
       operationId: getNewOnShopNear
@@ -391,6 +460,18 @@ paths:
         - name: verified
           in: query
           schema: { type: boolean }
+        - name: city
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: state
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: featured
+          in: query
+          schema: { type: boolean }
+        - name: newest
+          in: query
+          schema: { type: boolean }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -404,6 +485,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketplaceSearch"
+  /marketplace/nearby:
+    get:
+      operationId: getNearbyMarketplace
+      tags: [marketplace]
+      summary: Find verified nearby businesses, providers, products, and services within a radius
+      parameters:
+        - name: latitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: longitude
+          in: query
+          required: true
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: radiusKm
+          in: query
+          schema: { type: number, minimum: 0.1, maximum: 100, default: 25 }
+        - name: query
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: city
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: state
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: verified
+          in: query
+          schema: { type: boolean, default: true }
+        - name: featured
+          in: query
+          schema: { type: boolean }
+        - name: newest
+          in: query
+          schema: { type: boolean }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Nearby marketplace results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearbyMarketplace"
   /products/{id}:
     get:
       operationId: getProductDetail
@@ -852,6 +981,30 @@ components:
           maxLength: 10
         notificationsEnabled:
           type: boolean
+    LocationUpdate:
+      type: object
+      properties:
+        latitude: { type: ["number", "null"], minimum: -90, maximum: 90 }
+        longitude: { type: ["number", "null"], minimum: -180, maximum: 180 }
+        accuracy: { type: ["number", "null"], minimum: 0, maximum: 100000 }
+        enabled: { type: boolean }
+        visibility: { type: string, enum: [public, private] }
+        permissionStatus: { type: string, enum: [prompt, granted, denied, unavailable] }
+        city: { type: ["string", "null"], maxLength: 80 }
+        state: { type: ["string", "null"], maxLength: 80 }
+    Location:
+      type: object
+      properties:
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        accuracy: { type: ["number", "null"] }
+        updatedAt: { type: ["string", "null"], format: date-time }
+        enabled: { type: boolean }
+        visibility: { type: string, enum: [public, private] }
+        permissionStatus: { type: string, enum: [prompt, granted, denied, unavailable] }
+        city: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+      required: [latitude, longitude, accuracy, updatedAt, enabled, visibility, permissionStatus]
     User:
       type: object
       properties:
@@ -879,6 +1032,18 @@ components:
           type: string
         notificationsEnabled:
           type: boolean
+        locationAccuracy:
+          type: ["integer", "null"]
+        locationUpdatedAt:
+          type: ["string", "null"]
+          format: date-time
+        locationEnabled:
+          type: boolean
+        locationPermissionStatus:
+          type: string
+        locationVisibility:
+          type: string
+          enum: [public, private]
         status:
           type: string
         createdAt:
@@ -897,6 +1062,10 @@ components:
         businessAddress: { type: ["string", "null"], maxLength: 250 }
         latitude: { type: ["number", "null"] }
         longitude: { type: ["number", "null"] }
+        locationAccuracy: { type: ["integer", "null"] }
+        locationUpdatedAt: { type: ["string", "null"], format: date-time }
+        locationEnabled: { type: boolean }
+        locationVisibility: { type: string, enum: [public, private] }
         whatsapp: { type: ["string", "null"], maxLength: 20 }
         phone: { type: ["string", "null"], maxLength: 20 }
         website: { type: ["string", "null"], maxLength: 500 }
@@ -915,6 +1084,9 @@ components:
             verificationStatus: { type: string }
             approvedAt: { type: ["string", "null"], format: date-time }
             createdAt: { type: string, format: date-time }
+            distanceKm: { type: ["number", "null"] }
+            travelDistanceMeters: { type: ["number", "null"] }
+            travelTimeSeconds: { type: ["number", "null"] }
           required: [id, ownerId, verificationStatus, approvedAt, createdAt]
     ServiceProviderInput:
       type: object
@@ -928,6 +1100,12 @@ components:
         phone: { type: ["string", "null"], maxLength: 20 }
         whatsapp: { type: ["string", "null"], maxLength: 20 }
         location: { type: ["string", "null"], maxLength: 250 }
+        latitude: { type: ["number", "null"], minimum: -90, maximum: 90 }
+        longitude: { type: ["number", "null"], minimum: -180, maximum: 180 }
+        locationAccuracy: { type: ["integer", "null"], minimum: 0, maximum: 100000 }
+        locationUpdatedAt: { type: ["string", "null"], format: date-time }
+        locationEnabled: { type: boolean }
+        locationVisibility: { type: string, enum: [public, private] }
       required: [profession]
     ServiceProviderUpdate:
       allOf:
@@ -942,6 +1120,9 @@ components:
             verificationStatus: { type: string }
             approvedAt: { type: ["string", "null"], format: date-time }
             createdAt: { type: string, format: date-time }
+            distanceKm: { type: ["number", "null"] }
+            travelDistanceMeters: { type: ["number", "null"] }
+            travelTimeSeconds: { type: ["number", "null"] }
           required: [id, ownerId, verificationStatus, approvedAt, createdAt]
     NewOnShopNearSettings:
       type: object
@@ -1046,6 +1227,9 @@ components:
             publishedAt: { type: ["string", "null"], format: date-time }
             viewCount: { type: integer }
             favoriteCount: { type: integer }
+            distanceKm: { type: ["number", "null"] }
+            travelDistanceMeters: { type: ["number", "null"] }
+            travelTimeSeconds: { type: ["number", "null"] }
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
           required: [id, ownerId, businessId, status, createdAt, updatedAt]
@@ -1096,6 +1280,9 @@ components:
             publishedAt: { type: ["string", "null"], format: date-time }
             viewCount: { type: integer }
             favoriteCount: { type: integer }
+            distanceKm: { type: ["number", "null"] }
+            travelDistanceMeters: { type: ["number", "null"] }
+            travelTimeSeconds: { type: ["number", "null"] }
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
           required: [id, ownerId, businessId, providerId, status, createdAt, updatedAt]
@@ -1134,6 +1321,25 @@ components:
         page: { type: integer }
         limit: { type: integer }
       required: [businesses, serviceProviders, products, services, page, limit]
+    NearbyMarketplace:
+      type: object
+      properties:
+        center:
+          type: object
+          properties:
+            latitude: { type: number }
+            longitude: { type: number }
+          required: [latitude, longitude]
+        radiusKm: { type: number }
+        mapProvider: { type: string }
+        # Straight-line distance is always calculated. Road distance/time are null until a provider is configured.
+        businesses: { type: array, items: { $ref: "#/components/schemas/Business" } }
+        serviceProviders: { type: array, items: { $ref: "#/components/schemas/ServiceProvider" } }
+        products: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        services: { type: array, items: { $ref: "#/components/schemas/Service" } }
+        page: { type: integer }
+        limit: { type: integer }
+      required: [center, radiusKm, mapProvider, businesses, serviceProviders, products, services, page, limit]
     FavoriteInput:
       type: object
       properties:

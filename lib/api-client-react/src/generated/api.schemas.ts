@@ -51,6 +51,14 @@ export const UserAccountType = {
   admin: 'admin',
 } as const;
 
+export type UserLocationVisibility = typeof UserLocationVisibility[keyof typeof UserLocationVisibility];
+
+
+export const UserLocationVisibility = {
+  public: 'public',
+  private: 'private',
+} as const;
+
 export interface User {
   id: string;
   fullName: string;
@@ -68,6 +76,13 @@ export interface User {
   address: string | null;
   preferredLanguage: string;
   notificationsEnabled: boolean;
+  /** @nullable */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: string | null;
+  locationEnabled?: boolean;
+  locationPermissionStatus?: string;
+  locationVisibility?: UserLocationVisibility;
   status: string;
   createdAt: string;
 }
@@ -145,10 +160,106 @@ export interface ProfileUpdate {
   notificationsEnabled?: boolean;
 }
 
+export type LocationUpdateVisibility = typeof LocationUpdateVisibility[keyof typeof LocationUpdateVisibility];
+
+
+export const LocationUpdateVisibility = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+export type LocationUpdatePermissionStatus = typeof LocationUpdatePermissionStatus[keyof typeof LocationUpdatePermissionStatus];
+
+
+export const LocationUpdatePermissionStatus = {
+  prompt: 'prompt',
+  granted: 'granted',
+  denied: 'denied',
+  unavailable: 'unavailable',
+} as const;
+
+export interface LocationUpdate {
+  /**
+     * @minimum -90
+     * @maximum 90
+     * @nullable
+     */
+  latitude?: number | null;
+  /**
+     * @minimum -180
+     * @maximum 180
+     * @nullable
+     */
+  longitude?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 100000
+     * @nullable
+     */
+  accuracy?: number | null;
+  enabled?: boolean;
+  visibility?: LocationUpdateVisibility;
+  permissionStatus?: LocationUpdatePermissionStatus;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  city?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  state?: string | null;
+}
+
+export type LocationVisibility = typeof LocationVisibility[keyof typeof LocationVisibility];
+
+
+export const LocationVisibility = {
+  public: 'public',
+  private: 'private',
+} as const;
+
+export type LocationPermissionStatus = typeof LocationPermissionStatus[keyof typeof LocationPermissionStatus];
+
+
+export const LocationPermissionStatus = {
+  prompt: 'prompt',
+  granted: 'granted',
+  denied: 'denied',
+  unavailable: 'unavailable',
+} as const;
+
+export interface Location {
+  /** @nullable */
+  latitude: number | null;
+  /** @nullable */
+  longitude: number | null;
+  /** @nullable */
+  accuracy: number | null;
+  /** @nullable */
+  updatedAt: string | null;
+  enabled: boolean;
+  visibility: LocationVisibility;
+  permissionStatus: LocationPermissionStatus;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+}
+
 /**
  * @nullable
  */
 export type BusinessInputWorkingHours = { [key: string]: unknown } | null;
+
+export type BusinessInputLocationVisibility = typeof BusinessInputLocationVisibility[keyof typeof BusinessInputLocationVisibility];
+
+
+export const BusinessInputLocationVisibility = {
+  public: 'public',
+  private: 'private',
+} as const;
 
 /**
  * @nullable
@@ -192,6 +303,12 @@ export interface BusinessInput {
   latitude?: number | null;
   /** @nullable */
   longitude?: number | null;
+  /** @nullable */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: string | null;
+  locationEnabled?: boolean;
+  locationVisibility?: BusinessInputLocationVisibility;
   /**
      * @maxLength 20
      * @nullable
@@ -220,12 +337,26 @@ export type Business = BusinessInput & ({
   /** @nullable */
   approvedAt: string | null;
   createdAt: string;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
 });
 
 /**
  * @nullable
  */
 export type ServiceProviderInputAvailability = { [key: string]: unknown } | null;
+
+export type ServiceProviderInputLocationVisibility = typeof ServiceProviderInputLocationVisibility[keyof typeof ServiceProviderInputLocationVisibility];
+
+
+export const ServiceProviderInputLocationVisibility = {
+  public: 'public',
+  private: 'private',
+} as const;
 
 export interface ServiceProviderInput {
   /**
@@ -268,6 +399,28 @@ export interface ServiceProviderInput {
      * @nullable
      */
   location?: string | null;
+  /**
+     * @minimum -90
+     * @maximum 90
+     * @nullable
+     */
+  latitude?: number | null;
+  /**
+     * @minimum -180
+     * @maximum 180
+     * @nullable
+     */
+  longitude?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 100000
+     * @nullable
+     */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: string | null;
+  locationEnabled?: boolean;
+  locationVisibility?: ServiceProviderInputLocationVisibility;
 }
 
 export type ServiceProviderUpdate = ServiceProviderInput;
@@ -279,6 +432,12 @@ export type ServiceProvider = ServiceProviderInput & ({
   /** @nullable */
   approvedAt: string | null;
   createdAt: string;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
 });
 
 export interface NewOnShopNearSettings {
@@ -466,6 +625,12 @@ export type Product = ProductInput & ({
   publishedAt?: string | null;
   viewCount?: number;
   favoriteCount?: number;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
   createdAt: string;
   updatedAt: string;
 });
@@ -596,6 +761,12 @@ export type Service = ServiceInput & ({
   publishedAt?: string | null;
   viewCount?: number;
   favoriteCount?: number;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
   createdAt: string;
   updatedAt: string;
 });
@@ -620,6 +791,23 @@ export interface FeaturedMarketplace {
 }
 
 export interface MarketplaceSearch {
+  businesses: Business[];
+  serviceProviders: ServiceProvider[];
+  products: Product[];
+  services: Service[];
+  page: number;
+  limit: number;
+}
+
+export type NearbyMarketplaceCenter = {
+  latitude: number;
+  longitude: number;
+};
+
+export interface NearbyMarketplace {
+  center: NearbyMarketplaceCenter;
+  radiusKm: number;
+  mapProvider: string;
   businesses: Business[];
   serviceProviders: ServiceProvider[];
   products: Product[];
@@ -809,6 +997,58 @@ export type SearchMarketplaceParams = {
  */
 query?: string;
 verified?: boolean;
+/**
+ * @maxLength 80
+ */
+city?: string;
+/**
+ * @maxLength 80
+ */
+state?: string;
+featured?: boolean;
+newest?: boolean;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type GetNearbyMarketplaceParams = {
+/**
+ * @minimum -90
+ * @maximum 90
+ */
+latitude: number;
+/**
+ * @minimum -180
+ * @maximum 180
+ */
+longitude: number;
+/**
+ * @minimum 0.1
+ * @maximum 100
+ */
+radiusKm?: number;
+/**
+ * @maxLength 120
+ */
+query?: string;
+/**
+ * @maxLength 80
+ */
+city?: string;
+/**
+ * @maxLength 80
+ */
+state?: string;
+verified?: boolean;
+featured?: boolean;
+newest?: boolean;
 /**
  * @minimum 1
  */

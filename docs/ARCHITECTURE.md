@@ -41,3 +41,9 @@ Approved businesses and service providers are eligible when their `approved_at` 
 ## Phase 4 customer marketplace
 
 Public detail routes expose only approved businesses and published, visible, available listings. Detail responses include related listings and increment product/service view counters. Favorites remain customer-owned records in the existing entity-based table; product and service favorite counters are updated only when a save is created or removed.
+
+## Phase 5 location and nearby discovery
+
+GPS permission and the customer's location are managed through authenticated location routes; users can also provide a manual city/state. Business and service-provider locations are separately owner-scoped and require an explicit public-sharing action. Nearby search uses validated coordinates, Haversine distance, radius filtering, and city/state, verification, featured, and newest filters.
+
+Map and routing behavior stays behind a provider-neutral `MapProvider` interface. The active adapter currently returns no road distance/time, so those response fields are `null`; straight-line distance remains available without a third-party service. Choosing a routing/map vendor can replace the adapter without changing marketplace search logic.

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { BusinessInputLocationVisibility } from './businessInputLocationVisibility';
 import type { BusinessInputSocialLinks } from './businessInputSocialLinks';
 import type { BusinessInputWorkingHours } from './businessInputWorkingHours';
 
@@ -45,6 +46,12 @@ export interface BusinessInput {
   latitude?: number | null;
   /** @nullable */
   longitude?: number | null;
+  /** @nullable */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: Date | null;
+  locationEnabled?: boolean;
+  locationVisibility?: BusinessInputLocationVisibility;
   /**
      * @maxLength 20
      * @nullable

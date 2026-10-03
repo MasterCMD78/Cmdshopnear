@@ -8,10 +8,10 @@
 - Phase 3 foundation: persistent products/services, owner-scoped CRUD, availability/visibility controls, categories, catalog, and business metrics
 - Phase 3 follow-through: richer listing fields, featured/trending/newest discovery, marketplace search, category administration API, expanded dashboard metrics, OpenAPI synchronization, and verification
 - Phase 4: persistent favorites, public business/product/service details, related listings, API-backed home/search discovery, loading/empty states, and verification badges
+- Phase 5: opt-in location and permission controls, provider-neutral map/routing boundary, nearby business/product/service discovery, distance/radius filtering, city/state and verified/featured/newest filters, OpenAPI synchronization, and verification
 
 ## Next
 
-- Phase 5: GPS, maps, distance, and directions
 - Phase 6: full ShopNear AI recommendations
 - Phase 7: chat, notifications, reviews, and ratings
 - Phase 8: verification and admin operations
@@ -23,3 +23,7 @@
 - Resolve App Storage runtime resource authorization and rerun authenticated upload verification.
 - Replace the local OTP provider with production SMS delivery before release.
 - Add repeatable committed database migrations if schema history becomes a release requirement.
+
+## Phase 5 follow-up
+
+- Select a concrete map/routing provider before enabling map-pin selection and road travel estimates; straight-line distances work without one.

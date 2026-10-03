@@ -49,11 +49,12 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Business and service provider registration with verification-ready status
 - Automatically surfaced newly approved businesses and service providers
 - Phase 4 customer marketplace detail pages, related listings, API-backed discovery, and persistent favorites
+- Phase 5 opt-in GPS, manual city/state location, nearby search, distance/radius filtering, and public business/provider location controls
 
 ## User preferences
 
 - Preserve the existing ShopNear brand, logo, navigation, and completed marketplace UI.
-- Do not modify backend behavior outside the requested Phase 2 scope.
+- Preserve completed phases and make only additive changes needed for the explicitly requested work.
 
 ## Gotchas
 
@@ -63,6 +64,8 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Run database push only against the development database.
 - The existing development database already contains the entity-based `favorites` table (`user_id`, `entity_type`, `entity_id`); preserve that shape when extending favorites.
 - The current development database is Neon PostgreSQL configured through the Replit `DATABASE_URL` secret. Run `pnpm --filter @workspace/db run push` to reconcile it with the Drizzle schema.
+- Customer GPS is opt-in and private. Public business/provider coordinates require explicit owner sharing, valid coordinates, and approved verification status.
+- Nearby distance is straight-line; travel distance/time remain null until a map/routing provider is selected. Keep that provider behind the existing adapter boundary.
 
 ## Pointers
 

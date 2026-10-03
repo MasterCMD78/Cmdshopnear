@@ -13,6 +13,7 @@ import {
 } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
 import { requireAuth, requireRole } from "../lib/auth";
+import { getMapProvider, haversineDistanceKm, parseCoordinates, safePublicCoordinates } from "../lib/location";
 
 const router: IRouter = Router();
 const imagePaths = z.array(z.string().max(500)).max(10).optional();
@@ -108,7 +109,15 @@ function publicServiceWhere(id: string) {
 
 async function publicBusiness(id: string) {
   const [business] = await db.select().from(businesses).where(and(eq(businesses.id, id), eq(businesses.verificationStatus, "approved"))).limit(1);
-  return business;
+  return business ? safePublicCoordinates(business) : null;
+}
+
+function publicProvider(provider: typeof serviceProviders.$inferSelect) {
+  return safePublicCoordinates({
+    ...provider,
+    skills: Array.isArray(provider.skills) ? provider.skills : [],
+    portfolioImages: Array.isArray(provider.portfolioImages) ? provider.portfolioImages : [],
+  });
 }
 
 async function favoriteTarget(targetType: "business" | "product" | "service", targetId: string) {
@@ -126,9 +135,9 @@ async function favoriteTarget(targetType: "business" | "product" | "service", ta
   if (!service) return null;
   const business = service.businessId ? await publicBusiness(service.businessId) : null;
   const provider = service.providerId
-    ? (await db.select().from(serviceProviders).where(and(eq(serviceProviders.id, service.providerId), eq(serviceProviders.verificationStatus, "approved"))).limit(1))[0]
+    ? ((await db.select().from(serviceProviders).where(and(eq(serviceProviders.id, service.providerId), eq(serviceProviders.verificationStatus, "approved"))).limit(1))[0])
     : null;
-  return business || provider ? { service, business, provider } : null;
+  return business || provider ? { service, business, provider: provider ? publicProvider(provider) : null } : null;
 }
 
 function parsePagination(req: Request) {
@@ -207,13 +216,13 @@ router.get("/marketplace/featured", async (_req, res) => {
     db.select().from(serviceProviders).where(eq(serviceProviders.verificationStatus, "approved")).orderBy(desc(serviceProviders.createdAt)).limit(12),
   ]);
   res.json({
-    featuredBusinesses: newBusinesses.slice(0, 6),
+    featuredBusinesses: newBusinesses.slice(0, 6).map(safePublicCoordinates),
     featuredProducts: featuredProducts.map(normalizeListing),
     featuredServices: featuredServices.map(normalizeListing),
     trendingProducts: newestProducts.map(normalizeListing),
     trendingServices: newestServices.map(normalizeListing),
-    newestBusinesses: newBusinesses,
-    newestProviders: newProviders,
+    newestBusinesses: newBusinesses.map(safePublicCoordinates),
+    newestProviders: newProviders.map(publicProvider),
     newestProducts: newestProducts.map(normalizeListing),
     newestServices: newestServices.map(normalizeListing),
   });
@@ -222,28 +231,160 @@ router.get("/marketplace/featured", async (_req, res) => {
 router.get("/marketplace/search", async (req, res) => {
   const query = typeof req.query.query === "string" ? req.query.query.trim() : "";
   const verified = req.query.verified === "true";
+  const featured = req.query.featured === "true";
+  const newest = req.query.newest !== "false";
+  const city = typeof req.query.city === "string" ? req.query.city.trim() : "";
+  const state = typeof req.query.state === "string" ? req.query.state.trim() : "";
   const { page, limit, offset } = parsePagination(req);
   const businessWhere = and(
     query ? or(ilike(businesses.businessName, `%${query}%`), ilike(businesses.category, `%${query}%`), ilike(businesses.description, `%${query}%`)) : undefined,
     verified ? eq(businesses.verificationStatus, "approved") : undefined,
+    city ? ilike(businesses.businessAddress, `%${city}%`) : undefined,
+    state ? ilike(businesses.businessAddress, `%${state}%`) : undefined,
   );
   const providerWhere = and(
     query ? or(ilike(serviceProviders.profession, `%${query}%`), ilike(serviceProviders.location, `%${query}%`)) : undefined,
     verified ? eq(serviceProviders.verificationStatus, "approved") : undefined,
+    city ? ilike(serviceProviders.location, `%${city}%`) : undefined,
+    state ? ilike(serviceProviders.location, `%${state}%`) : undefined,
   );
   const [businessRows, providerRows, catalog] = await Promise.all([
     db.select().from(businesses).where(businessWhere).orderBy(desc(businesses.createdAt)).limit(limit).offset(offset),
     db.select().from(serviceProviders).where(providerWhere).orderBy(desc(serviceProviders.createdAt)).limit(limit).offset(offset),
     Promise.all([
-      db.select().from(products).where(and(eq(products.status, "published"), eq(products.isVisible, true), eq(products.isAvailable, true), query ? or(ilike(products.name, `%${query}%`), ilike(products.description, `%${query}%`), ilike(products.brand, `%${query}%`)) : undefined)).orderBy(desc(products.createdAt)).limit(limit).offset(offset),
-      db.select().from(services).where(and(eq(services.status, "published"), eq(services.isVisible, true), eq(services.isAvailable, true), query ? or(ilike(services.name, `%${query}%`), ilike(services.description, `%${query}%`)) : undefined)).orderBy(desc(services.createdAt)).limit(limit).offset(offset),
+      db.select().from(products).where(and(eq(products.status, "published"), eq(products.isVisible, true), eq(products.isAvailable, true), featured ? eq(products.isFeatured, true) : undefined, query ? or(ilike(products.name, `%${query}%`), ilike(products.description, `%${query}%`), ilike(products.brand, `%${query}%`)) : undefined, city ? ilike(products.location, `%${city}%`) : undefined, state ? ilike(products.location, `%${state}%`) : undefined)).orderBy(desc(products.createdAt)).limit(limit).offset(offset),
+      db.select().from(services).where(and(eq(services.status, "published"), eq(services.isVisible, true), eq(services.isAvailable, true), featured ? eq(services.isFeatured, true) : undefined, query ? or(ilike(services.name, `%${query}%`), ilike(services.description, `%${query}%`)) : undefined, city ? ilike(services.location, `%${city}%`) : undefined, state ? ilike(services.location, `%${state}%`) : undefined)).orderBy(newest ? desc(services.createdAt) : desc(services.favoriteCount), desc(services.createdAt)).limit(limit).offset(offset),
     ]),
   ]);
   res.json({
-    businesses: businessRows,
-    serviceProviders: providerRows,
+    businesses: businessRows.map(safePublicCoordinates),
+    serviceProviders: providerRows.map(publicProvider),
     products: catalog[0].map(normalizeListing),
     services: catalog[1].map(normalizeListing),
+    page,
+    limit,
+  });
+});
+
+router.get("/marketplace/nearby", async (req, res) => {
+  const latitude = Number(req.query.latitude);
+  const longitude = Number(req.query.longitude);
+  const radiusKm = Number(req.query.radiusKm ?? 25);
+  const query = typeof req.query.query === "string" ? req.query.query.trim() : "";
+  const city = typeof req.query.city === "string" ? req.query.city.trim() : "";
+  const state = typeof req.query.state === "string" ? req.query.state.trim() : "";
+  const verified = req.query.verified !== "false";
+  const newest = req.query.newest === "true";
+  const featured = req.query.featured === "true";
+  const { page, limit } = parsePagination(req);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180
+    || !Number.isFinite(radiusKm) || radiusKm < 0.1 || radiusKm > 100) {
+    res.status(400).json({ error: "Valid latitude, longitude, and radiusKm (0.1–100) are required" });
+    return;
+  }
+  const center = { latitude, longitude };
+  const [businessRows, providerRows, productRows, serviceRows] = await Promise.all([
+    db.select().from(businesses).where(and(
+      verified ? eq(businesses.verificationStatus, "approved") : undefined,
+      city ? ilike(businesses.businessAddress, `%${city}%`) : undefined,
+      state ? ilike(businesses.businessAddress, `%${state}%`) : undefined,
+    )),
+    db.select().from(serviceProviders).where(and(
+      verified ? eq(serviceProviders.verificationStatus, "approved") : undefined,
+      city ? ilike(serviceProviders.location, `%${city}%`) : undefined,
+      state ? ilike(serviceProviders.location, `%${state}%`) : undefined,
+    )),
+    db.select().from(products).where(and(
+      eq(products.status, "published"),
+      eq(products.isVisible, true),
+      eq(products.isAvailable, true),
+      featured ? eq(products.isFeatured, true) : undefined,
+      query ? or(ilike(products.name, `%${query}%`), ilike(products.description, `%${query}%`), ilike(products.brand, `%${query}%`)) : undefined,
+    )),
+    db.select().from(services).where(and(
+      eq(services.status, "published"),
+      eq(services.isVisible, true),
+      eq(services.isAvailable, true),
+      featured ? eq(services.isFeatured, true) : undefined,
+      query ? or(ilike(services.name, `%${query}%`), ilike(services.description, `%${query}%`), ilike(services.location, `%${query}%`)) : undefined,
+    )),
+  ]);
+
+  const businessLocations = new Map(businessRows.map((business) => [business.id, {
+    record: business,
+    coordinates: business.verificationStatus === "approved" && business.locationEnabled && business.locationVisibility === "public"
+      ? parseCoordinates(business.latitude, business.longitude)
+      : null,
+  }]));
+  const providerLocations = new Map(providerRows.map((provider) => [provider.id, {
+    record: provider,
+    coordinates: provider.verificationStatus === "approved" && provider.locationEnabled && provider.locationVisibility === "public"
+      ? parseCoordinates(provider.latitude, provider.longitude)
+      : null,
+  }]));
+  const distance = (coordinates: ReturnType<typeof parseCoordinates>) => coordinates ? haversineDistanceKm(center, coordinates) : null;
+  const inRadius = (value: number | null) => value !== null && value <= radiusKm;
+  const matchesQuery = (...values: (string | null | undefined)[]) => !query
+    || values.some((value) => value?.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+  const order = <T extends { distanceKm: number | null; createdAt: Date }>(items: T[]) => items.sort((a, b) => newest
+    ? b.createdAt.getTime() - a.createdAt.getTime()
+    : (a.distanceKm ?? Number.POSITIVE_INFINITY) - (b.distanceKm ?? Number.POSITIVE_INFINITY));
+  const nearbyBusinesses = order(businessRows.map((business) => ({
+    ...safePublicCoordinates(business),
+    distanceKm: distance(businessLocations.get(business.id)?.coordinates ?? null),
+  })).filter((business) => inRadius(business.distanceKm)
+    && matchesQuery(business.businessName, business.category, business.description)));
+  const nearbyProviders = order(providerRows.map((provider) => ({
+    ...publicProvider(provider),
+    distanceKm: distance(providerLocations.get(provider.id)?.coordinates ?? null),
+  })).filter((provider) => inRadius(provider.distanceKm)
+    && matchesQuery(provider.profession, provider.location)));
+  const nearbyProducts = order(productRows.map((product) => ({
+    ...normalizeListing(product),
+    distanceKm: distance(businessLocations.get(product.businessId)?.coordinates ?? null),
+  })).filter((product) => inRadius(product.distanceKm)
+    && (!verified || businessRows.some((business) => business.id === product.businessId && business.verificationStatus === "approved"))));
+  const nearbyServices = order(serviceRows.map((service) => {
+    const coordinates = service.businessId
+      ? businessLocations.get(service.businessId)?.coordinates
+      : service.providerId
+        ? providerLocations.get(service.providerId)?.coordinates
+        : null;
+    return { ...normalizeListing(service), distanceKm: distance(coordinates ?? null) };
+  }).filter((service) => {
+    const provider = service.providerId ? providerLocations.get(service.providerId)?.record : null;
+    const business = service.businessId ? businessLocations.get(service.businessId)?.record : null;
+    return inRadius(service.distanceKm) && (!verified || business?.verificationStatus === "approved" || provider?.verificationStatus === "approved");
+  }));
+  const paginate = <T>(items: T[]) => items.slice((page - 1) * limit, page * limit);
+  const mapProvider = getMapProvider();
+  const addTravelEstimates = async <T,>(items: T[], getDestination: (item: T) => ReturnType<typeof parseCoordinates>) => Promise.all(items.map(async (item) => {
+    const destination = getDestination(item);
+    const estimate = destination
+      ? await mapProvider.getTravelEstimate(center, destination)
+      : { distanceMeters: null, durationSeconds: null };
+    return {
+      ...item,
+      travelDistanceMeters: estimate.distanceMeters,
+      travelTimeSeconds: estimate.durationSeconds,
+    };
+  }));
+
+  res.json({
+    center,
+    radiusKm,
+    mapProvider: mapProvider.name,
+    businesses: await addTravelEstimates(paginate(nearbyBusinesses), (item) => parseCoordinates(item.latitude, item.longitude)),
+    serviceProviders: await addTravelEstimates(paginate(nearbyProviders), (item) => parseCoordinates(item.latitude, item.longitude)),
+    products: await addTravelEstimates(paginate(nearbyProducts), (item) => businessLocations.get(item.businessId)?.coordinates ?? null),
+    services: await addTravelEstimates(paginate(nearbyServices), (item) => {
+      const coordinates = item.businessId
+        ? businessLocations.get(item.businessId)?.coordinates
+        : item.providerId
+          ? providerLocations.get(item.providerId)?.coordinates
+          : null;
+      return coordinates ?? null;
+    }),
     page,
     limit,
   });
@@ -264,7 +405,7 @@ router.get("/businesses/:id", async (req, res) => {
     business,
     products: businessProducts.map(normalizeListing),
     services: businessServices.map(normalizeListing),
-    relatedBusinesses: relatedBusinesses.filter((item) => item.id !== business.id).slice(0, 6),
+    relatedBusinesses: relatedBusinesses.filter((item) => item.id !== business.id).map(safePublicCoordinates).slice(0, 6),
   });
 });
 
@@ -326,7 +467,7 @@ router.get("/services/:id", async (req, res) => {
   res.json({
     service: normalizeListing(service),
     business,
-    provider,
+    provider: provider ? publicProvider(provider) : null,
     relatedServices: relatedServices.map(normalizeListing),
   });
 });
@@ -336,7 +477,7 @@ router.get("/favorites", requireAuth, async (req, res) => {
   const items = await Promise.all(rows.map(async (favorite) => {
     if (favorite.entityType === "business") {
       const [business] = await db.select().from(businesses).where(eq(businesses.id, favorite.entityId)).limit(1);
-      return business ? { id: favorite.id, targetType: "business" as const, targetId: business.id, createdAt: favorite.createdAt, item: business } : null;
+      return business ? { id: favorite.id, targetType: "business" as const, targetId: business.id, createdAt: favorite.createdAt, item: safePublicCoordinates(business) } : null;
     }
     if (favorite.entityType === "product") {
       const [product] = await db.select().from(products).where(eq(products.id, favorite.entityId)).limit(1);

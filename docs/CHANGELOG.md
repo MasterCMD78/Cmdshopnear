@@ -35,3 +35,13 @@
 - Replaced hard-coded Home discovery cards and Search result navigation with featured and search API data.
 - Added detail screens, loading states, empty states, verification badges, and persistent favorite controls while preserving the existing navigation and brand.
 - Regenerated OpenAPI client/Zod types and verified typecheck and production artifact builds.
+
+## Phase 5 — GPS, Maps & Nearby Discovery
+
+- Added additive location metadata to existing user, business, and service-provider records without recreating tables.
+- Added authenticated customer location/permission routes and owner-scoped business/provider location updates.
+- Kept customer coordinates private; public coordinates are exposed only for approved, enabled, explicitly public businesses and providers.
+- Added nearby search with radius validation, straight-line distance, distance/newest sorting, and city/state, verified, and featured filters.
+- Connected Home and Search to browser location with radius selection; added manual city/state controls and business/provider location sharing controls in Profile.
+- Added a provider-neutral map/routing adapter with nullable road-distance/time fields because no external map provider is configured.
+- Regenerated OpenAPI client and Zod schemas.

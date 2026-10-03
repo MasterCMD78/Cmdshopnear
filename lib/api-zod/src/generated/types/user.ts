@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UserAccountType } from './userAccountType';
+import type { UserLocationVisibility } from './userLocationVisibility';
 
 export interface User {
   id: string;
@@ -24,6 +25,13 @@ export interface User {
   address: string | null;
   preferredLanguage: string;
   notificationsEnabled: boolean;
+  /** @nullable */
+  locationAccuracy?: number | null;
+  /** @nullable */
+  locationUpdatedAt?: Date | null;
+  locationEnabled?: boolean;
+  locationPermissionStatus?: string;
+  locationVisibility?: UserLocationVisibility;
   status: string;
   createdAt: Date;
 }

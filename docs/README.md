@@ -37,4 +37,11 @@ Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware acco
 - Home discovery now reads featured businesses, products, and services from the API with loading and empty states.
 - Search links API-backed businesses, products, and services to their public detail pages.
 - Favorites now load from the authenticated API and preserve the existing five-tab navigation and ShopNear visual language.
-- OpenAPI and generated client/Zod types are synchronized. Phase 5 GPS, maps, distance, and directions work is intentionally not started.
+- OpenAPI and generated client/Zod types are synchronized.
+
+## Phase 5 completion status
+
+- Added opt-in GPS controls, private customer location storage, and manual city/state selection.
+- Nearby Home/Search results include radius filtering, straight-line distances, and verified/featured/newest filters.
+- Public business/provider coordinates require owner opt-in and approval; customer coordinates are never public.
+- OpenAPI and generated client/Zod types are synchronized. Road travel distance/time remain nullable until a map provider is selected.

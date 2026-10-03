@@ -36,11 +36,15 @@ import type {
   FeaturedMarketplace,
   GetAdminCategoriesParams,
   GetMarketplaceCatalogParams,
+  GetNearbyMarketplaceParams,
   HealthStatus,
+  Location,
+  LocationUpdate,
   MarketplaceCatalog,
   MarketplaceCategories,
   MarketplaceSearch,
   Message,
+  NearbyMarketplace,
   NewOnShopNear,
   NewOnShopNearSettings,
   OtpChallenge,
@@ -923,6 +927,171 @@ export const useUpdateProfile = <TError = ErrorType<unknown>,
       return useMutation(getUpdateProfileMutationOptions(options));
     }
 
+export const getGetLocationUrl = () => {
+
+
+
+
+  return `/api/location`
+}
+
+/**
+ * @summary Read the authenticated user's location state
+ */
+export const getLocation = async ( options?: Parameters<typeof customFetch>[1]): Promise<Location> => {
+
+  return customFetch<Location>(getGetLocationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLocationQueryKey = () => {
+    return [
+    `/api/location`
+    ] as const;
+    }
+
+
+export const getGetLocationQueryOptions = <TData = Awaited<ReturnType<typeof getLocation>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLocationQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocation>>> = ({ signal }) => getLocation({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLocationQueryResult = NonNullable<Awaited<ReturnType<typeof getLocation>>>
+export type GetLocationQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Read the authenticated user's location state
+ */
+
+export function useGetLocation<TData = Awaited<ReturnType<typeof getLocation>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLocation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLocationQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateLocationUrl = () => {
+
+
+
+
+  return `/api/location`
+}
+
+/**
+ * @summary Update the authenticated user's GPS location and permission state
+ */
+export const updateLocation = async (locationUpdate: LocationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Location> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Location>(getUpdateLocationUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(locationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateLocationMutationKey = () => ['updateLocation'] as const;
+
+export const getUpdateLocationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLocation>>, TError,UpdateLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateLocation>>, TError,UpdateLocationMutationVariables, TContext> => {
+
+const mutationKey = getUpdateLocationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateLocation>>, UpdateLocationMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateLocation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateLocationMutationResult = NonNullable<Awaited<ReturnType<typeof updateLocation>>>
+    export type UpdateLocationMutationBody = BodyType<LocationUpdate>
+    export type UpdateLocationMutationError = ErrorType<unknown>
+    export type UpdateLocationMutationVariables = {data: BodyType<LocationUpdate>}
+
+    /**
+ * @summary Update the authenticated user's GPS location and permission state
+ */
+export const useUpdateLocation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLocation>>, TError,UpdateLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateLocation>>,
+        TError,
+        UpdateLocationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateLocationMutationOptions(options));
+    }
+
 export const getCreateBusinessUrl = () => {
 
 
@@ -1508,6 +1677,184 @@ export const useUpdateServiceProvider = <TError = ErrorType<unknown>,
       return useMutation(getUpdateServiceProviderMutationOptions(options));
     }
 
+export const getUpdateBusinessLocationUrl = (id: string,) => {
+
+
+
+
+  return `/api/businesses/${id}/location`
+}
+
+/**
+ * @summary Update an owned business location
+ */
+export const updateBusinessLocation = async (id: string,
+    locationUpdate: LocationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Location> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Location>(getUpdateBusinessLocationUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(locationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateBusinessLocationMutationKey = () => ['updateBusinessLocation'] as const;
+
+export const getUpdateBusinessLocationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessLocation>>, TError,UpdateBusinessLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessLocation>>, TError,UpdateBusinessLocationMutationVariables, TContext> => {
+
+const mutationKey = getUpdateBusinessLocationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessLocation>>, UpdateBusinessLocationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateBusinessLocation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessLocationMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessLocation>>>
+    export type UpdateBusinessLocationMutationBody = BodyType<LocationUpdate>
+    export type UpdateBusinessLocationMutationError = ErrorType<unknown>
+    export type UpdateBusinessLocationMutationVariables = {id: string;data: BodyType<LocationUpdate>}
+
+    /**
+ * @summary Update an owned business location
+ */
+export const useUpdateBusinessLocation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessLocation>>, TError,UpdateBusinessLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessLocation>>,
+        TError,
+        UpdateBusinessLocationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessLocationMutationOptions(options));
+    }
+
+export const getUpdateServiceProviderLocationUrl = (id: string,) => {
+
+
+
+
+  return `/api/service-providers/${id}/location`
+}
+
+/**
+ * @summary Update an owned service provider location
+ */
+export const updateServiceProviderLocation = async (id: string,
+    locationUpdate: LocationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Location> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Location>(getUpdateServiceProviderLocationUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(locationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateServiceProviderLocationMutationKey = () => ['updateServiceProviderLocation'] as const;
+
+export const getUpdateServiceProviderLocationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServiceProviderLocation>>, TError,UpdateServiceProviderLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateServiceProviderLocation>>, TError,UpdateServiceProviderLocationMutationVariables, TContext> => {
+
+const mutationKey = getUpdateServiceProviderLocationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateServiceProviderLocation>>, UpdateServiceProviderLocationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateServiceProviderLocation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateServiceProviderLocationMutationResult = NonNullable<Awaited<ReturnType<typeof updateServiceProviderLocation>>>
+    export type UpdateServiceProviderLocationMutationBody = BodyType<LocationUpdate>
+    export type UpdateServiceProviderLocationMutationError = ErrorType<unknown>
+    export type UpdateServiceProviderLocationMutationVariables = {id: string;data: BodyType<LocationUpdate>}
+
+    /**
+ * @summary Update an owned service provider location
+ */
+export const useUpdateServiceProviderLocation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServiceProviderLocation>>, TError,UpdateServiceProviderLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateServiceProviderLocation>>,
+        TError,
+        UpdateServiceProviderLocationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateServiceProviderLocationMutationOptions(options));
+    }
+
 export const getGetNewOnShopNearUrl = () => {
 
 
@@ -1895,6 +2242,90 @@ export function useSearchMarketplace<TData = Awaited<ReturnType<typeof searchMar
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getSearchMarketplaceQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetNearbyMarketplaceUrl = (params: GetNearbyMarketplaceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/marketplace/nearby?${stringifiedParams}` : `/api/marketplace/nearby`
+}
+
+/**
+ * @summary Find verified nearby businesses, providers, products, and services within a radius
+ */
+export const getNearbyMarketplace = async (params: GetNearbyMarketplaceParams, options?: Parameters<typeof customFetch>[1]): Promise<NearbyMarketplace> => {
+
+  return customFetch<NearbyMarketplace>(getGetNearbyMarketplaceUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNearbyMarketplaceQueryKey = (params?: GetNearbyMarketplaceParams,) => {
+    return [
+    `/api/marketplace/nearby`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetNearbyMarketplaceQueryOptions = <TData = Awaited<ReturnType<typeof getNearbyMarketplace>>, TError = ErrorType<unknown>>(params: GetNearbyMarketplaceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNearbyMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNearbyMarketplaceQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNearbyMarketplace>>> = ({ signal }) => getNearbyMarketplace(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNearbyMarketplace>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNearbyMarketplaceQueryResult = NonNullable<Awaited<ReturnType<typeof getNearbyMarketplace>>>
+export type GetNearbyMarketplaceQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Find verified nearby businesses, providers, products, and services within a radius
+ */
+
+export function useGetNearbyMarketplace<TData = Awaited<ReturnType<typeof getNearbyMarketplace>>, TError = ErrorType<unknown>>(
+ params: GetNearbyMarketplaceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNearbyMarketplace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNearbyMarketplaceQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -33,6 +33,14 @@ The project does not contain a committed migration directory. `drizzle-kit push`
 
 Product and service ownership is tied to the authenticated user and the related business/provider record. Prices are stored as integer cents to avoid floating-point currency drift.
 
+## Phase 5 location additions
+
+Phase 5 extends the existing `users`, `businesses`, and `service_providers` tables; it does not create replacement tables. These records now carry nullable text latitude/longitude (kept compatible with the existing coordinate representation), integer accuracy, last-update timestamp, location-enabled state, and public/private visibility. User rows also track browser permission state. User city/state remains available for manual search without requesting GPS.
+
+Coordinates are validated and converted at API boundaries. Customer coordinates are private and are never included in public marketplace responses. Business/provider coordinates are used for discovery only when valid, enabled, explicitly public, and approved. Products and services use their owning business/provider location; no per-listing coordinate columns were added.
+
+The current reconciliation remains the existing development-only Drizzle `push` workflow. Review its proposed changes and apply only additive column changes; do not force the push or recreate tables.
+
 User-uploaded files are stored outside PostgreSQL. Rows store object paths and metadata only.
 
 ## Compatibility

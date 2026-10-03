@@ -11,3 +11,5 @@
 - Service-provider JSON arrays are nullable in the existing schema; API responses normalize them to empty arrays to preserve the current contract without changing storage.
 - Replit App Storage is provisioned, but this runtime currently rejects its sidecar credential exchange with `401 no allowed resources`; treat upload verification as an environment dependency.
 - Phase 4 customer favorites use the existing entity-based database table and unique user/entity index; do not replace it with per-entity nullable foreign-key columns.
+- Phase 5 stores location data additively on existing user, business, and provider records. Keep customer GPS private; public business/provider coordinates require explicit opt-in and approval.
+- Nearby discovery calculates straight-line distance with Haversine and filters by radius. Road distance/time remain nullable behind a provider-neutral map adapter until a vendor is selected.

@@ -27,3 +27,11 @@ Password hashing, external social login, production SMS delivery, object ACL rev
 - Detail routes do not expose pending businesses or unpublished/hidden/unavailable listings.
 - Favorite reads, writes, and deletes require the authenticated session; the API validates both the target type and UUID.
 - Favorite mutations are audit logged and scoped to the current user.
+
+## Phase 5 location boundaries
+
+- Customer GPS is opt-in, stored with permission state, private by default, and available only through the authenticated user's location route.
+- Public business/provider coordinates require valid coordinates, location enabled, explicit public visibility, and approved verification status. Pending or private coordinates are removed before public serialization.
+- Location changes for businesses and service providers are owner-scoped; administrators retain their existing role-based access.
+- Public nearby search validates coordinate bounds and radius limits. It returns only records with eligible public coordinates and does not include the customer's location in result records.
+- Road distance and travel time are not fabricated: they are `null` until a real map/routing provider is configured.

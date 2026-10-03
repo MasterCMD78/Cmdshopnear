@@ -35,6 +35,12 @@ export type Product = ProductInput & ({
   publishedAt?: Date | null;
   viewCount?: number;
   favoriteCount?: number;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
   createdAt: Date;
   updatedAt: Date;
 });

@@ -16,12 +16,16 @@ The API is mounted at `/api`. All JSON bodies are validated with Zod schemas gen
 
 - `GET /profile` — return the authenticated profile
 - `PUT /profile` — update profile fields
+- `GET /location` — return the authenticated user's location and permission settings
+- `PUT /location` — update GPS location, permission state, or manual city/state; coordinates must be a valid latitude/longitude pair
 - `POST /businesses` — create a business registration
 - `GET /businesses/mine` — load the authenticated user's business
 - `PUT /businesses/:id` — update an owned business
+- `PUT /businesses/:id/location` — explicitly enable or update an owned business's public-discovery location
 - `POST /service-providers` — create a service provider registration
 - `GET /service-providers/mine` — load the authenticated user's provider profile
 - `PUT /service-providers/:id` — update an owned provider profile
+- `PUT /service-providers/:id/location` — explicitly enable or update an owned provider's public-discovery location
 - `GET /new-on-shopnear` — return currently eligible approved businesses and providers
 
 ## Storage
@@ -36,7 +40,8 @@ The upload endpoint accepts metadata only. The client uploads the file directly 
 - `GET /marketplace/categories` — list visible product and service categories
 - `GET /marketplace/catalog?query=&categoryId=&featured=&newest=&location=&tag=&page=&limit=` — list visible, available, published products and services with discovery filters
 - `GET /marketplace/featured` — return featured, trending/newest products and services plus approved businesses/providers
-- `GET /marketplace/search?query=&verified=&page=&limit=` — search businesses, service providers, products, and services
+- `GET /marketplace/search?query=&verified=&city=&state=&featured=&newest=&page=&limit=` — search businesses, service providers, products, and services
+- `GET /marketplace/nearby?latitude=&longitude=&radiusKm=&query=&city=&state=&verified=&featured=&newest=&page=&limit=` — find nearby businesses, providers, products, and services; `radiusKm` is 0.1–100 and defaults to 25
 - `GET /businesses/:id` — public approved business detail with products, services, and related businesses
 - `GET /products/:id` — public published product detail with its business and related listings
 - `GET /services/:id` — public published service detail with its business/provider and related services
@@ -65,3 +70,5 @@ Product and service mutations are owner-scoped in the API. The UI provides the f
 - `DELETE /admin/categories/:type/:id` — delete a category
 
 Protected routes return `401` when there is no valid session and `403` when the role is not allowed.
+
+Nearby results include straight-line `distanceKm` for radius filtering and sorting. `travelDistanceMeters` and `travelTimeSeconds` are nullable until a routing provider is configured. The current map provider is `none`; no provider-specific key or map SDK is required for GPS and straight-line discovery.

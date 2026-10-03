@@ -14,4 +14,10 @@ export type ServiceProvider = ServiceProviderInput & ({
   /** @nullable */
   approvedAt: Date | null;
   createdAt: Date;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  travelDistanceMeters?: number | null;
+  /** @nullable */
+  travelTimeSeconds?: number | null;
 });

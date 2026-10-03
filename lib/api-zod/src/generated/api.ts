@@ -86,6 +86,11 @@ export const VerifyOtpResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
 }),zod.null()])
@@ -124,6 +129,11 @@ export const VerifyOtpAliasResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
 }),zod.null()])
@@ -157,6 +167,11 @@ export const GetSessionResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
 }),zod.null()])
@@ -205,6 +220,11 @@ export const RegisterResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
 }),zod.null()])
@@ -226,6 +246,11 @@ export const GetProfileResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
 })
@@ -273,8 +298,71 @@ export const UpdateProfileResponse = zod.object({
   "address": zod.string().nullable(),
   "preferredLanguage": zod.string(),
   "notificationsEnabled": zod.boolean(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationPermissionStatus": zod.string().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "status": zod.string(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Read the authenticated user's location state
+ */
+export const GetLocationResponse = zod.object({
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "accuracy": zod.number().nullable(),
+  "updatedAt": zod.coerce.date().nullable(),
+  "enabled": zod.boolean(),
+  "visibility": zod.enum(['public', 'private']),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update the authenticated user's GPS location and permission state
+ */
+export const updateLocationBodyLatitudeMin = -90;
+export const updateLocationBodyLatitudeMax = 90;
+
+export const updateLocationBodyLongitudeMin = -180;
+export const updateLocationBodyLongitudeMax = 180;
+
+export const updateLocationBodyAccuracyMin = 0;
+export const updateLocationBodyAccuracyMax = 100000;
+
+export const updateLocationBodyCityMax = 80;
+
+export const updateLocationBodyStateMax = 80;
+
+
+
+export const UpdateLocationBody = zod.object({
+  "latitude": zod.number().min(updateLocationBodyLatitudeMin).max(updateLocationBodyLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateLocationBodyLongitudeMin).max(updateLocationBodyLongitudeMax).nullish(),
+  "accuracy": zod.number().min(updateLocationBodyAccuracyMin).max(updateLocationBodyAccuracyMax).nullish(),
+  "enabled": zod.boolean().optional(),
+  "visibility": zod.enum(['public', 'private']).optional(),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']).optional(),
+  "city": zod.string().max(updateLocationBodyCityMax).nullish(),
+  "state": zod.string().max(updateLocationBodyStateMax).nullish()
+})
+
+export const UpdateLocationResponse = zod.object({
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "accuracy": zod.number().nullable(),
+  "updatedAt": zod.coerce.date().nullable(),
+  "enabled": zod.boolean(),
+  "visibility": zod.enum(['public', 'private']),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish()
 })
 
 
@@ -313,6 +401,10 @@ export const CreateBusinessBody = zod.object({
   "businessAddress": zod.string().max(createBusinessBodyBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(createBusinessBodyWhatsappMax).nullish(),
   "phone": zod.string().max(createBusinessBodyPhoneMax).nullish(),
   "website": zod.string().max(createBusinessBodyWebsiteMax).nullish(),
@@ -351,6 +443,10 @@ export const CreateBusinessResponse = zod.object({
   "businessAddress": zod.string().max(createBusinessResponseOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(createBusinessResponseOneWhatsappMax).nullish(),
   "phone": zod.string().max(createBusinessResponseOnePhoneMax).nullish(),
   "website": zod.string().max(createBusinessResponseOneWebsiteMax).nullish(),
@@ -360,7 +456,10 @@ export const CreateBusinessResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
 
 
@@ -399,6 +498,10 @@ export const GetMyBusinessResponse = zod.object({
   "businessAddress": zod.string().max(getMyBusinessResponseOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getMyBusinessResponseOneWhatsappMax).nullish(),
   "phone": zod.string().max(getMyBusinessResponseOnePhoneMax).nullish(),
   "website": zod.string().max(getMyBusinessResponseOneWebsiteMax).nullish(),
@@ -408,7 +511,10 @@ export const GetMyBusinessResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
 
 
@@ -525,6 +631,10 @@ export const GetBusinessDetailResponse = zod.object({
   "businessAddress": zod.string().max(getBusinessDetailResponseBusinessOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getBusinessDetailResponseBusinessOneWhatsappMax).nullish(),
   "phone": zod.string().max(getBusinessDetailResponseBusinessOnePhoneMax).nullish(),
   "website": zod.string().max(getBusinessDetailResponseBusinessOneWebsiteMax).nullish(),
@@ -534,7 +644,10 @@ export const GetBusinessDetailResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })),
   "products": zod.array(zod.object({
   "name": zod.string().min(getBusinessDetailResponseProductsItemOneNameMin).max(getBusinessDetailResponseProductsItemOneNameMax),
@@ -573,6 +686,9 @@ export const GetBusinessDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -616,6 +732,9 @@ export const GetBusinessDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -629,6 +748,10 @@ export const GetBusinessDetailResponse = zod.object({
   "businessAddress": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneWhatsappMax).nullish(),
   "phone": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOnePhoneMax).nullish(),
   "website": zod.string().max(getBusinessDetailResponseRelatedBusinessesItemOneWebsiteMax).nullish(),
@@ -638,7 +761,10 @@ export const GetBusinessDetailResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })))
 })
 
@@ -682,6 +808,10 @@ export const UpdateBusinessBody = zod.object({
   "businessAddress": zod.string().max(updateBusinessBodyOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(updateBusinessBodyOneWhatsappMax).nullish(),
   "phone": zod.string().max(updateBusinessBodyOnePhoneMax).nullish(),
   "website": zod.string().max(updateBusinessBodyOneWebsiteMax).nullish(),
@@ -720,6 +850,10 @@ export const UpdateBusinessResponse = zod.object({
   "businessAddress": zod.string().max(updateBusinessResponseOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(updateBusinessResponseOneWhatsappMax).nullish(),
   "phone": zod.string().max(updateBusinessResponseOnePhoneMax).nullish(),
   "website": zod.string().max(updateBusinessResponseOneWebsiteMax).nullish(),
@@ -729,7 +863,10 @@ export const UpdateBusinessResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
 
 
@@ -756,6 +893,15 @@ export const createServiceProviderBodyWhatsappMax = 20;
 
 export const createServiceProviderBodyLocationMax = 250;
 
+export const createServiceProviderBodyLatitudeMin = -90;
+export const createServiceProviderBodyLatitudeMax = 90;
+
+export const createServiceProviderBodyLongitudeMin = -180;
+export const createServiceProviderBodyLongitudeMax = 180;
+
+export const createServiceProviderBodyLocationAccuracyMin = 0;
+export const createServiceProviderBodyLocationAccuracyMax = 100000;
+
 
 
 export const CreateServiceProviderBody = zod.object({
@@ -767,7 +913,13 @@ export const CreateServiceProviderBody = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(createServiceProviderBodyPhoneMax).nullish(),
   "whatsapp": zod.string().max(createServiceProviderBodyWhatsappMax).nullish(),
-  "location": zod.string().max(createServiceProviderBodyLocationMax).nullish()
+  "location": zod.string().max(createServiceProviderBodyLocationMax).nullish(),
+  "latitude": zod.number().min(createServiceProviderBodyLatitudeMin).max(createServiceProviderBodyLatitudeMax).nullish(),
+  "longitude": zod.number().min(createServiceProviderBodyLongitudeMin).max(createServiceProviderBodyLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(createServiceProviderBodyLocationAccuracyMin).max(createServiceProviderBodyLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 })
 
 export const createServiceProviderResponseOneProfessionMin = 2;
@@ -790,6 +942,15 @@ export const createServiceProviderResponseOneWhatsappMax = 20;
 
 export const createServiceProviderResponseOneLocationMax = 250;
 
+export const createServiceProviderResponseOneLatitudeMin = -90;
+export const createServiceProviderResponseOneLatitudeMax = 90;
+
+export const createServiceProviderResponseOneLongitudeMin = -180;
+export const createServiceProviderResponseOneLongitudeMax = 180;
+
+export const createServiceProviderResponseOneLocationAccuracyMin = 0;
+export const createServiceProviderResponseOneLocationAccuracyMax = 100000;
+
 
 
 export const CreateServiceProviderResponse = zod.object({
@@ -801,13 +962,22 @@ export const CreateServiceProviderResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(createServiceProviderResponseOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(createServiceProviderResponseOneWhatsappMax).nullish(),
-  "location": zod.string().max(createServiceProviderResponseOneLocationMax).nullish()
+  "location": zod.string().max(createServiceProviderResponseOneLocationMax).nullish(),
+  "latitude": zod.number().min(createServiceProviderResponseOneLatitudeMin).max(createServiceProviderResponseOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(createServiceProviderResponseOneLongitudeMin).max(createServiceProviderResponseOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(createServiceProviderResponseOneLocationAccuracyMin).max(createServiceProviderResponseOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
 
 
@@ -834,6 +1004,15 @@ export const getMyServiceProviderResponseOneWhatsappMax = 20;
 
 export const getMyServiceProviderResponseOneLocationMax = 250;
 
+export const getMyServiceProviderResponseOneLatitudeMin = -90;
+export const getMyServiceProviderResponseOneLatitudeMax = 90;
+
+export const getMyServiceProviderResponseOneLongitudeMin = -180;
+export const getMyServiceProviderResponseOneLongitudeMax = 180;
+
+export const getMyServiceProviderResponseOneLocationAccuracyMin = 0;
+export const getMyServiceProviderResponseOneLocationAccuracyMax = 100000;
+
 
 
 export const GetMyServiceProviderResponse = zod.object({
@@ -845,13 +1024,22 @@ export const GetMyServiceProviderResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(getMyServiceProviderResponseOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(getMyServiceProviderResponseOneWhatsappMax).nullish(),
-  "location": zod.string().max(getMyServiceProviderResponseOneLocationMax).nullish()
+  "location": zod.string().max(getMyServiceProviderResponseOneLocationMax).nullish(),
+  "latitude": zod.number().min(getMyServiceProviderResponseOneLatitudeMin).max(getMyServiceProviderResponseOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getMyServiceProviderResponseOneLongitudeMin).max(getMyServiceProviderResponseOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(getMyServiceProviderResponseOneLocationAccuracyMin).max(getMyServiceProviderResponseOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
 
 
@@ -882,6 +1070,15 @@ export const updateServiceProviderBodyOneWhatsappMax = 20;
 
 export const updateServiceProviderBodyOneLocationMax = 250;
 
+export const updateServiceProviderBodyOneLatitudeMin = -90;
+export const updateServiceProviderBodyOneLatitudeMax = 90;
+
+export const updateServiceProviderBodyOneLongitudeMin = -180;
+export const updateServiceProviderBodyOneLongitudeMax = 180;
+
+export const updateServiceProviderBodyOneLocationAccuracyMin = 0;
+export const updateServiceProviderBodyOneLocationAccuracyMax = 100000;
+
 
 
 export const UpdateServiceProviderBody = zod.object({
@@ -893,7 +1090,13 @@ export const UpdateServiceProviderBody = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(updateServiceProviderBodyOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(updateServiceProviderBodyOneWhatsappMax).nullish(),
-  "location": zod.string().max(updateServiceProviderBodyOneLocationMax).nullish()
+  "location": zod.string().max(updateServiceProviderBodyOneLocationMax).nullish(),
+  "latitude": zod.number().min(updateServiceProviderBodyOneLatitudeMin).max(updateServiceProviderBodyOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateServiceProviderBodyOneLongitudeMin).max(updateServiceProviderBodyOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(updateServiceProviderBodyOneLocationAccuracyMin).max(updateServiceProviderBodyOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 })
 
 export const updateServiceProviderResponseOneProfessionMin = 2;
@@ -916,6 +1119,15 @@ export const updateServiceProviderResponseOneWhatsappMax = 20;
 
 export const updateServiceProviderResponseOneLocationMax = 250;
 
+export const updateServiceProviderResponseOneLatitudeMin = -90;
+export const updateServiceProviderResponseOneLatitudeMax = 90;
+
+export const updateServiceProviderResponseOneLongitudeMin = -180;
+export const updateServiceProviderResponseOneLongitudeMax = 180;
+
+export const updateServiceProviderResponseOneLocationAccuracyMin = 0;
+export const updateServiceProviderResponseOneLocationAccuracyMax = 100000;
+
 
 
 export const UpdateServiceProviderResponse = zod.object({
@@ -927,14 +1139,115 @@ export const UpdateServiceProviderResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(updateServiceProviderResponseOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(updateServiceProviderResponseOneWhatsappMax).nullish(),
-  "location": zod.string().max(updateServiceProviderResponseOneLocationMax).nullish()
+  "location": zod.string().max(updateServiceProviderResponseOneLocationMax).nullish(),
+  "latitude": zod.number().min(updateServiceProviderResponseOneLatitudeMin).max(updateServiceProviderResponseOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateServiceProviderResponseOneLongitudeMin).max(updateServiceProviderResponseOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(updateServiceProviderResponseOneLocationAccuracyMin).max(updateServiceProviderResponseOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))
+
+
+/**
+ * @summary Update an owned business location
+ */
+export const UpdateBusinessLocationParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateBusinessLocationBodyLatitudeMin = -90;
+export const updateBusinessLocationBodyLatitudeMax = 90;
+
+export const updateBusinessLocationBodyLongitudeMin = -180;
+export const updateBusinessLocationBodyLongitudeMax = 180;
+
+export const updateBusinessLocationBodyAccuracyMin = 0;
+export const updateBusinessLocationBodyAccuracyMax = 100000;
+
+export const updateBusinessLocationBodyCityMax = 80;
+
+export const updateBusinessLocationBodyStateMax = 80;
+
+
+
+export const UpdateBusinessLocationBody = zod.object({
+  "latitude": zod.number().min(updateBusinessLocationBodyLatitudeMin).max(updateBusinessLocationBodyLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateBusinessLocationBodyLongitudeMin).max(updateBusinessLocationBodyLongitudeMax).nullish(),
+  "accuracy": zod.number().min(updateBusinessLocationBodyAccuracyMin).max(updateBusinessLocationBodyAccuracyMax).nullish(),
+  "enabled": zod.boolean().optional(),
+  "visibility": zod.enum(['public', 'private']).optional(),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']).optional(),
+  "city": zod.string().max(updateBusinessLocationBodyCityMax).nullish(),
+  "state": zod.string().max(updateBusinessLocationBodyStateMax).nullish()
+})
+
+export const UpdateBusinessLocationResponse = zod.object({
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "accuracy": zod.number().nullable(),
+  "updatedAt": zod.coerce.date().nullable(),
+  "enabled": zod.boolean(),
+  "visibility": zod.enum(['public', 'private']),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update an owned service provider location
+ */
+export const UpdateServiceProviderLocationParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateServiceProviderLocationBodyLatitudeMin = -90;
+export const updateServiceProviderLocationBodyLatitudeMax = 90;
+
+export const updateServiceProviderLocationBodyLongitudeMin = -180;
+export const updateServiceProviderLocationBodyLongitudeMax = 180;
+
+export const updateServiceProviderLocationBodyAccuracyMin = 0;
+export const updateServiceProviderLocationBodyAccuracyMax = 100000;
+
+export const updateServiceProviderLocationBodyCityMax = 80;
+
+export const updateServiceProviderLocationBodyStateMax = 80;
+
+
+
+export const UpdateServiceProviderLocationBody = zod.object({
+  "latitude": zod.number().min(updateServiceProviderLocationBodyLatitudeMin).max(updateServiceProviderLocationBodyLatitudeMax).nullish(),
+  "longitude": zod.number().min(updateServiceProviderLocationBodyLongitudeMin).max(updateServiceProviderLocationBodyLongitudeMax).nullish(),
+  "accuracy": zod.number().min(updateServiceProviderLocationBodyAccuracyMin).max(updateServiceProviderLocationBodyAccuracyMax).nullish(),
+  "enabled": zod.boolean().optional(),
+  "visibility": zod.enum(['public', 'private']).optional(),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']).optional(),
+  "city": zod.string().max(updateServiceProviderLocationBodyCityMax).nullish(),
+  "state": zod.string().max(updateServiceProviderLocationBodyStateMax).nullish()
+})
+
+export const UpdateServiceProviderLocationResponse = zod.object({
+  "latitude": zod.number().nullable(),
+  "longitude": zod.number().nullable(),
+  "accuracy": zod.number().nullable(),
+  "updatedAt": zod.coerce.date().nullable(),
+  "enabled": zod.boolean(),
+  "visibility": zod.enum(['public', 'private']),
+  "permissionStatus": zod.enum(['prompt', 'granted', 'denied', 'unavailable']),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish()
+})
 
 
 /**
@@ -980,6 +1293,15 @@ export const getNewOnShopNearResponseServiceProvidersItemOneWhatsappMax = 20;
 
 export const getNewOnShopNearResponseServiceProvidersItemOneLocationMax = 250;
 
+export const getNewOnShopNearResponseServiceProvidersItemOneLatitudeMin = -90;
+export const getNewOnShopNearResponseServiceProvidersItemOneLatitudeMax = 90;
+
+export const getNewOnShopNearResponseServiceProvidersItemOneLongitudeMin = -180;
+export const getNewOnShopNearResponseServiceProvidersItemOneLongitudeMax = 180;
+
+export const getNewOnShopNearResponseServiceProvidersItemOneLocationAccuracyMin = 0;
+export const getNewOnShopNearResponseServiceProvidersItemOneLocationAccuracyMax = 100000;
+
 
 
 export const GetNewOnShopNearResponse = zod.object({
@@ -993,6 +1315,10 @@ export const GetNewOnShopNearResponse = zod.object({
   "businessAddress": zod.string().max(getNewOnShopNearResponseBusinessesItemOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getNewOnShopNearResponseBusinessesItemOneWhatsappMax).nullish(),
   "phone": zod.string().max(getNewOnShopNearResponseBusinessesItemOnePhoneMax).nullish(),
   "website": zod.string().max(getNewOnShopNearResponseBusinessesItemOneWebsiteMax).nullish(),
@@ -1002,7 +1328,10 @@ export const GetNewOnShopNearResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "serviceProviders": zod.array(zod.object({
   "profession": zod.string().min(getNewOnShopNearResponseServiceProvidersItemOneProfessionMin).max(getNewOnShopNearResponseServiceProvidersItemOneProfessionMax),
@@ -1013,13 +1342,22 @@ export const GetNewOnShopNearResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(getNewOnShopNearResponseServiceProvidersItemOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(getNewOnShopNearResponseServiceProvidersItemOneWhatsappMax).nullish(),
-  "location": zod.string().max(getNewOnShopNearResponseServiceProvidersItemOneLocationMax).nullish()
+  "location": zod.string().max(getNewOnShopNearResponseServiceProvidersItemOneLocationMax).nullish(),
+  "latitude": zod.number().min(getNewOnShopNearResponseServiceProvidersItemOneLatitudeMin).max(getNewOnShopNearResponseServiceProvidersItemOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getNewOnShopNearResponseServiceProvidersItemOneLongitudeMin).max(getNewOnShopNearResponseServiceProvidersItemOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(getNewOnShopNearResponseServiceProvidersItemOneLocationAccuracyMin).max(getNewOnShopNearResponseServiceProvidersItemOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "days": zod.number().int()
 })
@@ -1170,6 +1508,9 @@ export const GetMarketplaceCatalogResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1213,6 +1554,9 @@ export const GetMarketplaceCatalogResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1390,6 +1734,15 @@ export const getFeaturedMarketplaceResponseNewestProvidersItemOneWhatsappMax = 2
 
 export const getFeaturedMarketplaceResponseNewestProvidersItemOneLocationMax = 250;
 
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLatitudeMin = -90;
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLatitudeMax = 90;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLongitudeMin = -180;
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLongitudeMax = 180;
+
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLocationAccuracyMin = 0;
+export const getFeaturedMarketplaceResponseNewestProvidersItemOneLocationAccuracyMax = 100000;
+
 export const getFeaturedMarketplaceResponseNewestProductsItemOneNameMin = 2;
 export const getFeaturedMarketplaceResponseNewestProductsItemOneNameMax = 120;
 
@@ -1456,6 +1809,10 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "businessAddress": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWhatsappMax).nullish(),
   "phone": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOnePhoneMax).nullish(),
   "website": zod.string().max(getFeaturedMarketplaceResponseFeaturedBusinessesItemOneWebsiteMax).nullish(),
@@ -1465,7 +1822,10 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "featuredProducts": zod.array(zod.object({
   "name": zod.string().min(getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMin).max(getFeaturedMarketplaceResponseFeaturedProductsItemOneNameMax),
@@ -1504,6 +1864,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1547,6 +1910,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1587,6 +1953,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1630,6 +1999,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1643,6 +2015,10 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "businessAddress": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneWhatsappMax).nullish(),
   "phone": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOnePhoneMax).nullish(),
   "website": zod.string().max(getFeaturedMarketplaceResponseNewestBusinessesItemOneWebsiteMax).nullish(),
@@ -1652,7 +2028,10 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "newestProviders": zod.array(zod.object({
   "profession": zod.string().min(getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneProfessionMax),
@@ -1663,13 +2042,22 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneWhatsappMax).nullish(),
-  "location": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneLocationMax).nullish()
+  "location": zod.string().max(getFeaturedMarketplaceResponseNewestProvidersItemOneLocationMax).nullish(),
+  "latitude": zod.number().min(getFeaturedMarketplaceResponseNewestProvidersItemOneLatitudeMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getFeaturedMarketplaceResponseNewestProvidersItemOneLongitudeMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(getFeaturedMarketplaceResponseNewestProvidersItemOneLocationAccuracyMin).max(getFeaturedMarketplaceResponseNewestProvidersItemOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "newestProducts": zod.array(zod.object({
   "name": zod.string().min(getFeaturedMarketplaceResponseNewestProductsItemOneNameMin).max(getFeaturedMarketplaceResponseNewestProductsItemOneNameMax),
@@ -1708,6 +2096,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1751,6 +2142,9 @@ export const GetFeaturedMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })))
@@ -1762,6 +2156,10 @@ export const GetFeaturedMarketplaceResponse = zod.object({
  */
 export const searchMarketplaceQueryQueryMax = 120;
 
+export const searchMarketplaceQueryCityMax = 80;
+
+export const searchMarketplaceQueryStateMax = 80;
+
 export const searchMarketplaceQueryPageDefault = 1;
 
 export const searchMarketplaceQueryLimitDefault = 20;
@@ -1772,6 +2170,10 @@ export const searchMarketplaceQueryLimitMax = 50;
 export const SearchMarketplaceQueryParams = zod.object({
   "query": zod.coerce.string().max(searchMarketplaceQueryQueryMax).optional(),
   "verified": zod.coerce.boolean().optional(),
+  "city": zod.coerce.string().max(searchMarketplaceQueryCityMax).optional(),
+  "state": zod.coerce.string().max(searchMarketplaceQueryStateMax).optional(),
+  "featured": zod.coerce.boolean().optional(),
+  "newest": zod.coerce.boolean().optional(),
   "page": zod.coerce.number().int().min(1).default(searchMarketplaceQueryPageDefault),
   "limit": zod.coerce.number().int().min(1).max(searchMarketplaceQueryLimitMax).default(searchMarketplaceQueryLimitDefault)
 })
@@ -1815,6 +2217,15 @@ export const searchMarketplaceResponseServiceProvidersItemOnePhoneMax = 20;
 export const searchMarketplaceResponseServiceProvidersItemOneWhatsappMax = 20;
 
 export const searchMarketplaceResponseServiceProvidersItemOneLocationMax = 250;
+
+export const searchMarketplaceResponseServiceProvidersItemOneLatitudeMin = -90;
+export const searchMarketplaceResponseServiceProvidersItemOneLatitudeMax = 90;
+
+export const searchMarketplaceResponseServiceProvidersItemOneLongitudeMin = -180;
+export const searchMarketplaceResponseServiceProvidersItemOneLongitudeMax = 180;
+
+export const searchMarketplaceResponseServiceProvidersItemOneLocationAccuracyMin = 0;
+export const searchMarketplaceResponseServiceProvidersItemOneLocationAccuracyMax = 100000;
 
 export const searchMarketplaceResponseProductsItemOneNameMin = 2;
 export const searchMarketplaceResponseProductsItemOneNameMax = 120;
@@ -1882,6 +2293,10 @@ export const SearchMarketplaceResponse = zod.object({
   "businessAddress": zod.string().max(searchMarketplaceResponseBusinessesItemOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(searchMarketplaceResponseBusinessesItemOneWhatsappMax).nullish(),
   "phone": zod.string().max(searchMarketplaceResponseBusinessesItemOnePhoneMax).nullish(),
   "website": zod.string().max(searchMarketplaceResponseBusinessesItemOneWebsiteMax).nullish(),
@@ -1891,7 +2306,10 @@ export const SearchMarketplaceResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "serviceProviders": zod.array(zod.object({
   "profession": zod.string().min(searchMarketplaceResponseServiceProvidersItemOneProfessionMin).max(searchMarketplaceResponseServiceProvidersItemOneProfessionMax),
@@ -1902,13 +2320,22 @@ export const SearchMarketplaceResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(searchMarketplaceResponseServiceProvidersItemOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneWhatsappMax).nullish(),
-  "location": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneLocationMax).nullish()
+  "location": zod.string().max(searchMarketplaceResponseServiceProvidersItemOneLocationMax).nullish(),
+  "latitude": zod.number().min(searchMarketplaceResponseServiceProvidersItemOneLatitudeMin).max(searchMarketplaceResponseServiceProvidersItemOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(searchMarketplaceResponseServiceProvidersItemOneLongitudeMin).max(searchMarketplaceResponseServiceProvidersItemOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(searchMarketplaceResponseServiceProvidersItemOneLocationAccuracyMin).max(searchMarketplaceResponseServiceProvidersItemOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 }))),
   "products": zod.array(zod.object({
   "name": zod.string().min(searchMarketplaceResponseProductsItemOneNameMin).max(searchMarketplaceResponseProductsItemOneNameMax),
@@ -1947,6 +2374,9 @@ export const SearchMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -1990,6 +2420,309 @@ export const SearchMarketplaceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "page": zod.number().int(),
+  "limit": zod.number().int()
+})
+
+
+/**
+ * @summary Find verified nearby businesses, providers, products, and services within a radius
+ */
+export const getNearbyMarketplaceQueryLatitudeMin = -90;
+export const getNearbyMarketplaceQueryLatitudeMax = 90;
+
+export const getNearbyMarketplaceQueryLongitudeMin = -180;
+export const getNearbyMarketplaceQueryLongitudeMax = 180;
+
+export const getNearbyMarketplaceQueryRadiusKmDefault = 25;
+export const getNearbyMarketplaceQueryRadiusKmMin = 0.1;
+export const getNearbyMarketplaceQueryRadiusKmMax = 100;
+
+export const getNearbyMarketplaceQueryQueryMax = 120;
+
+export const getNearbyMarketplaceQueryCityMax = 80;
+
+export const getNearbyMarketplaceQueryStateMax = 80;
+
+export const getNearbyMarketplaceQueryVerifiedDefault = true;
+export const getNearbyMarketplaceQueryPageDefault = 1;
+
+export const getNearbyMarketplaceQueryLimitDefault = 20;
+export const getNearbyMarketplaceQueryLimitMax = 50;
+
+
+
+export const GetNearbyMarketplaceQueryParams = zod.object({
+  "latitude": zod.coerce.number().min(getNearbyMarketplaceQueryLatitudeMin).max(getNearbyMarketplaceQueryLatitudeMax),
+  "longitude": zod.coerce.number().min(getNearbyMarketplaceQueryLongitudeMin).max(getNearbyMarketplaceQueryLongitudeMax),
+  "radiusKm": zod.coerce.number().min(getNearbyMarketplaceQueryRadiusKmMin).max(getNearbyMarketplaceQueryRadiusKmMax).default(getNearbyMarketplaceQueryRadiusKmDefault),
+  "query": zod.coerce.string().max(getNearbyMarketplaceQueryQueryMax).optional(),
+  "city": zod.coerce.string().max(getNearbyMarketplaceQueryCityMax).optional(),
+  "state": zod.coerce.string().max(getNearbyMarketplaceQueryStateMax).optional(),
+  "verified": zod.coerce.boolean().default(getNearbyMarketplaceQueryVerifiedDefault),
+  "featured": zod.coerce.boolean().optional(),
+  "newest": zod.coerce.boolean().optional(),
+  "page": zod.coerce.number().int().min(1).default(getNearbyMarketplaceQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(getNearbyMarketplaceQueryLimitMax).default(getNearbyMarketplaceQueryLimitDefault)
+})
+
+export const getNearbyMarketplaceResponseBusinessesItemOneBusinessNameMin = 2;
+export const getNearbyMarketplaceResponseBusinessesItemOneBusinessNameMax = 160;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneCategoryMin = 2;
+export const getNearbyMarketplaceResponseBusinessesItemOneCategoryMax = 100;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneBusinessLogoMax = 500;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneCoverPhotoMax = 500;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneDescriptionMax = 2000;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneBusinessAddressMax = 250;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneWhatsappMax = 20;
+
+export const getNearbyMarketplaceResponseBusinessesItemOnePhoneMax = 20;
+
+export const getNearbyMarketplaceResponseBusinessesItemOneWebsiteMax = 500;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneProfessionMin = 2;
+export const getNearbyMarketplaceResponseServiceProvidersItemOneProfessionMax = 120;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneExperienceMax = 120;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneSkillsMax = 20;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneServiceRadiusMin = 0;
+export const getNearbyMarketplaceResponseServiceProvidersItemOneServiceRadiusMax = 500;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOnePortfolioImagesItemMax = 500;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOnePortfolioImagesMax = 12;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOnePhoneMax = 20;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneWhatsappMax = 20;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLocationMax = 250;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLatitudeMin = -90;
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLatitudeMax = 90;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLongitudeMin = -180;
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLongitudeMax = 180;
+
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLocationAccuracyMin = 0;
+export const getNearbyMarketplaceResponseServiceProvidersItemOneLocationAccuracyMax = 100000;
+
+export const getNearbyMarketplaceResponseProductsItemOneNameMin = 2;
+export const getNearbyMarketplaceResponseProductsItemOneNameMax = 120;
+
+export const getNearbyMarketplaceResponseProductsItemOneDescriptionMax = 2000;
+
+export const getNearbyMarketplaceResponseProductsItemOneImagePathsItemMax = 500;
+
+export const getNearbyMarketplaceResponseProductsItemOneImagePathsMax = 10;
+
+export const getNearbyMarketplaceResponseProductsItemOnePrimaryImagePathMax = 500;
+
+export const getNearbyMarketplaceResponseProductsItemOnePriceCentsMin = 0;
+
+export const getNearbyMarketplaceResponseProductsItemOneRegularPriceCentsMin = 0;
+
+export const getNearbyMarketplaceResponseProductsItemOneDiscountPriceCentsMin = 0;
+
+export const getNearbyMarketplaceResponseProductsItemOneBrandMax = 120;
+
+export const getNearbyMarketplaceResponseProductsItemOneConditionMax = 80;
+
+export const getNearbyMarketplaceResponseProductsItemOneLocationMax = 250;
+
+export const getNearbyMarketplaceResponseProductsItemOneTagsItemMax = 40;
+
+export const getNearbyMarketplaceResponseProductsItemOneTagsMax = 30;
+
+export const getNearbyMarketplaceResponseServicesItemOneNameMin = 2;
+export const getNearbyMarketplaceResponseServicesItemOneNameMax = 120;
+
+export const getNearbyMarketplaceResponseServicesItemOneDescriptionMax = 2000;
+
+export const getNearbyMarketplaceResponseServicesItemOneImagePathsItemMax = 500;
+
+export const getNearbyMarketplaceResponseServicesItemOneImagePathsMax = 10;
+
+export const getNearbyMarketplaceResponseServicesItemOnePrimaryImagePathMax = 500;
+
+export const getNearbyMarketplaceResponseServicesItemOnePriceFromCentsMin = 0;
+
+export const getNearbyMarketplaceResponseServicesItemOnePricingOptionsMax = 20;
+
+export const getNearbyMarketplaceResponseServicesItemOneServiceRadiusMin = 0;
+export const getNearbyMarketplaceResponseServicesItemOneServiceRadiusMax = 1000;
+
+export const getNearbyMarketplaceResponseServicesItemOneEstimatedDurationMin = 0;
+
+export const getNearbyMarketplaceResponseServicesItemOneLocationMax = 250;
+
+export const getNearbyMarketplaceResponseServicesItemOneTagsItemMax = 40;
+
+export const getNearbyMarketplaceResponseServicesItemOneTagsMax = 30;
+
+
+
+export const GetNearbyMarketplaceResponse = zod.object({
+  "center": zod.object({
+  "latitude": zod.number(),
+  "longitude": zod.number()
+}),
+  "radiusKm": zod.number(),
+  "mapProvider": zod.string(),
+  "businesses": zod.array(zod.object({
+  "businessName": zod.string().min(getNearbyMarketplaceResponseBusinessesItemOneBusinessNameMin).max(getNearbyMarketplaceResponseBusinessesItemOneBusinessNameMax),
+  "category": zod.string().min(getNearbyMarketplaceResponseBusinessesItemOneCategoryMin).max(getNearbyMarketplaceResponseBusinessesItemOneCategoryMax),
+  "businessLogo": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneBusinessLogoMax).nullish(),
+  "coverPhoto": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneCoverPhotoMax).nullish(),
+  "description": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneDescriptionMax).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "businessAddress": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneBusinessAddressMax).nullish(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
+  "whatsapp": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneWhatsappMax).nullish(),
+  "phone": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOnePhoneMax).nullish(),
+  "website": zod.string().max(getNearbyMarketplaceResponseBusinessesItemOneWebsiteMax).nullish(),
+  "socialLinks": zod.record(zod.string(), zod.unknown()).nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
+}))),
+  "serviceProviders": zod.array(zod.object({
+  "profession": zod.string().min(getNearbyMarketplaceResponseServiceProvidersItemOneProfessionMin).max(getNearbyMarketplaceResponseServiceProvidersItemOneProfessionMax),
+  "experience": zod.string().max(getNearbyMarketplaceResponseServiceProvidersItemOneExperienceMax).nullish(),
+  "skills": zod.array(zod.string()).max(getNearbyMarketplaceResponseServiceProvidersItemOneSkillsMax).optional(),
+  "serviceRadius": zod.number().int().min(getNearbyMarketplaceResponseServiceProvidersItemOneServiceRadiusMin).max(getNearbyMarketplaceResponseServiceProvidersItemOneServiceRadiusMax).nullish(),
+  "portfolioImages": zod.array(zod.string().max(getNearbyMarketplaceResponseServiceProvidersItemOnePortfolioImagesItemMax)).max(getNearbyMarketplaceResponseServiceProvidersItemOnePortfolioImagesMax).optional(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "phone": zod.string().max(getNearbyMarketplaceResponseServiceProvidersItemOnePhoneMax).nullish(),
+  "whatsapp": zod.string().max(getNearbyMarketplaceResponseServiceProvidersItemOneWhatsappMax).nullish(),
+  "location": zod.string().max(getNearbyMarketplaceResponseServiceProvidersItemOneLocationMax).nullish(),
+  "latitude": zod.number().min(getNearbyMarketplaceResponseServiceProvidersItemOneLatitudeMin).max(getNearbyMarketplaceResponseServiceProvidersItemOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getNearbyMarketplaceResponseServiceProvidersItemOneLongitudeMin).max(getNearbyMarketplaceResponseServiceProvidersItemOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(getNearbyMarketplaceResponseServiceProvidersItemOneLocationAccuracyMin).max(getNearbyMarketplaceResponseServiceProvidersItemOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "verificationStatus": zod.string(),
+  "approvedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
+}))),
+  "products": zod.array(zod.object({
+  "name": zod.string().min(getNearbyMarketplaceResponseProductsItemOneNameMin).max(getNearbyMarketplaceResponseProductsItemOneNameMax),
+  "description": zod.string().max(getNearbyMarketplaceResponseProductsItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getNearbyMarketplaceResponseProductsItemOneImagePathsItemMax)).max(getNearbyMarketplaceResponseProductsItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getNearbyMarketplaceResponseProductsItemOnePrimaryImagePathMax).nullish(),
+  "priceCents": zod.number().int().min(getNearbyMarketplaceResponseProductsItemOnePriceCentsMin),
+  "regularPriceCents": zod.number().int().min(getNearbyMarketplaceResponseProductsItemOneRegularPriceCentsMin).nullish(),
+  "discountPriceCents": zod.number().int().min(getNearbyMarketplaceResponseProductsItemOneDiscountPriceCentsMin).nullish(),
+  "brand": zod.string().max(getNearbyMarketplaceResponseProductsItemOneBrandMax).nullish(),
+  "condition": zod.string().max(getNearbyMarketplaceResponseProductsItemOneConditionMax).nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().max(getNearbyMarketplaceResponseProductsItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getNearbyMarketplaceResponseProductsItemOneTagsItemMax)).max(getNearbyMarketplaceResponseProductsItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "regularPriceCents": zod.number().int().nullish(),
+  "discountPriceCents": zod.number().int().nullish(),
+  "brand": zod.string().nullish(),
+  "condition": zod.string().nullish(),
+  "specifications": zod.record(zod.string(), zod.unknown()).nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))),
+  "services": zod.array(zod.object({
+  "name": zod.string().min(getNearbyMarketplaceResponseServicesItemOneNameMin).max(getNearbyMarketplaceResponseServicesItemOneNameMax),
+  "description": zod.string().max(getNearbyMarketplaceResponseServicesItemOneDescriptionMax).nullish(),
+  "categoryId": zod.string().uuid().nullish(),
+  "imagePaths": zod.array(zod.string().max(getNearbyMarketplaceResponseServicesItemOneImagePathsItemMax)).max(getNearbyMarketplaceResponseServicesItemOneImagePathsMax).optional(),
+  "primaryImagePath": zod.string().max(getNearbyMarketplaceResponseServicesItemOnePrimaryImagePathMax).nullish(),
+  "priceFromCents": zod.number().int().min(getNearbyMarketplaceResponseServicesItemOnePriceFromCentsMin).nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).max(getNearbyMarketplaceResponseServicesItemOnePricingOptionsMax).nullish(),
+  "serviceRadius": zod.number().int().min(getNearbyMarketplaceResponseServicesItemOneServiceRadiusMin).max(getNearbyMarketplaceResponseServicesItemOneServiceRadiusMax).nullish(),
+  "availability": zod.record(zod.string(), zod.unknown()).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().min(getNearbyMarketplaceResponseServicesItemOneEstimatedDurationMin).nullish(),
+  "location": zod.string().max(getNearbyMarketplaceResponseServicesItemOneLocationMax).nullish(),
+  "tags": zod.array(zod.string().max(getNearbyMarketplaceResponseServicesItemOneTagsItemMax)).max(getNearbyMarketplaceResponseServicesItemOneTagsMax).optional(),
+  "isAvailable": zod.boolean().optional(),
+  "isVisible": zod.boolean().optional(),
+  "status": zod.enum(['draft', 'published', 'hidden', 'scheduled', 'out_of_stock']),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish()
+}).and(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "businessId": zod.string().uuid().nullable(),
+  "providerId": zod.string().uuid().nullable(),
+  "status": zod.string(),
+  "primaryImagePath": zod.string().nullish(),
+  "pricingOptions": zod.array(zod.record(zod.string(), zod.unknown())).nullish(),
+  "workingHours": zod.record(zod.string(), zod.unknown()).nullish(),
+  "emergencyService": zod.boolean().optional(),
+  "bookingReady": zod.boolean().optional(),
+  "estimatedDuration": zod.number().int().nullish(),
+  "location": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish(),
+  "viewCount": zod.number().int().optional(),
+  "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -2145,6 +2878,9 @@ export const GetProductDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })),
@@ -2158,6 +2894,10 @@ export const GetProductDetailResponse = zod.object({
   "businessAddress": zod.string().max(getProductDetailResponseBusinessOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getProductDetailResponseBusinessOneWhatsappMax).nullish(),
   "phone": zod.string().max(getProductDetailResponseBusinessOnePhoneMax).nullish(),
   "website": zod.string().max(getProductDetailResponseBusinessOneWebsiteMax).nullish(),
@@ -2167,7 +2907,10 @@ export const GetProductDetailResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })),
   "relatedProducts": zod.array(zod.object({
   "name": zod.string().min(getProductDetailResponseRelatedProductsItemOneNameMin).max(getProductDetailResponseRelatedProductsItemOneNameMax),
@@ -2206,6 +2949,9 @@ export const GetProductDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))),
@@ -2249,6 +2995,9 @@ export const GetProductDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })))
@@ -2328,6 +3077,15 @@ export const getServiceDetailResponseProviderOneOneWhatsappMax = 20;
 
 export const getServiceDetailResponseProviderOneOneLocationMax = 250;
 
+export const getServiceDetailResponseProviderOneOneLatitudeMin = -90;
+export const getServiceDetailResponseProviderOneOneLatitudeMax = 90;
+
+export const getServiceDetailResponseProviderOneOneLongitudeMin = -180;
+export const getServiceDetailResponseProviderOneOneLongitudeMax = 180;
+
+export const getServiceDetailResponseProviderOneOneLocationAccuracyMin = 0;
+export const getServiceDetailResponseProviderOneOneLocationAccuracyMax = 100000;
+
 export const getServiceDetailResponseRelatedServicesItemOneNameMin = 2;
 export const getServiceDetailResponseRelatedServicesItemOneNameMax = 120;
 
@@ -2397,6 +3155,9 @@ export const GetServiceDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })),
@@ -2410,6 +3171,10 @@ export const GetServiceDetailResponse = zod.object({
   "businessAddress": zod.string().max(getServiceDetailResponseBusinessOneOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getServiceDetailResponseBusinessOneOneWhatsappMax).nullish(),
   "phone": zod.string().max(getServiceDetailResponseBusinessOneOnePhoneMax).nullish(),
   "website": zod.string().max(getServiceDetailResponseBusinessOneOneWebsiteMax).nullish(),
@@ -2419,7 +3184,10 @@ export const GetServiceDetailResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })),zod.null()]),
   "provider": zod.union([zod.object({
   "profession": zod.string().min(getServiceDetailResponseProviderOneOneProfessionMin).max(getServiceDetailResponseProviderOneOneProfessionMax),
@@ -2430,13 +3198,22 @@ export const GetServiceDetailResponse = zod.object({
   "availability": zod.record(zod.string(), zod.unknown()).nullish(),
   "phone": zod.string().max(getServiceDetailResponseProviderOneOnePhoneMax).nullish(),
   "whatsapp": zod.string().max(getServiceDetailResponseProviderOneOneWhatsappMax).nullish(),
-  "location": zod.string().max(getServiceDetailResponseProviderOneOneLocationMax).nullish()
+  "location": zod.string().max(getServiceDetailResponseProviderOneOneLocationMax).nullish(),
+  "latitude": zod.number().min(getServiceDetailResponseProviderOneOneLatitudeMin).max(getServiceDetailResponseProviderOneOneLatitudeMax).nullish(),
+  "longitude": zod.number().min(getServiceDetailResponseProviderOneOneLongitudeMin).max(getServiceDetailResponseProviderOneOneLongitudeMax).nullish(),
+  "locationAccuracy": zod.number().int().min(getServiceDetailResponseProviderOneOneLocationAccuracyMin).max(getServiceDetailResponseProviderOneOneLocationAccuracyMax).nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional()
 }).and(zod.object({
   "id": zod.string().uuid(),
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })),zod.null()]),
   "relatedServices": zod.array(zod.object({
   "name": zod.string().min(getServiceDetailResponseRelatedServicesItemOneNameMin).max(getServiceDetailResponseRelatedServicesItemOneNameMax),
@@ -2478,6 +3255,9 @@ export const GetServiceDetailResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })))
@@ -2558,6 +3338,10 @@ export const GetBusinessDashboardResponse = zod.object({
   "businessAddress": zod.string().max(getBusinessDashboardResponseBusinessOneOneBusinessAddressMax).nullish(),
   "latitude": zod.number().nullish(),
   "longitude": zod.number().nullish(),
+  "locationAccuracy": zod.number().int().nullish(),
+  "locationUpdatedAt": zod.coerce.date().nullish(),
+  "locationEnabled": zod.boolean().optional(),
+  "locationVisibility": zod.enum(['public', 'private']).optional(),
   "whatsapp": zod.string().max(getBusinessDashboardResponseBusinessOneOneWhatsappMax).nullish(),
   "phone": zod.string().max(getBusinessDashboardResponseBusinessOneOnePhoneMax).nullish(),
   "website": zod.string().max(getBusinessDashboardResponseBusinessOneOneWebsiteMax).nullish(),
@@ -2567,7 +3351,10 @@ export const GetBusinessDashboardResponse = zod.object({
   "ownerId": zod.string().uuid(),
   "verificationStatus": zod.string(),
   "approvedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish()
 })),zod.null()]),
   "metrics": zod.object({
   "products": zod.number().int(),
@@ -2657,6 +3444,9 @@ export const GetMyProductsResponseItem = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -2782,6 +3572,9 @@ export const CreateProductResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -2910,6 +3703,9 @@ export const UpdateProductResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -2998,6 +3794,9 @@ export const GetMyServicesResponseItem = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -3126,6 +3925,9 @@ export const CreateServiceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))
@@ -3257,6 +4059,9 @@ export const UpdateServiceResponse = zod.object({
   "publishedAt": zod.coerce.date().nullish(),
   "viewCount": zod.number().int().optional(),
   "favoriteCount": zod.number().int().optional(),
+  "distanceKm": zod.number().nullish(),
+  "travelDistanceMeters": zod.number().nullish(),
+  "travelTimeSeconds": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }))

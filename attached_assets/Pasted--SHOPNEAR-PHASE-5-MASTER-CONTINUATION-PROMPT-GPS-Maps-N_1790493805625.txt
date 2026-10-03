@@ -1,0 +1,394 @@
+🚀 SHOPNEAR PHASE 5 MASTER CONTINUATION PROMPT
+GPS, Maps & Nearby Discovery
+
+IMPORTANT
+
+This project already contains completed work.
+
+DO NOT rebuild the project.
+
+DO NOT redesign the UI.
+
+DO NOT replace the architecture.
+
+DO NOT modify completed phases.
+
+Continue ONLY from the existing ShopNear codebase.
+
+--------------------------------------------------
+
+BEFORE WRITING ANY CODE
+
+Read completely:
+
+• ShopNear Functional Specification
+
+• ShopNear Screen-by-Screen Specification
+
+• ShopNear Database & API Specification
+
+• docs/
+
+• replit.md
+
+• PROJECT_MEMORY.md
+
+• HANDOFF.md
+
+HANDOFF.md is now the primary handoff document.
+
+Use it as the source of truth.
+
+If documentation conflicts with implementation,
+
+verify the implementation first,
+
+then update documentation.
+
+--------------------------------------------------
+
+CURRENT STATUS
+
+Completed:
+
+✅ Phase 1
+
+Architecture
+
+Documentation
+
+Project setup
+
+✅ Phase 2
+
+Authentication
+
+OTP
+
+JWT
+
+Sessions
+
+Roles
+
+Customer
+
+Business
+
+Provider
+
+Admin
+
+✅ Phase 3
+
+Marketplace Management
+
+Business Dashboard
+
+Product CRUD
+
+Service CRUD
+
+Categories
+
+Search
+
+Featured Listings
+
+Ownership
+
+API
+
+Documentation
+
+✅ Phase 4
+
+Favorites
+
+Business Details
+
+Product Details
+
+Service Details
+
+Featured Discovery
+
+Real Search
+
+Public Pages
+
+Loading States
+
+Empty States
+
+Documentation
+
+Phase 5 begins now.
+
+--------------------------------------------------
+
+OBJECTIVE
+
+Implement professional location services without changing the existing ShopNear experience.
+
+The GPS module must be completely modular.
+
+Future AI features will depend on it.
+
+--------------------------------------------------
+
+PHASE 5 FEATURES
+
+Implement:
+
+User Location
+
+Business Coordinates
+
+Provider Coordinates
+
+Permission Handling
+
+Nearby Businesses
+
+Nearby Products
+
+Nearby Services
+
+Distance Calculation
+
+Travel Distance
+
+Travel Time (future-ready)
+
+Map Integration Layer
+
+Nearby Search API
+
+Radius Filtering
+
+City Filtering
+
+State Filtering
+
+Location Storage
+
+Location Update
+
+Current Position
+
+Location Accuracy
+
+Location Permission States
+
+--------------------------------------------------
+
+IMPORTANT
+
+Design the system so maps can easily switch between:
+
+Google Maps
+
+OpenStreetMap
+
+Mapbox
+
+Apple Maps
+
+without changing business logic.
+
+Create an abstract Map Provider interface.
+
+--------------------------------------------------
+
+LOCATION STORAGE
+
+Extend existing PostgreSQL tables.
+
+Do NOT recreate tables.
+
+Store:
+
+Latitude
+
+Longitude
+
+Accuracy
+
+Last Updated
+
+Visibility
+
+Location Enabled
+
+--------------------------------------------------
+
+SEARCH
+
+Extend the current search API.
+
+Support:
+
+Nearby businesses
+
+Nearby products
+
+Nearby services
+
+Radius filters
+
+Distance sorting
+
+Verified nearby
+
+Newest nearby
+
+Featured nearby
+
+--------------------------------------------------
+
+HOME
+
+Extend Home using existing layout.
+
+Add:
+
+Businesses Near You
+
+Services Near You
+
+Products Near You
+
+Do NOT redesign the Home page.
+
+--------------------------------------------------
+
+PROFILE
+
+Allow users to:
+
+Enable Location
+
+Disable Location
+
+Update Current Location
+
+Choose manual location
+
+Future-ready map pin selection
+
+--------------------------------------------------
+
+API
+
+Extend REST endpoints.
+
+Document every endpoint.
+
+Regenerate OpenAPI.
+
+Update shared client types.
+
+--------------------------------------------------
+
+SECURITY
+
+Validate coordinates.
+
+Prevent invalid locations.
+
+Protect private locations.
+
+Only expose public business/provider coordinates.
+
+Never expose customer private coordinates publicly.
+
+--------------------------------------------------
+
+TESTING
+
+Run:
+
+Database migration verification
+
+Typecheck
+
+Production build
+
+API tests
+
+Location tests
+
+Nearby search tests
+
+Browser verification
+
+Workflow verification
+
+Fix only genuine issues.
+
+--------------------------------------------------
+
+DOCUMENTATION
+
+Update:
+
+docs/README.md
+
+docs/API.md
+
+docs/DATABASE.md
+
+docs/ARCHITECTURE.md
+
+docs/AI.md
+
+docs/SECURITY.md
+
+docs/ROADMAP.md
+
+docs/CHANGELOG.md
+
+replit.md
+
+PROJECT_MEMORY.md
+
+HANDOFF.md
+
+--------------------------------------------------
+
+HANDOFF.md
+
+Update after every milestone.
+
+Include:
+
+Current Phase
+
+Completed Features
+
+Database Migrations
+
+API Endpoints
+
+Files Modified
+
+Verification Results
+
+Known Limitations
+
+Environment Requirements
+
+Exact Next Task
+
+--------------------------------------------------
+
+DO NOT START PHASE 6.
+
+Finish ONLY Phase 5.
+
+After Phase 5 verification passes,
+
+STOP
+
+and update HANDOFF.md with the exact Phase 6 starting point.

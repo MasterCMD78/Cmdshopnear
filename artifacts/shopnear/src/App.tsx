@@ -1,11 +1,11 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock3, Compass, Heart, Home as HomeIcon, MapPin, Menu, MessageCircle, Pencil, Plus, Search, Send, Settings2, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Tag, Trash2, UserRound, X } from 'lucide-react';
+import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock3, Compass, Heart, Home as HomeIcon, LocateFixed, MapPin, Menu, MessageCircle, Pencil, Plus, Search, Send, Settings2, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Tag, Trash2, UserRound, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Link, Route, Switch, Router as WouterRouter, useLocation, useRoute } from 'wouter';
-import { addFavorite, deleteProduct, deleteService, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, logout, registerAccount, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, updateProfile, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type ServiceProviderRecord } from '@/lib/auth-api';
+import { addFavorite, deleteProduct, deleteService, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getLocation, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, getNearbyMarketplace, logout, registerAccount, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, updateBusinessLocation as saveBusinessLocation, updateLocation, updateProfile, updateServiceProviderLocation, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type NearbyMarketplace, type ServiceProviderRecord, type UserLocation } from '@/lib/auth-api';
 
 const queryClient = new QueryClient();
 const logoPath = '/assets/shopnear-logo.png';
@@ -37,6 +37,24 @@ const serviceRows = [
   { id: 'service-2', name: 'NeighborFix Repairs', detail: 'Appliance repair · 1.1 mi', price: 'Free quote', icon: 'wrench' },
   { id: 'service-3', name: 'Willow Pet Care', detail: 'Dog walking · 0.9 mi', price: 'from $18', icon: 'pet' },
 ];
+
+function readBrowserLocation() {
+  return new Promise<{ latitude: number; longitude: number; accuracy: number }>((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Location is not available in this browser'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      }),
+      () => reject(new Error('Location permission was not granted')),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
+    );
+  });
+}
 
 function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -221,7 +239,7 @@ function RemoteBusinessCard({ business, savedIds, onSaved }: { business: Busines
   return <article className="tap overflow-hidden rounded-[23px] border border-[#ece7dd] bg-white shadow-[0_6px_20px_rgba(16,72,50,.06)]" data-testid={`card-business-${business.id}`}>
     <button type="button" onClick={() => setLocation(`/businesses/${business.id}`)} className="block w-full text-left">
       <div className="relative h-28 overflow-hidden bg-[#dcefe2]"><div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_35%,#6ca66a_0_9%,transparent_10%),radial-gradient(circle_at_68%_70%,#ef9f54_0_12%,transparent_13%),linear-gradient(135deg,#d8efd8,#a8d4ae)] opacity-60" /><span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-[#216046]">{business.verificationStatus === 'approved' ? 'Verified' : 'Pending'}</span></div>
-      <div className="p-3.5"><div className="flex items-center gap-1.5"><h3 className="truncate text-sm font-bold text-[#174d37]">{business.businessName}</h3>{business.verificationStatus === 'approved' && <ShieldCheck size={14} className="shrink-0 text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 truncate text-[11px] text-[#89918a]">{business.category} · {business.businessAddress || 'Local business'}</p><div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-[#775d27]"><Star size={13} fill="#f3a820" className="text-[#f3a820]" /> {business.averageRating || 'New'} <span className="font-normal text-[#a1a49f]">({business.totalReviews ?? 0})</span></div></div>
+      <div className="p-3.5"><div className="flex items-center gap-1.5"><h3 className="truncate text-sm font-bold text-[#174d37]">{business.businessName}</h3>{business.verificationStatus === 'approved' && <ShieldCheck size={14} className="shrink-0 text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 truncate text-[11px] text-[#89918a]">{business.category} · {business.businessAddress || 'Local business'}{business.distanceKm != null ? ` · ${business.distanceKm.toFixed(1)} km` : ''}</p><div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-[#775d27]"><Star size={13} fill="#f3a820" className="text-[#f3a820]" /> {business.averageRating || 'New'} <span className="font-normal text-[#a1a49f]">({business.totalReviews ?? 0})</span></div></div>
     </button>
     <div className="flex justify-end px-3.5 pb-3.5"><FavoriteButton targetType="business" targetId={business.id} saved={savedIds.has(business.id)} onChange={(saved) => onSaved(business.id, saved)} /></div>
   </article>;
@@ -230,7 +248,7 @@ function RemoteBusinessCard({ business, savedIds, onSaved }: { business: Busines
 function RemoteProductCard({ item, savedIds, onSaved }: { item: MarketplaceProduct; savedIds: Set<string>; onSaved: (id: string, saved: boolean) => void }) {
   const [, setLocation] = useLocation();
   return <article className="tap overflow-hidden rounded-[21px] border border-[#ece7dd] bg-white p-2.5 shadow-[0_6px_20px_rgba(16,72,50,.05)]" data-testid={`card-product-${item.id}`}>
-    <button type="button" onClick={() => setLocation(`/products/${item.id}`)} className="block w-full text-left"><div className="relative flex h-32 items-center justify-center overflow-hidden rounded-[16px] bg-[#eedacb]"><div className="h-20 w-16 rounded-[12px_12px_17px_17px] bg-[#bb714e] shadow-[inset_-8px_-8px_12px_rgba(0,0,0,.10),4px_7px_10px_rgba(52,43,23,.12)]" /></div><div className="px-1 pb-1 pt-2"><h3 className="truncate text-xs font-bold text-[#174d37]">{item.name}</h3><p className="mt-1 truncate text-[10px] text-[#89918a]">{item.brand || item.location || 'Local find'}</p><p className="mt-2 text-sm font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p></div></button>
+    <button type="button" onClick={() => setLocation(`/products/${item.id}`)} className="block w-full text-left"><div className="relative flex h-32 items-center justify-center overflow-hidden rounded-[16px] bg-[#eedacb]"><div className="h-20 w-16 rounded-[12px_12px_17px_17px] bg-[#bb714e] shadow-[inset_-8px_-8px_12px_rgba(0,0,0,.10),4px_7px_10px_rgba(52,43,23,.12)]" /></div><div className="px-1 pb-1 pt-2"><h3 className="truncate text-xs font-bold text-[#174d37]">{item.name}</h3><p className="mt-1 truncate text-[10px] text-[#89918a]">{item.brand || item.location || 'Local find'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</p><p className="mt-2 text-sm font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p></div></button>
     <div className="flex justify-end px-1 pb-1"><FavoriteButton targetType="product" targetId={item.id} saved={savedIds.has(item.id)} onChange={(saved) => onSaved(item.id, saved)} /></div>
   </article>;
 }
@@ -238,7 +256,7 @@ function RemoteProductCard({ item, savedIds, onSaved }: { item: MarketplaceProdu
 function RemoteServiceCard({ item, savedIds, onSaved }: { item: MarketplaceService; savedIds: Set<string>; onSaved: (id: string, saved: boolean) => void }) {
   const [, setLocation] = useLocation();
   return <button type="button" onClick={() => setLocation(`/services/${item.id}`)} className="focus-ring tap flex items-center gap-3 rounded-[18px] border border-[#eee8dd] bg-white p-3.5 text-left shadow-[0_4px_13px_rgba(16,72,50,.04)]" data-testid={`card-service-${item.id}`}>
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={18} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs font-bold text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[10px] text-[#8a968d]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}</span></span><span className="text-right text-[10px] font-bold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}<ChevronRight size={14} className="ml-auto mt-1" /></span>
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={18} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs font-bold text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[10px] text-[#8a968d]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><span className="text-right text-[10px] font-bold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}<ChevronRight size={14} className="ml-auto mt-1" /></span>
   </button>;
 }
 
@@ -246,9 +264,24 @@ function HomePage() {
   const [, setLocation] = useLocation();
   const [toast, setToast] = useState('');
   const [discovery, setDiscovery] = useState<Awaited<ReturnType<typeof getFeaturedMarketplace>> | null>(null);
+  const [nearby, setNearby] = useState<NearbyMarketplace | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200); };
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const point = await readBrowserLocation();
+      const results = await getNearbyMarketplace({ latitude: point.latitude, longitude: point.longitude, radiusKm: 25 });
+      setNearby(results);
+      notify('Location enabled for nearby search');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not read your location');
+    } finally {
+      setLocating(false);
+    }
+  };
   useEffect(() => {
     getFeaturedMarketplace().then(async (next) => {
       setDiscovery(next);
@@ -260,7 +293,7 @@ function HomePage() {
       <div className="px-5 md:px-10">
         <section className="animate-rise flex items-end justify-between py-4 md:py-7">
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#6d8979]"><MapPin size={14} className="text-[#f47716]" fill="#f47716" />Brooklyn, NY <button type="button" onClick={() => notify('Location picker coming next')} className="ml-1 text-[#087044] underline underline-offset-2" data-testid="button-change-location">Change</button></div>
+            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#6d8979]"><MapPin size={14} className="text-[#f47716]" fill="#f47716" />Near you <button type="button" onClick={useCurrentLocation} disabled={locating} className="ml-1 text-[#087044] underline underline-offset-2 disabled:opacity-60" data-testid="button-change-location">{locating ? 'Locating…' : 'Use current location'}</button></div>
             <h1 className="font-display text-[30px] font-extrabold leading-[1.05] tracking-[-.05em] text-[#164d38] md:text-[39px]">Good morning,<br /><span className="text-[#f47716]">Maya.</span></h1>
             <p className="mt-2 text-sm text-[#77867c]">Here’s what’s happening around you.</p>
           </div>
@@ -272,21 +305,21 @@ function HomePage() {
           <CategoryStrip onSelect={(label) => { setLocation('/search'); notify(`Showing ${label.toLowerCase()} nearby`); }} />
         </section>
         {loading ? <div className="pb-8"><LoadingState /></div> : discovery && <><section className="animate-rise delay-2 pb-7">
-          <SectionHeading eyebrow="Trusted by neighbors" title="Places worth the walk" action="See all" onAction={() => setLocation('/search')} />
+          <SectionHeading eyebrow={nearby ? "Businesses near you" : "Trusted by neighbors"} title={nearby ? "Places worth the walk" : "Places worth the walk"} action="See all" onAction={() => setLocation('/search')} />
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-            {discovery.featuredBusinesses.length ? discovery.featuredBusinesses.slice(0, 6).map((business) => <RemoteBusinessCard key={business.id} business={business} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={Store} title="Local businesses are on their way" detail="Approved businesses will appear here as the marketplace grows." action="Browse search" onAction={() => setLocation('/search')} />}
+            {(nearby?.businesses ?? discovery.featuredBusinesses).length ? (nearby?.businesses ?? discovery.featuredBusinesses).slice(0, 6).map((business) => <RemoteBusinessCard key={business.id} business={business} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={Store} title="Local businesses are on their way" detail="Approved businesses will appear here as the marketplace grows." action="Browse search" onAction={() => setLocation('/search')} />}
           </div>
         </section>
         <section className="pb-8">
-          <SectionHeading eyebrow="Local finds" title="Small things, good stories" action="See all" onAction={() => setLocation('/search')} />
+          <SectionHeading eyebrow={nearby ? "Products near you" : "Local finds"} title="Small things, good stories" action="See all" onAction={() => setLocation('/search')} />
           <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-            {discovery.featuredProducts.length ? discovery.featuredProducts.slice(0, 6).map((item) => <RemoteProductCard key={item.id} item={item} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={ShoppingBag} title="No featured products yet" detail="Published products from verified businesses will appear here." action="Search products" onAction={() => setLocation('/search')} />}
+            {(nearby?.products ?? discovery.featuredProducts).length ? (nearby?.products ?? discovery.featuredProducts).slice(0, 6).map((item) => <RemoteProductCard key={item.id} item={item} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={ShoppingBag} title="No featured products yet" detail="Published products from verified businesses will appear here." action="Search products" onAction={() => setLocation('/search')} />}
           </div>
         </section>
         <section className="pb-8">
-          <SectionHeading eyebrow="Help around the corner" title="Services nearby" action="Browse all" onAction={() => setLocation('/search')} />
+          <SectionHeading eyebrow={nearby ? "Services near you" : "Help around the corner"} title="Services nearby" action="Browse all" onAction={() => setLocation('/search')} />
           <div className="grid gap-2.5 md:grid-cols-3">
-            {discovery.featuredServices.length ? discovery.featuredServices.slice(0, 6).map((service) => <RemoteServiceCard key={service.id} item={service} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={BriefcaseBusiness} title="No featured services yet" detail="Verified local providers will appear here as they publish services." action="Search services" onAction={() => setLocation('/search')} />}
+            {(nearby?.services ?? discovery.featuredServices).length ? (nearby?.services ?? discovery.featuredServices).slice(0, 6).map((service) => <RemoteServiceCard key={service.id} item={service} savedIds={savedIds} onSaved={onSaved} />) : <EmptyState icon={BriefcaseBusiness} title="No featured services yet" detail="Verified local providers will appear here as they publish services." action="Search services" onAction={() => setLocation('/search')} />}
           </div>
         </section>
         </>}
@@ -298,16 +331,52 @@ function HomePage() {
 function SearchPage() {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [toast, setToast] = useState('');
   const [liveResults, setLiveResults] = useState<MarketplaceSearchResult | null>(null);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState(25);
+  const [locating, setLocating] = useState(false);
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2000); };
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const point = await readBrowserLocation();
+      setCoordinates(point);
+      notify('Showing results near your location');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not read your location');
+    } finally {
+      setLocating(false);
+    }
+  };
   useEffect(() => {
     let active = true;
     setLoadingResults(true);
     const timer = window.setTimeout(() => {
-      const request = query.trim()
-        ? searchMarketplace(query.trim())
+      const searchOptions = {
+        verified: activeFilter === 'Verified' ? true : undefined,
+        city: city.trim() || undefined,
+        state: state.trim() || undefined,
+        featured: activeFilter === 'Featured' ? true : undefined,
+        newest: activeFilter === 'Newest' ? true : undefined,
+      };
+      const request = coordinates
+        ? getNearbyMarketplace({
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          radiusKm,
+          query: query.trim() || undefined,
+          city: searchOptions.city,
+          state: searchOptions.state,
+          verified: searchOptions.verified,
+          newest: activeFilter === 'Newest' ? true : undefined,
+          featured: activeFilter === 'Featured' ? true : undefined,
+        })
+        : query.trim() || searchOptions.city || searchOptions.state || searchOptions.verified || searchOptions.featured || searchOptions.newest
+        ? searchMarketplace(query.trim(), searchOptions)
         : Promise.all([getMarketplaceCatalog({ limit: 12 }), searchMarketplace('')]).then(([catalog, discovery]) => ({
           ...discovery,
           products: catalog.products,
@@ -316,12 +385,16 @@ function SearchPage() {
       request.then((value) => { if (active) setLiveResults(value); }).catch(() => { if (active) setLiveResults(null); }).finally(() => { if (active) setLoadingResults(false); });
     }, 220);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [query]);
-  const filters = ['All', 'Open now', 'Top rated', 'Products', 'Services'];
-  const showProducts = activeFilter === 'All' || activeFilter === 'Products';
-  const showServices = activeFilter === 'All' || activeFilter === 'Services';
-  const showBusinesses = activeFilter === 'All' || activeFilter === 'Top rated' || activeFilter === 'Open now';
-  const resultCount = (showProducts ? liveResults?.products.length ?? 0 : 0) + (showServices ? liveResults?.services.length ?? 0 : 0) + (showBusinesses ? liveResults?.businesses.length ?? 0 : 0);
+  }, [query, coordinates, radiusKm, activeFilter, city, state]);
+  const filters = ['All', 'Verified', 'Newest', 'Featured', 'Products', 'Services'];
+  const showProducts = ['All', 'Newest', 'Featured', 'Products'].includes(activeFilter);
+  const showServices = ['All', 'Newest', 'Featured', 'Services'].includes(activeFilter);
+  const showBusinesses = ['All', 'Verified', 'Newest'].includes(activeFilter);
+  const showProviders = ['All', 'Verified', 'Newest', 'Services'].includes(activeFilter);
+  const resultCount = (showProducts ? liveResults?.products.length ?? 0 : 0)
+    + (showServices ? liveResults?.services.length ?? 0 : 0)
+    + (showBusinesses ? liveResults?.businesses.length ?? 0 : 0)
+    + (showProviders ? liveResults?.serviceProviders.length ?? 0 : 0);
   return (
     <Shell active="search" toast={toast}>
       <div className="px-5 py-5 md:px-10 md:py-8">
@@ -332,15 +405,26 @@ function SearchPage() {
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search shops, products, services..." autoFocus className="min-w-0 flex-1 bg-transparent text-sm text-[#174d37] outline-none placeholder:text-[#a4aaa3]" data-testid="input-search" />
           {query && <button type="button" onClick={() => setQuery('')} className="focus-ring text-[#8a968d]" aria-label="Clear search" data-testid="button-clear-search"><X size={17} /></button>}
         </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <label className="sr-only" htmlFor="search-city">Filter by city</label>
+          <input id="search-city" value={city} onChange={(event) => setCity(event.target.value)} placeholder="City" className="min-w-0 rounded-full border border-[#ebe4d9] bg-white px-4 py-2.5 text-xs text-[#174d37] outline-none focus:border-[#087044]" data-testid="input-search-city" />
+          <label className="sr-only" htmlFor="search-state">Filter by state</label>
+          <input id="search-state" value={state} onChange={(event) => setState(event.target.value)} placeholder="State" className="min-w-0 rounded-full border border-[#ebe4d9] bg-white px-4 py-2.5 text-xs text-[#174d37] outline-none focus:border-[#087044]" data-testid="input-search-state" />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={useCurrentLocation} disabled={locating} className={`focus-ring flex items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-bold ${coordinates ? 'bg-[#e4f3e7] text-[#087044]' : 'border border-[#ebe4d9] bg-white text-[#658071]'} disabled:opacity-60`} data-testid="button-use-current-location"><LocateFixed size={14} />{locating ? 'Locating…' : coordinates ? 'Near you' : 'Use current location'}</button>
+          {coordinates && <label className="flex items-center gap-2 text-[11px] font-semibold text-[#658071]">Within <select value={radiusKm} onChange={(event) => setRadiusKm(Number(event.target.value))} className="rounded-full border border-[#ebe4d9] bg-white px-2.5 py-2 text-[11px] font-bold text-[#087044]" aria-label="Nearby search radius"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option></select></label>}
+        </div>
         <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
           {filters.map((filter) => <button type="button" key={filter} onClick={() => setActiveFilter(filter)} className={`focus-ring whitespace-nowrap rounded-full px-4 py-2 text-xs font-bold transition ${activeFilter === filter ? 'bg-[#087044] text-white' : 'border border-[#ebe4d9] bg-white text-[#658071]'}`} data-testid={`button-filter-${filter.toLowerCase().replaceAll(' ', '-')}`}>{filter}</button>)}
         </div>
         <section className="mt-8">
            <SectionHeading eyebrow={loadingResults ? 'Searching the marketplace' : query ? `${resultCount} results nearby` : 'Curated for you'} title={query ? `Results for “${query}”` : 'Popular near you'} />
            {loadingResults ? <LoadingState label="Searching the marketplace…" /> : liveResults && resultCount > 0 ? <div className="space-y-3">
-             {showBusinesses && liveResults.businesses.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/businesses/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><Store size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.businessName}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.category} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}
-             {showProducts && liveResults.products.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/products/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1df] text-[#e8781a]"><ShoppingBag size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.brand || item.location || 'Local product'} · {item.tags?.join(', ') || 'Marketplace find'}</span></span><span className="text-xs font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</span></button>)}
-             {showServices && liveResults.services.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/services/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}</span></span><span className="text-xs font-extrabold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</span></button>)}
+             {showBusinesses && liveResults.businesses.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/businesses/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><Store size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.businessName}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.category} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}
+             {showProviders && liveResults.serviceProviders.map((item) => <div key={item.id} className="flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff0df] text-[#e8781a]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.profession}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Local service provider'} · {item.verificationStatus === 'approved' ? 'Verified' : 'Verification pending'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span></div>)}
+             {showProducts && liveResults.products.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/products/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1df] text-[#e8781a]"><ShoppingBag size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.brand || item.location || 'Local product'} · {item.tags?.join(', ') || 'Marketplace find'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><span className="text-xs font-extrabold text-[#e56e12]">{(item.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</span></button>)}
+             {showServices && liveResults.services.map((item) => <button type="button" key={item.id} onClick={() => window.location.assign(`/services/${item.id}`)} className="focus-ring flex w-full items-center gap-3 rounded-2xl border border-[#ebe5da] bg-white p-3 text-left shadow-[0_4px_15px_rgba(16,72,50,.04)]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><BriefcaseBusiness size={17} /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs text-[#174d37]">{item.name}</strong><span className="mt-1 block truncate text-[11px] text-[#89948c]">{item.location || 'Nearby service'} · {item.bookingReady ? 'Booking ready' : 'Contact provider'}{item.distanceKm != null ? ` · ${item.distanceKm.toFixed(1)} km` : ''}</span></span><span className="text-xs font-extrabold text-[#087044]">{item.priceFromCents == null ? 'Quote' : `from ${(item.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</span></button>)}
            </div> : <EmptyState icon={Search} title="No nearby matches yet" detail="Try a broader search or browse one of the categories below." action="Browse categories" onAction={() => setQuery('')} />}
         </section>
         <section className="mt-9">
@@ -472,10 +556,20 @@ function BusinessEditor() {
   const [businessAddress, setBusinessAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
+  const [locationBusy, setLocationBusy] = useState(false);
   const [notice, setNotice] = useState('');
   useEffect(() => { getMyBusiness().then((value) => { setRecord(value); setBusinessName(value.businessName); setCategory(value.category); setDescription(value.description ?? ''); setBusinessAddress(value.businessAddress ?? ''); setPhone(value.phone ?? ''); }).catch(() => undefined); }, []);
   const submit = async (event: FormEvent) => { event.preventDefault(); setBusy(true); setNotice(''); try { const value = await saveBusiness({ businessName, category, description: description || null, businessAddress: businessAddress || null, phone: phone || null }, record?.id); setRecord(value); setNotice('Business profile saved. It is pending verification.'); } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save business'); } finally { setBusy(false); } };
-  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#f3dfcf] bg-[#fffaf5] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#ee7117]">Business account</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your business' : 'Register your business'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Business name<input required value={businessName} onChange={(event) => setBusinessName(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Category<input required value={category} onChange={(event) => setCategory(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Description<textarea value={description} onChange={(event) => setDescription(event.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Address<input value={businessAddress} onChange={(event) => setBusinessAddress(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Business phone<input value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<button disabled={busy} className="focus-ring mt-4 rounded-full bg-[#f47716] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save business' : 'Register business'}</button></form>;
+  const updateBusinessLocation = async () => {
+    if (!record) { setNotice('Save your business profile before adding a map location.'); return; }
+    setLocationBusy(true);
+    try {
+      const point = await readBrowserLocation();
+      await saveBusinessLocation(record.id, { latitude: point.latitude, longitude: point.longitude, accuracy: point.accuracy, enabled: true, visibility: 'public' });
+      setNotice('Business location is shared publicly after approval.');
+    } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save business location'); } finally { setLocationBusy(false); }
+  };
+  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#f3dfcf] bg-[#fffaf5] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#ee7117]">Business account</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your business' : 'Register your business'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Business name<input required value={businessName} onChange={(event) => setBusinessName(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Category<input required value={category} onChange={(event) => setCategory(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Description<textarea value={description} onChange={(event) => setDescription(event.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Address<input value={businessAddress} onChange={(event) => setBusinessAddress(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Business phone<input value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#eadfd1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<div className="mt-4 flex flex-wrap gap-2"><button disabled={busy} className="focus-ring rounded-full bg-[#f47716] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save business' : 'Register business'}</button>{record && <button type="button" onClick={updateBusinessLocation} disabled={locationBusy} className="focus-ring rounded-full border border-[#f3c9a3] px-4 py-2.5 text-xs font-bold text-[#b95d1a] disabled:opacity-60"><LocateFixed size={14} className="mr-1 inline" />{locationBusy ? 'Saving location…' : 'Share current location publicly'}</button>}</div><p className="mt-2 text-[10px] leading-relaxed text-[#89948c]">Sharing is optional. Customers see the business pin only after verification.</p></form>;
 }
 
 function ServiceProviderEditor() {
@@ -485,10 +579,20 @@ function ServiceProviderEditor() {
   const [skills, setSkills] = useState('');
   const [location, setLocation] = useState('');
   const [busy, setBusy] = useState(false);
+  const [locationBusy, setLocationBusy] = useState(false);
   const [notice, setNotice] = useState('');
   useEffect(() => { getMyServiceProvider().then((value) => { setRecord(value); setProfession(value.profession); setExperience(value.experience ?? ''); setSkills(value.skills?.join(', ') ?? ''); setLocation(value.location ?? ''); }).catch(() => undefined); }, []);
   const submit = async (event: FormEvent) => { event.preventDefault(); setBusy(true); setNotice(''); try { const value = await saveServiceProvider({ profession, experience: experience || null, skills: skills.split(',').map((item) => item.trim()).filter(Boolean), location: location || null }, record?.id); setRecord(value); setNotice('Provider profile saved. It is pending verification.'); } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save provider profile'); } finally { setBusy(false); } };
-  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#dfe5f1] bg-[#f8fafc] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#5871a0]">Service provider</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your provider profile' : 'Register your services'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Profession<input required value={profession} onChange={(event) => setProfession(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Experience<input value={experience} onChange={(event) => setExperience(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="5 years" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Skills<input value={skills} onChange={(event) => setSkills(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="Repairs, installation, maintenance" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Service location<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<button disabled={busy} className="focus-ring mt-4 rounded-full bg-[#087044] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save provider profile' : 'Register provider profile'}</button></form>;
+  const updateProviderLocation = async () => {
+    if (!record) { setNotice('Save your provider profile before adding a map location.'); return; }
+    setLocationBusy(true);
+    try {
+      const point = await readBrowserLocation();
+      await updateServiceProviderLocation(record.id, { latitude: point.latitude, longitude: point.longitude, accuracy: point.accuracy, enabled: true, visibility: 'public' });
+      setNotice('Provider location is shared publicly after approval.');
+    } catch (err) { setNotice(err instanceof Error ? err.message : 'Could not save provider location'); } finally { setLocationBusy(false); }
+  };
+  return <form onSubmit={submit} className="mt-4 rounded-[22px] border border-[#dfe5f1] bg-[#f8fafc] p-4"><div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#5871a0]">Service provider</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{record ? 'Edit your provider profile' : 'Register your services'}</h3></div><div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-[#4d715f]">Profession<input required value={profession} onChange={(event) => setProfession(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label><label className="text-xs font-bold text-[#4d715f]">Experience<input value={experience} onChange={(event) => setExperience(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="5 years" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Skills<input value={skills} onChange={(event) => setSkills(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" placeholder="Repairs, installation, maintenance" /></label><label className="text-xs font-bold text-[#4d715f] sm:col-span-2">Service location<input value={location} onChange={(event) => setLocation(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#dfe5f1] bg-white px-3 py-2.5 text-sm font-normal text-[#174d37] outline-none" /></label></div>{notice && <p className="mt-3 text-xs font-semibold text-[#087044]">{notice}</p>}<div className="mt-4 flex flex-wrap gap-2"><button disabled={busy} className="focus-ring rounded-full bg-[#087044] px-4 py-2.5 text-xs font-bold text-white">{busy ? 'Saving…' : record ? 'Save provider profile' : 'Register provider profile'}</button>{record && <button type="button" onClick={updateProviderLocation} disabled={locationBusy} className="focus-ring rounded-full border border-[#cbd8e8] px-4 py-2.5 text-xs font-bold text-[#4b679c] disabled:opacity-60"><LocateFixed size={14} className="mr-1 inline" />{locationBusy ? 'Saving location…' : 'Share current location publicly'}</button>}</div><p className="mt-2 text-[10px] leading-relaxed text-[#89948c]">Sharing is optional. Customers see your pin only after verification.</p></form>;
 }
 
 function ProductManager() {
@@ -609,6 +713,76 @@ function BusinessDashboardPanel() {
   </section>;
 }
 
+function LocationSettings({ onNotice }: { onNotice: (message: string) => void }) {
+  const [location, setLocation] = useState<UserLocation | null>(null);
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { getLocation().then((value) => { setLocation(value); setCity(value.city ?? ''); setState(value.state ?? ''); }).catch(() => setLocation(null)); }, []);
+  const useCurrentLocation = async () => {
+    setBusy(true);
+    try {
+      const point = await readBrowserLocation();
+      const next = await updateLocation({ ...point, enabled: true, visibility: 'private', permissionStatus: 'granted' });
+      setLocation(next);
+      onNotice('Your private location was updated');
+    } catch (error) {
+      try {
+        const next = await updateLocation({ enabled: false, permissionStatus: 'denied' });
+        setLocation(next);
+      } catch { /* The browser permission result is still shown locally. */ }
+      onNotice(error instanceof Error ? error.message : 'Could not update your location');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const disableLocation = async () => {
+    setBusy(true);
+    try {
+      const next = await updateLocation({ latitude: null, longitude: null, accuracy: null, enabled: false, permissionStatus: 'prompt' });
+      setLocation(next);
+      onNotice('Location sharing is off');
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : 'Could not update location settings');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const saveManualLocation = async () => {
+    setBusy(true);
+    try {
+      const next = await updateLocation({ city: city.trim() || null, state: state.trim() || null });
+      setLocation(next);
+      onNotice('Manual city and state saved');
+    } catch (error) {
+      onNotice(error instanceof Error ? error.message : 'Could not save manual location');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <section className="mt-6 rounded-[22px] border border-[#dcecdf] bg-[#f7fbf7] p-4">
+    <div className="flex items-start gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e4f3e7] text-[#087044]"><LocateFixed size={18} /></span>
+      <div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#ee7117]">Location controls</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">Nearby discovery</h3><p className="mt-1 text-xs leading-relaxed text-[#718278]">{location?.enabled && location.latitude != null ? `Location enabled${location.accuracy ? ` · ±${Math.round(location.accuracy)} m accuracy` : ''}. Your customer coordinates stay private.` : 'Use your device location to sort nearby businesses, products, and services.'}</p></div>
+    </div>
+    <div className="mt-3 flex flex-wrap gap-2">
+      <button type="button" onClick={useCurrentLocation} disabled={busy} className="focus-ring rounded-full bg-[#087044] px-4 py-2 text-xs font-bold text-white disabled:opacity-60">{busy ? 'Updating…' : location?.enabled ? 'Refresh location' : 'Use current location'}</button>
+      {location?.enabled && <button type="button" onClick={disableLocation} disabled={busy} className="focus-ring rounded-full border border-[#dbe6dc] px-4 py-2 text-xs font-bold text-[#658071] disabled:opacity-60">Turn off</button>}
+    </div>
+    <div className="mt-4 border-t border-[#dcecdf] pt-3">
+      <p className="text-xs font-bold text-[#4d715f]">Or choose a location manually</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <label className="sr-only" htmlFor="profile-location-city">City</label>
+        <input id="profile-location-city" value={city} onChange={(event) => setCity(event.target.value)} placeholder="City" className="min-w-0 rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-xs text-[#174d37] outline-none" />
+        <label className="sr-only" htmlFor="profile-location-state">State</label>
+        <input id="profile-location-state" value={state} onChange={(event) => setState(event.target.value)} placeholder="State" className="min-w-0 rounded-xl border border-[#e3e8df] bg-white px-3 py-2.5 text-xs text-[#174d37] outline-none" />
+      </div>
+      <button type="button" onClick={saveManualLocation} disabled={busy} className="focus-ring mt-2 rounded-full border border-[#dbe6dc] px-4 py-2 text-xs font-bold text-[#087044] disabled:opacity-60">Save manual location</button>
+      <p className="mt-2 text-[10px] text-[#89948c]">Map pin selection will be available after a map provider is selected.</p>
+    </div>
+  </section>;
+}
+
 function ProfilePage() {
   const [toast, setToast] = useState('');
   const [notifications, setNotifications] = useState(true);
@@ -647,6 +821,7 @@ function ProfilePage() {
           <div className="min-w-0"><h2 className="font-display text-xl font-extrabold text-[#164d38]">{user.fullName}</h2><p className="mt-1 text-xs text-[#5f806e]">{user.phone} · {user.accountType.replace('_', ' ')}</p><button type="button" onClick={() => setEditingProfile((value) => !value)} className="focus-ring mt-2 text-xs font-bold text-[#087044] underline underline-offset-4" data-testid="button-edit-profile">{editingProfile ? 'Close editor' : 'Edit profile'}</button></div>
         </section> : <section className="mt-6 rounded-[24px] bg-[#e4f3e7] p-5"><div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#087044] text-white"><ShieldCheck size={22} /></span><div><h2 className="font-display text-xl font-extrabold text-[#164d38]">Make ShopNear yours.</h2><p className="mt-1 text-xs leading-relaxed text-[#5f806e]">Sign in to sync your profile, save your details, and register as a local business or service provider.</p><button type="button" onClick={() => setLocation('/auth')} className="focus-ring mt-3 rounded-full bg-[#f47716] px-4 py-2 text-xs font-bold text-white" data-testid="button-sign-in">Sign in with phone</button></div></div></section>}
         {user && editingProfile && <ProfileEditor user={user} onSaved={(next) => { setUser(next); setEditingProfile(false); notify('Profile saved'); }} onCancel={() => setEditingProfile(false)} />}
+        {user && <LocationSettings onNotice={notify} />}
         {user?.accountType === 'business' && <BusinessEditor />}
         {user?.accountType === 'service_provider' && <ServiceProviderEditor />}
          {user?.accountType === 'business' && <BusinessDashboardPanel />}

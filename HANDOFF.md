@@ -2,58 +2,54 @@
 
 ## Current Phase
 
-Phase 4 — Customer Experience Completion & Handoff System
+Phase 5 — GPS, Maps & Nearby Discovery (complete)
 
 ## Last Completed Task
 
-Recovered the existing Phase 2/3 implementation and completed the missing Phase 4 customer marketplace experience.
+Completed additive location infrastructure for customer, business, and provider discovery without replacing completed phases or the existing architecture.
 
 ## Database Migrations Applied
 
-No migration was applied. The development database already contained the entity-based `favorites` table (`user_id`, `entity_type`, `entity_id`) and its unique user/entity index; the Drizzle schema was aligned to that existing shape.
+The existing development-only Drizzle push applied the Phase 5 location columns to the existing `users`, `businesses`, and `service_providers` tables. Direct schema inspection confirmed the expected columns. No tables were recreated.
 
 ## API Endpoints Added
 
-- `GET /businesses/:id`, `GET /products/:id`, `GET /services/:id`
-- `GET /favorites`, `POST /favorites`, `DELETE /favorites/:targetType/:targetId`
+- `GET /location`, `PUT /location`
+- `PUT /businesses/:id/location`, `PUT /service-providers/:id/location`
+- `GET /marketplace/nearby` with radius, city/state, verified, featured, newest, and paging filters
+- Extended `GET /marketplace/search` with city/state, featured, and newest filters
 
 ## Files Modified
 
-- `lib/db/src/schema/marketplace.ts`
-- `artifacts/api-server/src/routes/marketplace.ts`
-- `artifacts/shopnear/src/lib/auth-api.ts`
-- `artifacts/shopnear/src/App.tsx`
-- `lib/api-spec/openapi.yaml`
-- generated API client/Zod files
+- Existing Drizzle user/business/provider schemas and API routes
+- ShopNear Home, Search, Profile, and API client location flows
+- OpenAPI specification and generated React/Zod clients
+- Phase 5 docs, project memory, and collaborator handoff
 
 ## Documentation Updated
 
-Updated all project documents, `replit.md`, and `PROJECT_MEMORY.md` with Phase 4 status, API behavior, security boundaries, and the existing favorites schema decision.
+Updated the eight requested product/API/security docs, `replit.md`, and `PROJECT_MEMORY.md` with Phase 5 status, API behavior, location privacy, and the provider boundary.
 
 ## Verification Results
 
-- `pnpm install --frozen-lockfile` passed.
-- `pnpm run typecheck` passed.
-- API build passed.
-- ShopNear production build passed; Vite emitted only its existing tooltip sourcemap warning.
-- OpenAPI codegen passed after merging the detail GET into the existing business path.
-- Database inspection confirmed the existing favorites table and unique index. Drizzle push was intentionally not forced because it detected unrelated existing-schema conflicts.
-- Runtime workflows restarted successfully and are serving.
-- `GET /api/healthz` returned `{"status":"ok"}`.
-- Featured discovery and verified marketplace search returned valid empty-state envelopes.
-- Missing product detail returned the expected `404` JSON response.
-- Unauthenticated favorites returned the expected `401` JSON response.
-- ShopNear mobile preview rendered with no browser console errors.
-- `git diff --check` passed.
+- OpenAPI client/Zod code generation passed.
+- `pnpm run build` passed: full typecheck, API bundle, ShopNear production bundle, and mockup-sandbox build. Vite emitted the existing tooltip sourcemap warning.
+- Development database push completed; inspection confirmed additive location columns on the three existing tables.
+- Location validation/privacy/Haversine/null-provider checks passed.
+- API smoke checks passed: health, featured/search, nearby success, invalid latitude/radius rejection, and private location route authentication.
+- ShopNear Home and Search mobile previews rendered; browser console had no errors. Signed-in-only Profile controls were not visible to the screenshot browser.
+- Managed web/API workflows restarted and are serving. `git diff --check` passed.
 
 ## Known Limitations
 
 - App Storage upload signing is documented as runtime-limited by the existing project notes.
 - The database contains no committed demo/seed data according to the existing documentation.
+- No map/routing vendor is configured. Straight-line distances work; road travel distance/time are deliberately `null`.
+- Search supports manual city/state filters; a customer's saved account city/state is not automatically applied to public browsing.
 
 ## Open Bugs
 
-- Database has no committed demo/seed data, so public marketplace sections may correctly render empty states.
+- Database has no committed demo/seed data, so nearby marketplace sections currently show empty states.
 
 ## Environment Requirements
 
@@ -63,8 +59,8 @@ Updated all project documents, `replit.md`, and `PROJECT_MEMORY.md` with Phase 4
 
 ## Exact Next Task
 
-Prepare Phase 5 GPS & Maps work: define the location/distance data contract, map provider boundary, permission flow, and migration plan without implementing GPS, maps, distance, or directions yet.
+Choose a map/routing provider only when road estimates or map pins are in scope. Otherwise, Phase 5 is complete; do not begin Phase 6 without an explicit request.
 
 ## Next Prompt Context
 
-Phase 4 is complete. Do not restart completed phases, redesign the existing ShopNear UI, recreate database tables, or begin Phase 5 GPS/maps work. The exact next product task is Phase 5 GPS & Maps preparation, which requires explicit approval.
+Phase 5 GPS/maps infrastructure is complete. Keep customer GPS private, and expose business/provider coordinates only after owner opt-in and approval. No provider is configured; do not fabricate road estimates. Preserve completed phases, the existing ShopNear UI and architecture, and existing tables. Do not start Phase 6 without an explicit request.
