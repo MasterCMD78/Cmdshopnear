@@ -1,0 +1,255 @@
+SHOPNEAR PHASE 6 FINALIZATION & CONTINUATION (Recovery Prompt)
+
+This repository is NOT a new project.
+
+It already contains completed work from:
+
+* Phase 1
+* Phase 2
+* Phase 3
+* Phase 4
+* Phase 5
+
+Phase 6 was already started and is partially implemented.
+
+IMPORTANT
+
+Do NOT restart Phase 6.
+
+Do NOT redesign anything.
+
+Do NOT replace existing architecture.
+
+Continue from the current codebase only.
+
+Before changing any code:
+
+1. Read every project document.
+2. Read the three official ShopNear specification PDFs.
+3. Read:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Treat these as the source of truth.
+
+⸻
+
+RECOVERY FIRST
+
+Before writing code:
+
+Audit the existing implementation.
+
+Determine exactly what Phase 6 already contains.
+
+Recover the previous work.
+
+Do NOT duplicate completed functionality.
+
+Only implement genuinely missing Phase 6 work.
+
+⸻
+
+VERIFY EXISTING AI FEATURES
+
+Confirm that the following exist and work:
+
+✅ Natural-language search
+
+✅ AI recommendation engine
+
+✅ Search fallback when AI fails
+
+✅ AI preferences
+
+✅ AI history
+
+✅ Account-scoped AI history
+
+✅ No exact GPS coordinates stored
+
+✅ Public-location privacy
+
+✅ Existing Home integration
+
+✅ Existing Search integration
+
+✅ Existing Profile integration
+
+Verify every feature before changing code.
+
+⸻
+
+COMPLETE REMAINING PHASE 6 WORK
+
+Only if missing:
+
+• AI recommendation improvements
+
+• Better intent detection
+
+• Search ranking
+
+• Category inference
+
+• Business recommendation scoring
+
+• Product recommendation scoring
+
+• Service recommendation scoring
+
+• Search suggestions
+
+• AI explanation text
+
+• Better loading states
+
+• Better error states
+
+Do not redesign existing UI.
+
+⸻
+
+DATABASE
+
+Only extend existing schema if absolutely necessary.
+
+Never recreate tables.
+
+Never remove data.
+
+Document every migration.
+
+⸻
+
+API
+
+Verify:
+
+AI routes
+
+Search routes
+
+Recommendation routes
+
+History routes
+
+Preference routes
+
+Regenerate OpenAPI only if required.
+
+⸻
+
+TESTING
+
+Run:
+
+* pnpm install (if dependencies are missing)
+* Database migration verification
+* Typecheck
+* Production build
+* API tests
+* AI search tests
+* Natural-language search tests
+* Recommendation tests
+* Browser verification
+* Smoke tests
+
+Fix only real issues.
+
+⸻
+
+DOCUMENTATION
+
+Update:
+
+docs/README.md
+
+docs/API.md
+
+docs/DATABASE.md
+
+docs/ARCHITECTURE.md
+
+docs/SECURITY.md
+
+docs/AI.md
+
+docs/CHANGELOG.md
+
+docs/ROADMAP.md
+
+replit.md
+
+PROJECT_MEMORY.md
+
+HANDOFF.md
+
+⸻
+
+HANDOFF.md
+
+Maintain this file permanently.
+
+It must always contain:
+
+* Current Phase
+* Last Completed Task
+* Database Migrations Applied
+* API Endpoints Added
+* Files Modified
+* Verification Results
+* Known Limitations
+* Exact Next Task
+
+Every future phase must update HANDOFF.md before completion.
+
+⸻
+
+IMPORTANT RULES
+
+* Never redesign completed pages.
+* Never break existing functionality.
+* Never remove completed work.
+* Never duplicate implementation.
+* Never start Phase 7.
+* Finish Phase 6 only.
+
+If a feature already exists:
+
+Verify it.
+
+Test it.
+
+Document it.
+
+Do not rewrite it.
+
+⸻
+
+DEFINITION OF DONE
+
+Phase 6 is complete only when:
+
+* All existing AI functionality is verified.
+* Missing AI features (if any) are implemented.
+* Typecheck passes.
+* Production build passes.
+* Database verification passes.
+* API verification passes.
+* Browser verification passes.
+* Documentation is fully synchronized.
+* replit.md is updated.
+* PROJECT_MEMORY.md is updated.
+* HANDOFF.md is updated.
+* A detailed summary clearly states what was verified, what was added, any known limitations, and the exact recommended starting point for Phase 7.
