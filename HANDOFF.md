@@ -59,7 +59,7 @@ Updated the eight requested product/API/security docs, `replit.md`, and `PROJECT
 
 ## Exact Next Task
 
-Choose a map/routing provider only when road estimates or map pins are in scope. Otherwise, the Phase 5 straight-line location behavior is complete.
+There is no remaining Phase 6 implementation. Wait for explicit approval before starting Phase 7. Choose a map/routing provider only if road estimates or map pins become part of an approved scope.
 
 ## Current Phase: 6 complete
 
@@ -96,7 +96,13 @@ Choose a map/routing provider only when road estimates or map pins are in scope.
 ### Environment and verification
 
 - Uses the existing PostgreSQL `DATABASE_URL` and session configuration; no AI key is required.
-- Record final typecheck, build, additive development schema push, API endpoint, browser, and workflow verification results here before handoff.
+- `pnpm build` passed, including workspace typechecks and API, ShopNear, and mockup production builds. The existing tooltip component emitted a non-fatal sourcemap warning.
+- `pnpm --filter @workspace/api-server test` passed all 5 tests.
+- Development schema push succeeded with only `ai_preferences`, `ai_search_history`, and their foreign keys/indexes added; no existing tables were altered.
+- API smoke checks passed for AI search, suggestions, recommendations, coordinate validation/privacy, and unauthenticated history/preferences access. The updated search response also reports when “near me” has no coordinates and when featured filtering omits business/provider profiles.
+- All three configured workflows are running. The API workflow was restarted after the final route change.
+- Mobile Home and desktop Search rendered in the browser. The screenshot's 401 was the expected unauthenticated `GET /api/auth/session`; the client treats it as a signed-out state. The signed-in Profile controls were not visually verified because the preview browser has no session.
+- The database contains no seeded public listings, so discovery pages show their expected empty states.
 
 ## Next prompt context
 
