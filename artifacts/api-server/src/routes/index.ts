@@ -6,6 +6,9 @@ import storageRouter from "./storage";
 import marketplaceRouter from "./marketplace";
 import locationRouter from "./location";
 import aiRouter from "./ai";
+import chatRouter from "./chat";
+import notificationRouter from "./notifications";
+import reviewsRouter from "./reviews";
 
 const router: IRouter = Router();
 
@@ -16,5 +19,8 @@ router.use(storageRouter);
 router.use(marketplaceRouter);
 router.use(locationRouter);
 router.use(aiRouter);
+router.use(chatRouter);
+router.use(notificationRouter);
+router.use(reviewsRouter);
 
 export default router;

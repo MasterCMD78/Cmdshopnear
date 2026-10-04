@@ -1,0 +1,378 @@
+🚀 SHOPNEAR PHASE 7 MASTER CONTINUATION PROMPT
+
+Chat, Notifications, Reviews & Ratings
+
+This repository is NOT a new project.
+
+The following phases are already completed and verified:
+
+* ✅ Phase 1 – Foundation & UI
+* ✅ Phase 2 – Authentication & User Accounts
+* ✅ Phase 3 – Marketplace Management
+* ✅ Phase 4 – Customer Experience
+* ✅ Phase 5 – GPS & Nearby Discovery
+* ✅ Phase 6 – AI Search & Recommendations
+
+Do NOT rebuild or redesign any completed phase.
+
+Continue only from the existing codebase.
+
+⸻
+
+BEFORE WRITING ANY CODE
+
+Read every project document first.
+
+Read:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Also read all three official ShopNear specification PDFs.
+
+Treat these documents as the source of truth.
+
+If documentation and implementation differ:
+
+* Audit first.
+* Verify first.
+* Fix only genuine inconsistencies.
+* Never duplicate existing functionality.
+
+⸻
+
+RECOVERY
+
+Before implementing anything:
+
+Audit the entire repository.
+
+Determine exactly what already exists.
+
+Verify:
+
+* Database
+* API
+* Frontend
+* Documentation
+* Existing tests
+
+Recover the previous implementation.
+
+Never recreate completed work.
+
+Only implement genuinely missing Phase 7 functionality.
+
+⸻
+
+PHASE 7 OBJECTIVE
+
+Build a production-ready communication and engagement system.
+
+This phase includes:
+
+* Real-time Chat
+* Notifications
+* Reviews
+* Ratings
+* Favorites enhancements
+
+Do not begin Phase 8.
+
+⸻
+
+CHAT SYSTEM
+
+Implement secure real-time messaging.
+
+Support conversations between:
+
+Customer ↔ Business
+
+Customer ↔ Service Provider
+
+Business ↔ Customer
+
+Service Provider ↔ Customer
+
+Features:
+
+* Conversation list
+* Message history
+* Read receipts
+* Unread counters
+* Typing indicator architecture
+* Message timestamps
+* Delivery status
+* Soft delete
+* Report conversation
+* Block user architecture
+* Conversation search
+
+Keep the architecture modular for future media/file messages.
+
+⸻
+
+NOTIFICATIONS
+
+Implement an in-app notification system.
+
+Support notifications for:
+
+* New message
+* Favorite updates
+* Business verification
+* New review
+* New rating
+* Admin announcements
+* Account activity
+
+Features:
+
+* Read / unread
+* Mark all as read
+* Notification history
+* Pagination
+* Notification preferences
+
+Design it so push notifications can be added later without changing the core architecture.
+
+⸻
+
+REVIEWS
+
+Allow customers to review:
+
+Businesses
+
+Products
+
+Services
+
+Features:
+
+* Written review
+* Rating
+* Edit review
+* Delete review
+* Verified purchaser/customer flag (future-ready)
+* Report review
+* Moderation support
+
+⸻
+
+RATINGS
+
+Implement:
+
+1–5 star ratings.
+
+Automatically calculate:
+
+* Average rating
+* Rating count
+* Distribution
+
+Display ratings throughout the marketplace.
+
+⸻
+
+FAVORITES
+
+Improve the existing favorites system.
+
+Support:
+
+Businesses
+
+Products
+
+Services
+
+Provide:
+
+* Fast loading
+* Pagination
+* Empty states
+* Removal
+* Synchronization
+
+⸻
+
+SECURITY
+
+Protect against:
+
+Spam
+
+Flooding
+
+Message abuse
+
+Unauthorized access
+
+Role violations
+
+Input validation
+
+XSS
+
+Rate limiting
+
+Audit logging
+
+⸻
+
+DATABASE
+
+Extend the existing schema only.
+
+Never recreate tables.
+
+Never remove existing data.
+
+Document every migration.
+
+⸻
+
+API
+
+Create or extend secure REST endpoints for:
+
+* Conversations
+* Messages
+* Notifications
+* Reviews
+* Ratings
+* Favorites
+
+Update OpenAPI only if required.
+
+⸻
+
+USER INTERFACE
+
+Maintain the existing ShopNear design.
+
+Do NOT redesign.
+
+Continue using:
+
+* Emerald Green
+* Orange
+* White
+* Rounded Cards
+* Existing Bottom Navigation
+* Existing Mobile Layout
+
+Integrate new screens naturally into the current application.
+
+⸻
+
+TESTING
+
+Before completion run:
+
+* Database migration verification
+* Typecheck
+* Production build
+* API tests
+* Chat tests
+* Notification tests
+* Review tests
+* Rating tests
+* Favorites tests
+* Browser verification
+* Smoke tests
+
+Fix only real issues.
+
+⸻
+
+DOCUMENTATION
+
+Update:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Never allow documentation to become outdated.
+
+⸻
+
+HANDOFF.md
+
+Maintain this file permanently.
+
+It must always include:
+
+* Current Phase
+* Last Completed Task
+* Database Migrations Applied
+* API Endpoints Added
+* Files Modified
+* Verification Results
+* Known Limitations
+* Exact Next Task
+
+Update it before marking the phase complete.
+
+⸻
+
+IMPORTANT RULES
+
+* Never redesign completed pages.
+* Never break existing functionality.
+* Never remove completed work.
+* Never duplicate implementation.
+* Never start Phase 8.
+* Finish Phase 7 only.
+* If a feature already exists, verify it instead of rebuilding it.
+* If you recommend an improvement, explain it before implementing it.
+
+⸻
+
+DEFINITION OF DONE
+
+Phase 7 is complete only when:
+
+* Real-time chat works.
+* Notifications work.
+* Reviews work.
+* Ratings work.
+* Favorites enhancements work.
+* Typecheck passes.
+* Production build passes.
+* Database verification passes.
+* API verification passes.
+* Browser verification passes.
+* Documentation is fully synchronized.
+* replit.md is updated.
+* PROJECT_MEMORY.md is updated.
+* HANDOFF.md is updated.
+* A final report summarizes:
+    * What was verified
+    * What was implemented
+    * Database migrations
+    * API endpoints added
+    * Tests executed
+    * Known limitations
+    * Exact recommended starting point for Phase 8 (Verification System, Admin Dashboard, Reports, Moderation & Analytics)

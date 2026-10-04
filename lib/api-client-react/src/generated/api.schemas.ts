@@ -865,6 +865,10 @@ export interface FavoriteItem {
 
 export interface Favorites {
   favorites: FavoriteItem[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
 }
 
 export interface BusinessDetail {
@@ -1164,6 +1168,414 @@ export interface AIPreferencesUpdate {
   preferredCategories?: string[];
 }
 
+export type ChatParticipantSummaryAccountType = typeof ChatParticipantSummaryAccountType[keyof typeof ChatParticipantSummaryAccountType];
+
+
+export const ChatParticipantSummaryAccountType = {
+  customer: 'customer',
+  business: 'business',
+  service_provider: 'service_provider',
+  admin: 'admin',
+} as const;
+
+export interface ChatParticipantSummary {
+  id: string;
+  fullName: string;
+  /** @nullable */
+  profilePhoto: string | null;
+  accountType: ChatParticipantSummaryAccountType;
+}
+
+export type ChatLastMessageStatus = typeof ChatLastMessageStatus[keyof typeof ChatLastMessageStatus];
+
+
+export const ChatLastMessageStatus = {
+  sent: 'sent',
+  delivered: 'delivered',
+  read: 'read',
+} as const;
+
+export interface ChatLastMessage {
+  id: string;
+  body: string;
+  messageType: string;
+  senderId: string;
+  createdAt: string;
+  status: ChatLastMessageStatus;
+}
+
+export interface ChatConversation {
+  id: string;
+  otherUser: ChatParticipantSummary;
+  /** @nullable */
+  contextType: string | null;
+  /** @nullable */
+  contextId: string | null;
+  lastMessage: ChatLastMessage | null;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export interface ChatConversationPage {
+  conversations: ChatConversation[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * @nullable
+ */
+export type ChatMessageMetadata = { [key: string]: unknown } | null;
+
+export type ChatMessageStatus = typeof ChatMessageStatus[keyof typeof ChatMessageStatus];
+
+
+export const ChatMessageStatus = {
+  sent: 'sent',
+  delivered: 'delivered',
+  read: 'read',
+} as const;
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  messageType: string;
+  body: string;
+  /** @nullable */
+  metadata: ChatMessageMetadata;
+  createdAt: string;
+  /** @nullable */
+  deletedAt: string | null;
+  status: ChatMessageStatus;
+  isMine: boolean;
+}
+
+export interface ChatMessagePage {
+  messages: ChatMessage[];
+  hasMore: boolean;
+  /** @nullable */
+  nextBefore: string | null;
+  typing: boolean;
+}
+
+export type ConversationInputTargetType = typeof ConversationInputTargetType[keyof typeof ConversationInputTargetType];
+
+
+export const ConversationInputTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+  service_provider: 'service_provider',
+} as const;
+
+export interface ConversationInput {
+  targetType: ConversationInputTargetType;
+  targetId: string;
+}
+
+export interface ChatMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  body: string;
+}
+
+export interface TypingInput {
+  typing: boolean;
+}
+
+export interface ReportInput {
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  reason: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  details?: string | null;
+}
+
+export type ContentReportEntityType = typeof ContentReportEntityType[keyof typeof ContentReportEntityType];
+
+
+export const ContentReportEntityType = {
+  conversation: 'conversation',
+  review: 'review',
+} as const;
+
+export type ContentReportStatus = typeof ContentReportStatus[keyof typeof ContentReportStatus];
+
+
+export const ContentReportStatus = {
+  open: 'open',
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface ContentReport {
+  id: string;
+  reporterId: string;
+  entityType: ContentReportEntityType;
+  entityId: string;
+  reason: string;
+  /** @nullable */
+  details: string | null;
+  status: ContentReportStatus;
+  /** @nullable */
+  reviewedById: string | null;
+  /** @nullable */
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
+export interface ContentReportPage {
+  reports: ContentReport[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export type ReportStatusInputStatus = typeof ReportStatusInputStatus[keyof typeof ReportStatusInputStatus];
+
+
+export const ReportStatusInputStatus = {
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface ReportStatusInput {
+  status: ReportStatusInputStatus;
+}
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+
+export const NotificationType = {
+  message: 'message',
+  favorite: 'favorite',
+  verification: 'verification',
+  review: 'review',
+  rating: 'rating',
+  announcement: 'announcement',
+  account_activity: 'account_activity',
+} as const;
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  /** @nullable */
+  entityType: string | null;
+  /** @nullable */
+  entityId: string | null;
+  /** @nullable */
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationPage {
+  notifications: Notification[];
+  page: number;
+  limit: number;
+  total: number;
+  unreadCount: number;
+  hasMore: boolean;
+}
+
+export interface UnreadCount {
+  unreadCount: number;
+}
+
+export interface NotificationReadCount {
+  updated: number;
+}
+
+export interface NotificationPreferences {
+  messages: boolean;
+  favorites: boolean;
+  verification: boolean;
+  reviews: boolean;
+  ratings: boolean;
+  announcements: boolean;
+  accountActivity: boolean;
+}
+
+export interface NotificationPreferencesInput {
+  messages?: boolean;
+  favorites?: boolean;
+  verification?: boolean;
+  reviews?: boolean;
+  ratings?: boolean;
+  announcements?: boolean;
+  accountActivity?: boolean;
+}
+
+export interface AnnouncementInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  title: string;
+  /**
+     * @minLength 2
+     * @maxLength 1000
+     */
+  message: string;
+  /** @nullable */
+  entityType?: string | null;
+  /** @nullable */
+  entityId?: string | null;
+}
+
+export interface AnnouncementResult {
+  created: number;
+}
+
+export interface RatingDistribution {
+  '1': number;
+  '2': number;
+  '3': number;
+  '4': number;
+  '5': number;
+}
+
+export type RatingSummaryTargetType = typeof RatingSummaryTargetType[keyof typeof RatingSummaryTargetType];
+
+
+export const RatingSummaryTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface RatingSummary {
+  targetType: RatingSummaryTargetType;
+  targetId: string;
+  averageRating: number;
+  ratingCount: number;
+  distribution: RatingDistribution;
+}
+
+export type ReviewInputTargetType = typeof ReviewInputTargetType[keyof typeof ReviewInputTargetType];
+
+
+export const ReviewInputTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface ReviewInput {
+  targetType: ReviewInputTargetType;
+  targetId: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  comment: string | null;
+}
+
+export interface ReviewUpdate {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  comment: string | null;
+}
+
+export interface ReviewAuthor {
+  id: string;
+  fullName: string;
+  /** @nullable */
+  profilePhoto: string | null;
+}
+
+export type ReviewTargetType = typeof ReviewTargetType[keyof typeof ReviewTargetType];
+
+
+export const ReviewTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof ReviewModerationStatus];
+
+
+export const ReviewModerationStatus = {
+  visible: 'visible',
+  hidden: 'hidden',
+} as const;
+
+export interface Review {
+  id: string;
+  targetType: ReviewTargetType;
+  targetId: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @nullable */
+  comment: string | null;
+  verifiedCustomer: boolean;
+  moderationStatus: ReviewModerationStatus;
+  author: ReviewAuthor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewPage {
+  reviews: Review[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+  summary: RatingSummary;
+}
+
+export interface ReviewModerationPage {
+  reviews: Review[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface MyReview {
+  review: Review | null;
+}
+
+export type ReviewModerationInputModerationStatus = typeof ReviewModerationInputModerationStatus[keyof typeof ReviewModerationInputModerationStatus];
+
+
+export const ReviewModerationInputModerationStatus = {
+  visible: 'visible',
+  hidden: 'hidden',
+} as const;
+
+export interface ReviewModerationInput {
+  moderationStatus: ReviewModerationInputModerationStatus;
+}
+
 export type GetMarketplaceCatalogParams = {
 /**
  * @maxLength 120
@@ -1285,6 +1697,18 @@ export type GetAISuggestionsParams = {
 query?: string;
 };
 
+export type GetFavoritesParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
 export type GetAdminCategoriesParams = {
 type: GetAdminCategoriesType;
 };
@@ -1296,4 +1720,113 @@ export const GetAdminCategoriesType = {
   products: 'products',
   services: 'services',
 } as const;
+
+export type ListChatConversationsParams = {
+/**
+ * @maxLength 120
+ */
+search?: string;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type ListChatMessagesParams = {
+conversationId: string;
+before?: string;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListNotificationsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+unreadOnly?: boolean;
+};
+
+export type ListReviewsParams = {
+targetType: ListReviewsTargetType;
+targetId: string;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type ListReviewsTargetType = typeof ListReviewsTargetType[keyof typeof ListReviewsTargetType];
+
+
+export const ListReviewsTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export type GetMyReviewParams = {
+targetType: GetMyReviewTargetType;
+targetId: string;
+};
+
+export type GetMyReviewTargetType = typeof GetMyReviewTargetType[keyof typeof GetMyReviewTargetType];
+
+
+export const GetMyReviewTargetType = {
+  business: 'business',
+  product: 'product',
+  service: 'service',
+} as const;
+
+export type ListAdminReviewsParams = {
+status?: ListAdminReviewsStatus;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type ListAdminReviewsStatus = typeof ListAdminReviewsStatus[keyof typeof ListAdminReviewsStatus];
+
+
+export const ListAdminReviewsStatus = {
+  visible: 'visible',
+  hidden: 'hidden',
+} as const;
+
+export type ListContentReportsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
 

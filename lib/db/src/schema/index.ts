@@ -21,3 +21,4 @@ export * from "./auth";
 export * from "./accounts";
 export * from "./marketplace";
 export * from "./ai";
+export * from "./engagement";

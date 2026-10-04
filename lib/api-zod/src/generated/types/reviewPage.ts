@@ -5,12 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { FavoriteItem } from './favoriteItem';
+import type { RatingSummary } from './ratingSummary';
+import type { Review } from './review';
 
-export interface Favorites {
-  favorites: FavoriteItem[];
+export interface ReviewPage {
+  reviews: Review[];
   page: number;
   limit: number;
   total: number;
   hasMore: boolean;
+  summary: RatingSummary;
 }

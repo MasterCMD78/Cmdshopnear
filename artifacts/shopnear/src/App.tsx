@@ -1,12 +1,14 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, CircleUserRound, Clock3, Compass, Heart, Home as HomeIcon, LocateFixed, MapPin, Menu, MessageCircle, Pencil, Plus, Search, Send, Settings2, ShieldCheck, ShoppingBag, Sparkles, Star, Store, Tag, Trash2, UserRound, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AIListingCard, AIListingRail, AISuggestionChips } from '@/components/ai-marketplace';
 import { Link, Route, Switch, Router as WouterRouter, useLocation, useRoute } from 'wouter';
-import { addFavorite, clearAIHistory, clearAIConversation, deleteProduct, deleteService, getAIConversationId, getAIHistory, getAIPreferences, getAIRecommendations, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getFavorites, getLocation, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, getNearbyMarketplace, logout, registerAccount, rememberAIConversationId, removeFavorite, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, searchWithAI, updateAIPreferences, updateBusinessLocation as saveBusinessLocation, updateLocation, updateProfile, updateServiceProviderLocation, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type NearbyMarketplace, type ServiceProviderRecord, type UserLocation } from '@/lib/auth-api';
+import { clearAIHistory, clearAIConversation, deleteProduct, deleteService, getAIConversationId, getAIHistory, getAIPreferences, getAIRecommendations, getBusinessDashboard, getBusinessDetail, getFeaturedMarketplace, getLocation, getMarketplaceCatalog, getMyBusiness, getMyProducts, getMyServiceProvider, getMyServices, getProductDetail, getServiceDetail, getSession, getNearbyMarketplace, logout, registerAccount, rememberAIConversationId, requestOtp, saveBusiness, saveProduct, saveService, saveServiceProvider, searchMarketplace, searchWithAI, updateAIPreferences, updateBusinessLocation as saveBusinessLocation, updateLocation, updateProfile, updateServiceProviderLocation, verifyOtp, type AccountType, type AuthUser, type BusinessRecord, type FavoriteItem, type MarketplaceProduct, type MarketplaceService, type MarketplaceSearchResult, type NearbyMarketplace, type ServiceProviderRecord, type UserLocation } from '@/lib/auth-api';
+import { getGetFavoritesQueryKey, getGetNotificationUnreadCountQueryKey, useAddFavorite, useGetFavorites, useGetNotificationUnreadCount, useRemoveFavorite } from '@workspace/api-client-react';
+import { AdminModerationPage, ListingMessageAction, ListingReviews, MessagesPage as ConversationsPage, NotificationsPage } from './phase7';
 
 const queryClient = new QueryClient();
 const logoPath = '/assets/shopnear-logo.png';
@@ -102,14 +104,16 @@ function BottomNav({ active }: { active: Tab }) {
 
 function Shell({ active, children, toast }: { active: Tab; children: ReactNode; toast?: string }) {
   const [, setLocation] = useLocation();
-  const openNotifications = () => setLocation('/messages');
+  const unread = useGetNotificationUnreadCount({ query: { queryKey: getGetNotificationUnreadCountQueryKey(), refetchInterval: 60000, refetchOnMount: true } });
+  const unreadBadge = unread.data?.unreadCount ? unread.data.unreadCount > 9 ? '9+' : String(unread.data.unreadCount) : undefined;
+  const openNotifications = () => setLocation('/notifications');
   return (
     <div className="min-h-[100dvh] bg-[#f5f1e9]">
       <div className="app-shell relative min-h-[100dvh] overflow-hidden bg-[#fffdf9] pb-24 md:pb-28 md:shadow-[0_0_70px_rgba(16,72,50,.05)]">
         <header className="flex items-center justify-between px-5 pb-2 pt-5 md:px-10 md:pt-7">
           <Logo />
           <div className="flex items-center gap-2">
-            <IconButton label="Open notifications" onClick={openNotifications} badge="2"><Bell size={20} strokeWidth={1.8} /></IconButton>
+            <IconButton label="Open notifications" onClick={openNotifications} badge={unreadBadge}><Bell size={20} strokeWidth={1.8} /></IconButton>
             <button type="button" onClick={() => setLocation('/profile')} className="focus-ring tap ml-1 flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-[#d9efe1] text-[#087044]" aria-label="Open profile" data-testid="button-open-profile">
               <CircleUserRound size={24} strokeWidth={1.6} />
             </button>
@@ -216,18 +220,21 @@ function LoadingState({ label = 'Loading nearby listings…' }: { label?: string
 }
 
 function FavoriteButton({ targetType, targetId, saved, onChange, light = false }: { targetType: FavoriteItem["targetType"]; targetId: string; saved: boolean; onChange: (saved: boolean) => void; light?: boolean }) {
-  const [busy, setBusy] = useState(false);
+  const queryClient = useQueryClient();
+  const add = useAddFavorite();
+  const remove = useRemoveFavorite();
+  const busy = add.isPending || remove.isPending;
   const [message, setMessage] = useState('');
-  const toggle = async () => {
+  const toggle = () => {
     if (busy) return;
-    setBusy(true); setMessage('');
-    try {
-      if (saved) await removeFavorite(targetType, targetId);
-      else await addFavorite(targetType, targetId);
+    setMessage('');
+    const onSuccess = () => {
       onChange(!saved);
-    } catch (error) {
-      setMessage(error instanceof Error && error.message.includes('Authentication') ? 'Sign in to save' : 'Could not save');
-    } finally { setBusy(false); }
+      void queryClient.invalidateQueries({ queryKey: getGetFavoritesQueryKey() });
+    };
+    const onError = (error: Error) => setMessage(error.message.includes('Authentication') ? 'Sign in to save' : 'Could not save');
+    if (saved) remove.mutate({ targetType, targetId }, { onSuccess, onError });
+    else add.mutate({ data: { targetType, targetId } }, { onSuccess, onError });
   };
   return <span className="relative">
     <button type="button" onClick={toggle} disabled={busy} aria-label={saved ? 'Remove from favorites' : 'Add to favorites'} className={`focus-ring flex h-9 w-9 items-center justify-center rounded-full ${saved ? 'bg-[#f47716] text-white' : light ? 'bg-white/90 text-[#216046]' : 'border border-[#dce8dc] bg-white text-[#216046]'} disabled:opacity-60`} data-testid={`button-favorite-${targetType}-${targetId}`}><Heart size={16} fill={saved ? 'currentColor' : 'none'} /></button>
@@ -560,14 +567,23 @@ function EmptyState({ icon: Icon, title, detail, action, onAction }: { icon: typ
 }
 
 function FavoritesPage() {
-  const [favorites, setFavorites] = useState<FavoriteItem[] | null>(null);
+  const [page, setPage] = useState(1);
+  const [loadedFavorites, setLoadedFavorites] = useState<FavoriteItem[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [toast, setToast] = useState('');
+  const params = useMemo(() => ({ page, limit: 12 }), [page]);
+  const favoritesQuery = useGetFavorites(params, { query: { queryKey: getGetFavoritesQueryKey(params), refetchOnMount: 'always' } });
+  const favorites = loadedFavorites;
   const notify = (message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2200); };
-  const load = () => getSession().then((session) => session.user ? getFavorites().then((value) => setFavorites(value.favorites)) : setFavorites([])).catch(() => setFavorites([]));
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const pageRows = favoritesQuery.data?.favorites as unknown as FavoriteItem[] | undefined;
+    if (!pageRows) return;
+    setLoadedFavorites((current) => page === 1 ? pageRows : [...current, ...pageRows.filter((row) => !current.some((item) => item.id === row.id))]);
+    setInitialized(true);
+  }, [favoritesQuery.data, page]);
   const savedIds = new Set((favorites ?? []).map((item) => item.targetId));
   const onSaved = (id: string, saved: boolean) => {
-    if (!saved) setFavorites((current) => current?.filter((item) => item.targetId !== id) ?? []);
+    if (!saved) setLoadedFavorites((current) => current.filter((item) => item.targetId !== id));
   };
   return (
     <Shell active="favorites" toast={toast}>
@@ -575,13 +591,14 @@ function FavoritesPage() {
         <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Your shortlist</p>
         <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Favorites</h1><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5 text-[11px] font-bold text-[#087044]">{favorites?.length ?? 0} saved</span></div>
         <p className="mt-2 text-sm text-[#7a897f]">Keep the local places and finds you want to come back to.</p>
-        {favorites === null ? <div className="mt-7"><LoadingState label="Loading your favorites…" /></div> : favorites.length ? <div className="mt-7 grid gap-3 md:grid-cols-3">
+        {favoritesQuery.isLoading && !initialized ? <div className="mt-7"><LoadingState label="Loading your favorites…" /></div> : favoritesQuery.isError && !initialized ? <div className="mt-7 rounded-2xl bg-[#fff0ed] p-5 text-sm text-[#a24430]" role="alert">Your favorites could not be loaded. <button type="button" onClick={() => void favoritesQuery.refetch()} className="font-bold underline" data-testid="button-retry-favorites">Try again</button></div> : favorites.length ? <div className="mt-7 grid gap-3 md:grid-cols-3">
           {favorites.map((favorite) => favorite.targetType === 'business'
             ? <RemoteBusinessCard key={favorite.id} business={favorite.item as BusinessRecord} savedIds={savedIds} onSaved={onSaved} />
             : favorite.targetType === 'product'
               ? <RemoteProductCard key={favorite.id} item={favorite.item as MarketplaceProduct} savedIds={savedIds} onSaved={onSaved} />
               : <RemoteServiceCard key={favorite.id} item={favorite.item as MarketplaceService} savedIds={savedIds} onSaved={onSaved} />)}
         </div> : <div className="mt-7"><EmptyState icon={Heart} title="Your favorites are waiting" detail="Tap the heart on a place or product to keep it close." action="Discover nearby" onAction={() => window.location.assign('/search')} /></div>}
+        {favoritesQuery.data && favoritesQuery.data.favorites.length === 12 && <div className="mt-5 text-center"><button type="button" onClick={() => setPage((value) => value + 1)} disabled={favoritesQuery.isFetching} className="focus-ring rounded-full border border-[#dbe6dc] bg-white px-5 py-2.5 text-xs font-bold text-[#087044] disabled:opacity-50" data-testid="button-load-more-favorites">{favoritesQuery.isFetching ? 'Loading…' : 'Load more favorites'}</button></div>}
         <div className="mt-8 rounded-[23px] bg-[#fff1df] p-5">
           <div className="flex gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#f47716] text-white"><MapPin size={19} /></span><div><h3 className="text-sm font-bold text-[#78441d]">A little local tip</h3><p className="mt-1 text-xs leading-relaxed text-[#9c6945]">Saved places are sorted by what’s closest to you, so your shortlist stays useful.</p></div></div>
         </div>
@@ -601,7 +618,20 @@ function BusinessDetailPage() {
   useEffect(() => { if (params?.id) { getBusinessDetail(params.id).then(setData); } }, [params?.id]);
   if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading business details…" /></div></Shell>;
   const { business } = data;
-  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 overflow-hidden rounded-[26px] border border-[#e8e3d8] bg-white shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="h-36 bg-[#dcefe2]"><div className="h-full bg-[radial-gradient(circle_at_25%_35%,#6ca66a_0_9%,transparent_10%),radial-gradient(circle_at_68%_70%,#ef9f54_0_12%,transparent_13%),linear-gradient(135deg,#d8efd8,#a8d4ae)] opacity-60" /></div><div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1.5"><h1 className="font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{business.businessName}</h1>{business.verificationStatus === 'approved' && <ShieldCheck size={17} className="text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 text-sm text-[#78897e]">{business.category} · {business.businessAddress || 'Local business'}</p></div><FavoriteButton targetType="business" targetId={business.id} saved={saved} onChange={setSaved} /></div><p className="mt-4 text-sm leading-relaxed text-[#61776a]">{business.description || 'A trusted local business on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{business.verificationStatus === 'approved' ? 'Verified business' : 'Verification pending'}</span><span className="rounded-full bg-[#fff1df] px-3 py-1.5"><Star size={12} className="mr-1 inline text-[#f3a820]" fill="#f3a820" />{business.averageRating || 'New'} ({business.totalReviews ?? 0})</span></div></div></section><section className="mt-8"><SectionHeading eyebrow="From this business" title="Products" />{data.products.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.products.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No products listed yet" detail="Check back soon for new local finds." action="Browse search" onAction={() => window.location.assign('/search')} />}</section><section className="mt-8"><SectionHeading title="Services" />{data.services.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.services.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No services listed yet" detail="This business has not published services." action="Browse search" onAction={() => window.location.assign('/search')} />}</section>{data.relatedBusinesses.length > 0 && <section className="mt-8"><SectionHeading eyebrow="You may also like" title="Related businesses" /><div className="grid gap-3 md:grid-cols-3">{data.relatedBusinesses.map((item) => <RemoteBusinessCard key={item.id} business={item} savedIds={new Set()} onSaved={() => undefined} />)}</div></section>}</div></Shell>;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9">
+    <DetailBack />
+    <section className="mt-5 overflow-hidden rounded-[26px] border border-[#e8e3d8] bg-white shadow-[0_8px_25px_rgba(16,72,50,.05)]">
+      <div className="h-36 bg-[#dcefe2]"><div className="h-full bg-[radial-gradient(circle_at_25%_35%,#6ca66a_0_9%,transparent_10%),radial-gradient(circle_at_68%_70%,#ef9f54_0_12%,transparent_13%),linear-gradient(135deg,#d8efd8,#a8d4ae)] opacity-60" /></div>
+      <div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1.5"><h1 className="font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{business.businessName}</h1>{business.verificationStatus === 'approved' && <ShieldCheck size={17} className="text-[#087044]" fill="#dff2e6" />}</div><p className="mt-1 text-sm text-[#78897e]">{business.category} · {business.businessAddress || 'Local business'}</p></div><FavoriteButton targetType="business" targetId={business.id} saved={saved} onChange={setSaved} /></div>
+        <p className="mt-4 text-sm leading-relaxed text-[#61776a]">{business.description || 'A trusted local business on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{business.verificationStatus === 'approved' ? 'Verified business' : 'Verification pending'}</span><span className="rounded-full bg-[#fff1df] px-3 py-1.5"><Star size={12} className="mr-1 inline text-[#f3a820]" fill="#f3a820" />{business.averageRating || 'New'} ({business.totalReviews ?? 0})</span></div>
+        <div className="mt-4"><ListingMessageAction targetType="business" targetId={business.id} /></div>
+      </div>
+    </section>
+    <ListingReviews targetType="business" targetId={business.id} />
+    <section className="mt-8"><SectionHeading eyebrow="From this business" title="Products" />{data.products.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.products.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No products listed yet" detail="Check back soon for new local finds." action="Browse search" onAction={() => window.location.assign('/search')} />}</section>
+    <section className="mt-8"><SectionHeading title="Services" />{data.services.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.services.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No services listed yet" detail="This business has not published services." action="Browse search" onAction={() => window.location.assign('/search')} />}</section>
+    {data.relatedBusinesses.length > 0 && <section className="mt-8"><SectionHeading eyebrow="You may also like" title="Related businesses" /><div className="grid gap-3 md:grid-cols-3">{data.relatedBusinesses.map((item) => <RemoteBusinessCard key={item.id} business={item} savedIds={new Set()} onSaved={() => undefined} />)}</div></section>}
+  </div></Shell>;
 }
 
 function ProductDetailPage() {
@@ -611,7 +641,7 @@ function ProductDetailPage() {
   useEffect(() => { if (params?.id) { getProductDetail(params.id).then(setData); } }, [params?.id]);
   if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading product details…" /></div></Shell>;
   const { product, business } = data;
-  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex flex-col gap-5 md:flex-row"><div className="flex h-56 items-center justify-center rounded-[20px] bg-[#eedacb] md:w-1/2"><div className="h-32 w-24 rounded-[18px_18px_26px_26px] bg-[#bb714e] shadow-[inset_-10px_-10px_15px_rgba(0,0,0,.1),5px_8px_12px_rgba(52,43,23,.12)]" /></div><div className="flex-1"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Product</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{product.name}</h1></div><FavoriteButton targetType="product" targetId={product.id} saved={saved} onChange={setSaved} /></div><p className="mt-3 text-2xl font-extrabold text-[#e56e12]">{(product.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p><p className="mt-4 text-sm leading-relaxed text-[#61776a]">{product.description || 'A local marketplace find from a verified ShopNear business.'}</p><Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link></div></div></section><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related products" />{data.relatedProducts.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.relatedProducts.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No related products yet" detail="Browse more local products from Search." action="Browse products" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex flex-col gap-5 md:flex-row"><div className="flex h-56 items-center justify-center rounded-[20px] bg-[#eedacb] md:w-1/2"><div className="h-32 w-24 rounded-[18px_18px_26px_26px] bg-[#bb714e] shadow-[inset_-10px_-10px_15px_rgba(0,0,0,.1),5px_8px_12px_rgba(52,43,23,.12)]" /></div><div className="flex-1"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Product</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{product.name}</h1></div><FavoriteButton targetType="product" targetId={product.id} saved={saved} onChange={setSaved} /></div><p className="mt-3 text-2xl font-extrabold text-[#e56e12]">{(product.priceCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}</p><p className="mt-4 text-sm leading-relaxed text-[#61776a]">{product.description || 'A local marketplace find from a verified ShopNear business.'}</p><Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link><div className="mt-3"><ListingMessageAction targetType="product" targetId={product.id} /></div></div></div></section><ListingReviews targetType="product" targetId={product.id} /><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related products" />{data.relatedProducts.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{data.relatedProducts.map((item) => <RemoteProductCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={ShoppingBag} title="No related products yet" detail="Browse more local products from Search." action="Browse products" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
 }
 
 function ServiceDetailPage() {
@@ -621,30 +651,11 @@ function ServiceDetailPage() {
   useEffect(() => { if (params?.id) { getServiceDetail(params.id).then(setData); } }, [params?.id]);
   if (!data) return <Shell active="search"><div className="px-5 py-7 md:px-10"><DetailBack /><LoadingState label="Loading service details…" /></div></Shell>;
   const { service, business, provider } = data;
-  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Service</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{service.name}</h1><p className="mt-1 text-sm text-[#78897e]">{service.location || 'Nearby service'} · {service.bookingReady ? 'Booking ready' : 'Contact provider'}</p></div><FavoriteButton targetType="service" targetId={service.id} saved={saved} onChange={setSaved} /></div><p className="mt-4 text-2xl font-extrabold text-[#087044]">{service.priceFromCents == null ? 'Request a quote' : `from ${(service.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</p><p className="mt-3 text-sm leading-relaxed text-[#61776a]">{service.description || 'A trusted local service on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{provider ? 'Verified provider' : 'Verified business'}</span>{service.serviceRadius != null && <span className="rounded-full bg-[#fff1df] px-3 py-1.5">Serves {service.serviceRadius} mi</span>}{service.estimatedDuration != null && <span className="rounded-full bg-[#edf0f4] px-3 py-1.5">{service.estimatedDuration} min</span>}</div>{business && <Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link>}</section><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related services" />{data.relatedServices.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.relatedServices.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No related services yet" detail="Browse more local services from Search." action="Browse services" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
+  return <Shell active="search"><div className="px-5 py-6 md:px-10 md:py-9"><DetailBack /><section className="mt-5 rounded-[26px] border border-[#e8e3d8] bg-white p-5 shadow-[0_8px_25px_rgba(16,72,50,.05)]"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#ee7117]">Service</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-[-.04em] text-[#164d38]">{service.name}</h1><p className="mt-1 text-sm text-[#78897e]">{service.location || 'Nearby service'} · {service.bookingReady ? 'Booking ready' : 'Contact provider'}</p></div><FavoriteButton targetType="service" targetId={service.id} saved={saved} onChange={setSaved} /></div><p className="mt-4 text-2xl font-extrabold text-[#087044]">{service.priceFromCents == null ? 'Request a quote' : `from ${(service.priceFromCents / 100).toLocaleString(undefined, { style: 'currency', currency: 'USD' })}`}</p><p className="mt-3 text-sm leading-relaxed text-[#61776a]">{service.description || 'A trusted local service on ShopNear.'}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-[#5e7968]"><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5">{provider ? 'Verified provider' : 'Verified business'}</span>{service.serviceRadius != null && <span className="rounded-full bg-[#fff1df] px-3 py-1.5">Serves {service.serviceRadius} mi</span>}{service.estimatedDuration != null && <span className="rounded-full bg-[#edf0f4] px-3 py-1.5">{service.estimatedDuration} min</span>}</div><div className="mt-4"><ListingMessageAction targetType="service" targetId={service.id} /></div>{business && <Link href={`/businesses/${business.id}`} className="focus-ring mt-5 inline-flex items-center gap-2 rounded-full bg-[#e4f3e7] px-4 py-2.5 text-xs font-bold text-[#087044]"><Store size={14} />{business.businessName}</Link>}</section><ListingReviews targetType="service" targetId={service.id} /><section className="mt-8"><SectionHeading eyebrow="Keep browsing" title="Related services" />{data.relatedServices.length ? <div className="grid gap-2.5 md:grid-cols-2">{data.relatedServices.map((item) => <RemoteServiceCard key={item.id} item={item} savedIds={new Set()} onSaved={() => undefined} />)}</div> : <EmptyState icon={BriefcaseBusiness} title="No related services yet" detail="Browse more local services from Search." action="Browse services" onAction={() => window.location.assign('/search')} />}</section></div></Shell>;
 }
 
 function MessagesPage() {
-  const [selected, setSelected] = useState<string | null>(null);
-  const threads = [{ id: 'green-basket', name: 'Green Basket Market', message: 'Your order is ready for pickup.', time: '9:42 AM', unread: true, tint: 'bg-[#dcefe2]' }, { id: 'makers-co', name: 'Makers & Co.', message: 'The cedar candles are back in stock.', time: 'Yesterday', unread: false, tint: 'bg-[#f5dfc5]' }];
-  return (
-    <Shell active="messages">
-      <div className="px-5 py-6 md:px-10 md:py-9">
-        <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Stay connected</p>
-        <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Messages</h1><button type="button" onClick={() => setSelected('new')} className="focus-ring flex h-10 w-10 items-center justify-center rounded-full bg-[#e4f3e7] text-[#087044]" aria-label="New message" data-testid="button-new-message"><Send size={17} /></button></div>
-        <p className="mt-2 text-sm text-[#7a897f]">Updates from the neighborhood businesses you love.</p>
-        <div className="mt-7 overflow-hidden rounded-[24px] border border-[#ebe5da] bg-white shadow-[0_8px_25px_rgba(16,72,50,.05)]">
-          {threads.map((thread, index) => <button type="button" key={thread.id} onClick={() => setSelected(thread.id)} className={`focus-ring flex w-full items-center gap-3 p-4 text-left transition hover:bg-[#f7faf5] ${index ? 'border-t border-[#f0ece4]' : ''}`} data-testid={`button-thread-${thread.id}`}>
-            <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-[17px] ${thread.tint} text-[#267052]`}><Store size={21} strokeWidth={1.7} /></span>
-            <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-3"><strong className="truncate text-sm text-[#174d37]">{thread.name}</strong><span className="shrink-0 text-[10px] text-[#9aa19b]">{thread.time}</span></span><span className="mt-1 block truncate text-xs text-[#7c8b80]">{thread.message}</span></span>
-            {thread.unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#f47716]" />}
-          </button>)}
-        </div>
-        <div className="mt-8"><EmptyState icon={MessageCircle} title="Looking for a conversation?" detail="Send a message from any business profile when you need a detail before you visit." action="Explore local businesses" onAction={() => setSelected('explore')} /></div>
-        {selected && <div className="fixed inset-x-5 bottom-24 z-30 rounded-[23px] bg-[#164d38] p-4 text-white shadow-xl md:bottom-32 md:left-1/2 md:w-[420px] md:-translate-x-1/2"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#b7e7c7]">Messages</p><p className="mt-1 text-sm font-semibold">{selected === 'new' ? 'Choose a business from Search to start a conversation.' : selected === 'explore' ? 'Explore local businesses to start a conversation.' : 'This is where your conversation will live.'}</p></div><button type="button" onClick={() => setSelected(null)} className="focus-ring rounded-full p-1 text-[#b7e7c7]" aria-label="Close message notice" data-testid="button-close-message-notice"><X size={16} /></button></div></div>}
-      </div>
-    </Shell>
-  );
+  return <Shell active="messages"><ConversationsPage /></Shell>;
 }
 
 function ProfileEditor({ user, onSaved, onCancel }: { user: AuthUser; onSaved: (user: AuthUser) => void; onCancel: () => void }) {
@@ -999,6 +1010,7 @@ function ProfilePage() {
   };
   const signOut = async () => {
     await logout();
+    queryClient.clear();
     setUser(null);
     notify('Signed out securely');
   };
@@ -1019,6 +1031,7 @@ function ProfilePage() {
          {user?.accountType === 'business' && <BusinessDashboardPanel />}
          {(user?.accountType === 'business' || user?.accountType === 'service_provider') && <ServiceManager />}
          {user?.accountType === 'business' && <ProductManager />}
+        {user?.accountType === 'admin' && <Link href="/admin/moderation" className="focus-ring mt-6 flex items-center justify-between rounded-[20px] border border-[#dce6dc] bg-white p-4 text-sm font-bold text-[#087044]" data-testid="link-admin-moderation"><span className="flex items-center gap-2"><ShieldCheck size={17} />Open moderation desk</span><ChevronRight size={16} /></Link>}
         <section className="mt-8"><SectionHeading title="Your activity" /><div className="grid grid-cols-3 gap-2.5"><div className="rounded-[18px] bg-[#fff1df] p-3.5"><p className="font-display text-2xl font-extrabold text-[#e56e12]">12</p><p className="mt-1 text-[10px] font-bold text-[#9b6b4a]">Places saved</p></div><div className="rounded-[18px] bg-[#e4f3e7] p-3.5"><p className="font-display text-2xl font-extrabold text-[#087044]">4</p><p className="mt-1 text-[10px] font-bold text-[#5f806e]">Visits planned</p></div><div className="rounded-[18px] bg-[#edf0f4] p-3.5"><p className="font-display text-2xl font-extrabold text-[#486274]">8</p><p className="mt-1 text-[10px] font-bold text-[#687e89]">Reviews shared</p></div></div></section>
         <section className="mt-8"><SectionHeading title="Settings" /><div className="overflow-hidden rounded-[22px] border border-[#ebe5da] bg-white shadow-[0_6px_20px_rgba(16,72,50,.04)]">{settings.map(({ label, detail, icon: Icon }, index) => <button type="button" key={label} onClick={() => label === 'Notifications' ? saveNotifications() : notify(`${label} selected`)} className={`focus-ring flex w-full items-center gap-3 p-4 text-left transition hover:bg-[#f8faf6] ${index ? 'border-t border-[#f0ece4]' : ''}`} data-testid={`button-setting-${label.toLowerCase().replaceAll(' ', '-')}`}><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf6ef] text-[#087044]"><Icon size={17} strokeWidth={1.8} /></span><span className="min-w-0 flex-1"><strong className="block text-xs font-bold text-[#174d37]">{label}</strong><span className="mt-1 block text-[11px] text-[#89948c]">{detail}</span></span><ChevronRight size={16} className="text-[#a3aaa3]" /></button>)}</div></section>
         <button type="button" onClick={() => user ? signOut() : setLocation('/auth')} className="focus-ring mt-7 flex w-full items-center justify-center gap-2 rounded-full border border-[#e8ded1] py-3 text-xs font-bold text-[#9a6b47]" data-testid="button-sign-out"><Clock3 size={15} /> {user ? 'Sign out' : 'Sign in'}</button>
@@ -1045,18 +1058,18 @@ function AuthPage() {
   };
   const submitCode = async (event: FormEvent) => {
     event.preventDefault(); setError(''); setBusy(true);
-    try { const result = await verifyOtp(phone, code); if (result.authenticated) setLocation('/profile'); else setStep('profile'); } catch (err) { setError(err instanceof Error ? err.message : 'That code is not valid'); } finally { setBusy(false); }
+    try { const result = await verifyOtp(phone, code); if (result.authenticated) { queryClient.clear(); setLocation('/profile'); } else setStep('profile'); } catch (err) { setError(err instanceof Error ? err.message : 'That code is not valid'); } finally { setBusy(false); }
   };
   const submitProfile = async (event: FormEvent) => {
     event.preventDefault(); setError(''); setBusy(true);
-    try { await registerAccount({ fullName, accountType, city: city || undefined, state: state || undefined }); clearAIConversation(); setLocation('/'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to create account'); } finally { setBusy(false); }
+    try { await registerAccount({ fullName, accountType, city: city || undefined, state: state || undefined }); queryClient.clear(); clearAIConversation(); setLocation('/'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to create account'); } finally { setBusy(false); }
   };
   const inputClass = "mt-2 w-full rounded-2xl border border-[#e5dfd3] bg-white px-4 py-3 text-sm text-[#174d37] outline-none focus:border-[#087044] focus:ring-2 focus:ring-[#d8efdf]";
   return <div className="min-h-[100dvh] bg-[#f5f1e9] px-5 py-7 md:px-10 md:py-10"><div className="mx-auto max-w-xl rounded-[30px] bg-[#fffdf9] p-6 shadow-[0_18px_50px_rgba(16,72,50,.10)] md:p-10"><div className="flex items-center justify-between"><Logo compact /><button type="button" onClick={() => setLocation('/')} className="focus-ring text-xs font-bold text-[#087044]">Back to ShopNear</button></div><p className="mt-10 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Secure phone access</p><h1 className="mt-2 font-display text-[32px] font-extrabold leading-tight tracking-[-.05em] text-[#164d38]">{step === 'phone' ? 'Welcome to your neighborhood.' : step === 'otp' ? 'Enter your code.' : 'Tell us about you.'}</h1><p className="mt-3 text-sm leading-relaxed text-[#77867c]">{step === 'phone' ? 'Use your phone number to sign in or create a ShopNear account.' : step === 'otp' ? `We sent a six-digit code to ${phone}.` : 'One quick step, then your ShopNear account is ready.'}</p>{developmentOtp && step === 'otp' && <div className="mt-5 rounded-2xl border border-[#f8d5b9] bg-[#fff1df] p-3 text-xs text-[#8c572f]">Development code: <strong className="tracking-[.2em]">{developmentOtp}</strong></div>}{error && <div className="mt-5 rounded-2xl bg-[#fff0ed] p-3 text-xs font-semibold text-[#b34b32]" role="alert">{error}</div>}{step === 'phone' && <form onSubmit={submitPhone} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Phone number<input required value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+234 801 234 5678" inputMode="tel" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Sending code…' : 'Send verification code'}</button></form>}{step === 'otp' && <form onSubmit={submitCode} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Six-digit code<input required minLength={6} maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))} className={`${inputClass} text-center text-xl tracking-[.35em]`} placeholder="123456" inputMode="numeric" /></label><button disabled={busy} className="focus-ring w-full rounded-full bg-[#087044] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Verifying…' : 'Verify phone'}</button><button type="button" onClick={() => { setStep('phone'); setDevelopmentOtp(null); }} className="focus-ring w-full text-xs font-bold text-[#087044]">Use a different number</button></form>}{step === 'profile' && <form onSubmit={submitProfile} className="mt-7 space-y-5"><label className="block text-xs font-bold text-[#4d715f]">Full name<input required minLength={2} value={fullName} onChange={(event) => setFullName(event.target.value)} className={inputClass} placeholder="Your name" /></label><fieldset><legend className="text-xs font-bold text-[#4d715f]">I’m joining as</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{([['customer', 'Customer'], ['business', 'Business'], ['service_provider', 'Service provider']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setAccountType(value)} className={`focus-ring rounded-2xl border px-3 py-3 text-xs font-bold ${accountType === value ? 'border-[#087044] bg-[#e4f3e7] text-[#087044]' : 'border-[#e5dfd3] bg-white text-[#718278]'}`}>{label}</button>)}</div></fieldset><div className="grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-[#4d715f]">City<input value={city} onChange={(event) => setCity(event.target.value)} className={inputClass} placeholder="Lagos" /></label><label className="block text-xs font-bold text-[#4d715f]">State<input value={state} onChange={(event) => setState(event.target.value)} className={inputClass} placeholder="Lagos" /></label></div><button disabled={busy} className="focus-ring w-full rounded-full bg-[#f47716] px-5 py-3.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Creating account…' : 'Finish account setup'}</button></form>}</div></div>;
 }
 
 function Router() {
-  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/auth" component={AuthPage} /><Route path="/businesses/:id" component={BusinessDetailPage} /><Route path="/products/:id" component={ProductDetailPage} /><Route path="/services/:id" component={ServiceDetailPage} /><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary resetKey={useLocation()[0]}><Switch><Route path="/auth" component={AuthPage} /><Route path="/businesses/:id" component={BusinessDetailPage} /><Route path="/products/:id" component={ProductDetailPage} /><Route path="/services/:id" component={ServiceDetailPage} /><Route path="/" component={HomePage} /><Route path="/search" component={SearchPage} /><Route path="/favorites" component={FavoritesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/notifications" component={() => <Shell active="profile"><NotificationsPage /></Shell>} /><Route path="/admin/moderation" component={() => <Shell active="profile"><AdminModerationPage /></Shell>} /><Route path="/profile" component={ProfilePage} /><Route component={HomePage} /></Switch></ErrorBoundary>;
 }
 
 function App() {

@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request } from "express";
 import { and, count, desc, eq, gte, ilike, or, asc, sql } from "drizzle-orm";
 import { z } from "zod";
+import { GetFavoritesQueryParams, GetFavoritesResponse } from "@workspace/api-zod";
 import { db } from "@workspace/db";
 import {
   businesses,
@@ -12,6 +13,7 @@ import {
   services,
 } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
+import { createNotification } from "../lib/engagement";
 import { requireAuth, requireRole } from "../lib/auth";
 import { getMapProvider, haversineDistanceKm, parseCoordinates, safePublicCoordinates } from "../lib/location";
 
@@ -473,7 +475,18 @@ router.get("/services/:id", async (req, res) => {
 });
 
 router.get("/favorites", requireAuth, async (req, res) => {
-  const rows = await db.select().from(favorites).where(eq(favorites.userId, req.user!.id)).orderBy(desc(favorites.createdAt));
+  const parsed = GetFavoritesQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid favorites list request" });
+    return;
+  }
+  const { page, limit } = parsed.data;
+  const [totalRow] = await db.select({ total: count() }).from(favorites).where(eq(favorites.userId, req.user!.id));
+  const rows = await db.select().from(favorites)
+    .where(eq(favorites.userId, req.user!.id))
+    .orderBy(desc(favorites.createdAt))
+    .limit(limit)
+    .offset((page - 1) * limit);
   const items = await Promise.all(rows.map(async (favorite) => {
     if (favorite.entityType === "business") {
       const [business] = await db.select().from(businesses).where(eq(businesses.id, favorite.entityId)).limit(1);
@@ -489,7 +502,14 @@ router.get("/favorites", requireAuth, async (req, res) => {
     }
     return null;
   }));
-  res.json({ favorites: items.filter(Boolean) });
+  const total = Number(totalRow?.total ?? 0);
+  res.json(GetFavoritesResponse.parse({
+    favorites: items.filter(Boolean),
+    page,
+    limit,
+    total,
+    hasMore: page * limit < total,
+  }));
 });
 
 router.post("/favorites", requireAuth, async (req, res) => {
@@ -515,6 +535,23 @@ router.post("/favorites", requireAuth, async (req, res) => {
   }
   if (favorite && targetType === "service") {
     await db.update(services).set({ favoriteCount: sql`${services.favoriteCount} + 1` }).where(eq(services.id, targetId));
+  }
+  if (favorite) {
+    let recipientId: string | null = null;
+    let listingName: string | null = null;
+    if (targetType === "business" && target.business) {
+      recipientId = target.business.ownerId;
+      listingName = target.business.businessName;
+    } else if (targetType === "product" && target.product) {
+      recipientId = target.product.ownerId;
+      listingName = target.product.name;
+    } else if (targetType === "service" && target.service) {
+      recipientId = target.service.ownerId;
+      listingName = target.service.name;
+    }
+    if (recipientId && listingName && recipientId !== req.user!.id) {
+      await createNotification(recipientId, "favorite", "Your listing was saved", `A customer saved ${listingName}.`, targetType, targetId);
+    }
   }
   await audit(req, favorite ? "favorite.created" : "favorite.exists", targetType, targetId);
   res.status(favorite ? 201 : 200).json({ favorite: favorite ?? values, targetType, targetId });

@@ -61,6 +61,8 @@ export const products = pgTable("products", {
   publishedAt: timestamp("published_at", { withTimezone: true }),
   viewCount: integer("view_count").notNull().default(0),
   favoriteCount: integer("favorite_count").notNull().default(0),
+  averageRating: text("average_rating").notNull().default("0"),
+  totalReviews: integer("total_reviews").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
@@ -97,6 +99,8 @@ export const services = pgTable("services", {
   publishedAt: timestamp("published_at", { withTimezone: true }),
   viewCount: integer("view_count").notNull().default(0),
   favoriteCount: integer("favorite_count").notNull().default(0),
+  averageRating: text("average_rating").notNull().default("0"),
+  totalReviews: integer("total_reviews").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({

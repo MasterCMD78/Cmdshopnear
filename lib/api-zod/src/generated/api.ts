@@ -3597,6 +3597,18 @@ export const GetServiceDetailResponse = zod.object({
 /**
  * @summary List the authenticated customer's favorites
  */
+export const getFavoritesQueryPageDefault = 1;
+
+export const getFavoritesQueryLimitDefault = 20;
+export const getFavoritesQueryLimitMax = 50;
+
+
+
+export const GetFavoritesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(getFavoritesQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(getFavoritesQueryLimitMax).default(getFavoritesQueryLimitDefault)
+})
+
 export const GetFavoritesResponse = zod.object({
   "favorites": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -3604,7 +3616,11 @@ export const GetFavoritesResponse = zod.object({
   "targetId": zod.string().uuid(),
   "createdAt": zod.coerce.date(),
   "item": zod.record(zod.string(), zod.unknown())
-}))
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
 })
 
 
@@ -4571,6 +4587,753 @@ export const RequestUploadUrlResponse = zod.object({
   "size": zod.number().int(),
   "contentType": zod.string()
 })
+})
+
+
+/**
+ * @summary Subscribe to authenticated live chat and notification updates
+ */
+export const SubscribeChatEventsResponse = zod.unknown()
+
+
+/**
+ * @summary List the current user's conversations with unread counts
+ */
+export const listChatConversationsQuerySearchMax = 120;
+
+export const listChatConversationsQueryPageDefault = 1;
+
+export const listChatConversationsQueryLimitDefault = 20;
+export const listChatConversationsQueryLimitMax = 50;
+
+
+
+export const ListChatConversationsQueryParams = zod.object({
+  "search": zod.coerce.string().max(listChatConversationsQuerySearchMax).optional(),
+  "page": zod.coerce.number().int().min(1).default(listChatConversationsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listChatConversationsQueryLimitMax).default(listChatConversationsQueryLimitDefault)
+})
+
+export const ListChatConversationsResponse = zod.object({
+  "conversations": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "otherUser": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable(),
+  "accountType": zod.enum(['customer', 'business', 'service_provider', 'admin'])
+}),
+  "contextType": zod.string().nullable(),
+  "contextId": zod.string().uuid().nullable(),
+  "lastMessage": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "body": zod.string(),
+  "messageType": zod.string(),
+  "senderId": zod.string().uuid(),
+  "createdAt": zod.coerce.date(),
+  "status": zod.enum(['sent', 'delivered', 'read'])
+}),zod.null()]),
+  "lastMessageAt": zod.coerce.date(),
+  "unreadCount": zod.number().int()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Start or reopen a customer conversation with a public business or provider listing
+ */
+export const CreateChatConversationBody = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service', 'service_provider']),
+  "targetId": zod.string().uuid()
+})
+
+export const CreateChatConversationResponse = zod.object({
+  "id": zod.string().uuid(),
+  "otherUser": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable(),
+  "accountType": zod.enum(['customer', 'business', 'service_provider', 'admin'])
+}),
+  "contextType": zod.string().nullable(),
+  "contextId": zod.string().uuid().nullable(),
+  "lastMessage": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "body": zod.string(),
+  "messageType": zod.string(),
+  "senderId": zod.string().uuid(),
+  "createdAt": zod.coerce.date(),
+  "status": zod.enum(['sent', 'delivered', 'read'])
+}),zod.null()]),
+  "lastMessageAt": zod.coerce.date(),
+  "unreadCount": zod.number().int()
+})
+
+
+/**
+ * @summary Get a conversation's messages and mark incoming messages read
+ */
+export const listChatMessagesQueryLimitDefault = 50;
+export const listChatMessagesQueryLimitMax = 100;
+
+
+
+export const ListChatMessagesQueryParams = zod.object({
+  "conversationId": zod.coerce.string().uuid(),
+  "before": zod.date().optional(),
+  "limit": zod.coerce.number().int().min(1).max(listChatMessagesQueryLimitMax).default(listChatMessagesQueryLimitDefault)
+})
+
+export const ListChatMessagesResponse = zod.object({
+  "messages": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "conversationId": zod.string().uuid(),
+  "senderId": zod.string().uuid(),
+  "messageType": zod.string(),
+  "body": zod.string(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['sent', 'delivered', 'read']),
+  "isMine": zod.boolean()
+})),
+  "hasMore": zod.boolean(),
+  "nextBefore": zod.coerce.date().nullable(),
+  "typing": zod.boolean()
+})
+
+
+/**
+ * @summary Send a plain-text message
+ */
+export const SendChatMessageParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const sendChatMessageBodyBodyMax = 4000;
+
+
+
+export const SendChatMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendChatMessageBodyBodyMax)
+})
+
+export const SendChatMessageResponse = zod.object({
+  "id": zod.string().uuid(),
+  "conversationId": zod.string().uuid(),
+  "senderId": zod.string().uuid(),
+  "messageType": zod.string(),
+  "body": zod.string(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['sent', 'delivered', 'read']),
+  "isMine": zod.boolean()
+})
+
+
+/**
+ * @summary Mark a conversation's incoming messages as read
+ */
+export const MarkConversationReadParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const MarkConversationReadResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Publish a short-lived typing state to the other participant
+ */
+export const UpdateChatTypingParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const UpdateChatTypingBody = zod.object({
+  "typing": zod.boolean()
+})
+
+export const UpdateChatTypingResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Soft-delete a message sent by the current user
+ */
+export const DeleteChatMessageParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteChatMessageResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Report a conversation for moderation
+ */
+export const ReportChatConversationParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const reportChatConversationBodyReasonMin = 2;
+export const reportChatConversationBodyReasonMax = 80;
+
+export const reportChatConversationBodyDetailsMax = 1000;
+
+
+
+export const ReportChatConversationBody = zod.object({
+  "reason": zod.string().min(reportChatConversationBodyReasonMin).max(reportChatConversationBodyReasonMax),
+  "details": zod.string().max(reportChatConversationBodyDetailsMax).nullish()
+})
+
+export const ReportChatConversationResponse = zod.object({
+  "id": zod.string().uuid(),
+  "reporterId": zod.string().uuid(),
+  "entityType": zod.enum(['conversation', 'review']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string(),
+  "details": zod.string().nullable(),
+  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Block another user from messaging the current user
+ */
+export const BlockChatUserParams = zod.object({
+  "userId": zod.coerce.string().uuid()
+})
+
+export const BlockChatUserResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Remove a user block
+ */
+export const UnblockChatUserParams = zod.object({
+  "userId": zod.coerce.string().uuid()
+})
+
+export const UnblockChatUserResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary List the current user's notification history
+ */
+export const listNotificationsQueryPageDefault = 1;
+
+export const listNotificationsQueryLimitDefault = 20;
+export const listNotificationsQueryLimitMax = 50;
+
+export const listNotificationsQueryUnreadOnlyDefault = false;
+
+export const ListNotificationsQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listNotificationsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listNotificationsQueryLimitMax).default(listNotificationsQueryLimitDefault),
+  "unreadOnly": zod.coerce.boolean().default(listNotificationsQueryUnreadOnlyDefault)
+})
+
+export const ListNotificationsResponse = zod.object({
+  "notifications": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['message', 'favorite', 'verification', 'review', 'rating', 'announcement', 'account_activity']),
+  "title": zod.string(),
+  "message": zod.string(),
+  "entityType": zod.string().nullable(),
+  "entityId": zod.string().uuid().nullable(),
+  "readAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "unreadCount": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Count unread notifications
+ */
+export const GetNotificationUnreadCountResponse = zod.object({
+  "unreadCount": zod.number().int()
+})
+
+
+/**
+ * @summary Mark one notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.string().uuid(),
+  "type": zod.enum(['message', 'favorite', 'verification', 'review', 'rating', 'announcement', 'account_activity']),
+  "title": zod.string(),
+  "message": zod.string(),
+  "entityType": zod.string().nullable(),
+  "entityId": zod.string().uuid().nullable(),
+  "readAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "updated": zod.number().int()
+})
+
+
+/**
+ * @summary Read per-category notification preferences
+ */
+export const GetNotificationPreferencesResponse = zod.object({
+  "messages": zod.boolean(),
+  "favorites": zod.boolean(),
+  "verification": zod.boolean(),
+  "reviews": zod.boolean(),
+  "ratings": zod.boolean(),
+  "announcements": zod.boolean(),
+  "accountActivity": zod.boolean()
+})
+
+
+/**
+ * @summary Update per-category notification preferences
+ */
+export const UpdateNotificationPreferencesBody = zod.object({
+  "messages": zod.boolean().optional(),
+  "favorites": zod.boolean().optional(),
+  "verification": zod.boolean().optional(),
+  "reviews": zod.boolean().optional(),
+  "ratings": zod.boolean().optional(),
+  "announcements": zod.boolean().optional(),
+  "accountActivity": zod.boolean().optional()
+})
+
+export const UpdateNotificationPreferencesResponse = zod.object({
+  "messages": zod.boolean(),
+  "favorites": zod.boolean(),
+  "verification": zod.boolean(),
+  "reviews": zod.boolean(),
+  "ratings": zod.boolean(),
+  "announcements": zod.boolean(),
+  "accountActivity": zod.boolean()
+})
+
+
+/**
+ * @summary Send an in-app announcement to active users
+ */
+export const createNotificationAnnouncementBodyTitleMin = 2;
+export const createNotificationAnnouncementBodyTitleMax = 120;
+
+export const createNotificationAnnouncementBodyMessageMin = 2;
+export const createNotificationAnnouncementBodyMessageMax = 1000;
+
+
+
+export const CreateNotificationAnnouncementBody = zod.object({
+  "title": zod.string().min(createNotificationAnnouncementBodyTitleMin).max(createNotificationAnnouncementBodyTitleMax),
+  "message": zod.string().min(createNotificationAnnouncementBodyMessageMin).max(createNotificationAnnouncementBodyMessageMax),
+  "entityType": zod.string().nullish(),
+  "entityId": zod.string().uuid().nullish()
+})
+
+export const CreateNotificationAnnouncementResponse = zod.object({
+  "created": zod.number().int()
+})
+
+
+/**
+ * @summary Get average, count, and 1–5 star distribution
+ */
+export const GetRatingSummaryParams = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.coerce.string().uuid()
+})
+
+export const GetRatingSummaryResponse = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "averageRating": zod.number(),
+  "ratingCount": zod.number().int(),
+  "distribution": zod.object({
+  "1": zod.number().int(),
+  "2": zod.number().int(),
+  "3": zod.number().int(),
+  "4": zod.number().int(),
+  "5": zod.number().int()
+})
+})
+
+
+/**
+ * @summary List visible reviews for a business, product, or service
+ */
+export const listReviewsQueryPageDefault = 1;
+
+export const listReviewsQueryLimitDefault = 20;
+export const listReviewsQueryLimitMax = 50;
+
+
+
+export const ListReviewsQueryParams = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.coerce.string().uuid(),
+  "page": zod.coerce.number().int().min(1).default(listReviewsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listReviewsQueryLimitMax).default(listReviewsQueryLimitDefault)
+})
+
+export const listReviewsResponseReviewsItemRatingMax = 5;
+
+
+
+export const ListReviewsResponse = zod.object({
+  "reviews": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(listReviewsResponseReviewsItemRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean(),
+  "summary": zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "averageRating": zod.number(),
+  "ratingCount": zod.number().int(),
+  "distribution": zod.object({
+  "1": zod.number().int(),
+  "2": zod.number().int(),
+  "3": zod.number().int(),
+  "4": zod.number().int(),
+  "5": zod.number().int()
+})
+})
+})
+
+
+/**
+ * @summary Create a customer review with a 1–5 star rating
+ */
+export const createReviewBodyRatingMax = 5;
+
+export const createReviewBodyCommentMax = 2000;
+
+
+
+export const CreateReviewBody = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(createReviewBodyRatingMax),
+  "comment": zod.string().max(createReviewBodyCommentMax).nullable()
+})
+
+export const createReviewResponseRatingMax = 5;
+
+
+
+export const CreateReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(createReviewResponseRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get the current customer's review for a listing, if any
+ */
+export const GetMyReviewQueryParams = zod.object({
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.coerce.string().uuid()
+})
+
+export const getMyReviewResponseReviewOneRatingMax = 5;
+
+
+
+export const GetMyReviewResponse = zod.object({
+  "review": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(getMyReviewResponseReviewOneRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Edit the current customer's review
+ */
+export const UpdateReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateReviewBodyRatingMax = 5;
+
+export const updateReviewBodyCommentMax = 2000;
+
+
+
+export const UpdateReviewBody = zod.object({
+  "rating": zod.number().int().min(1).max(updateReviewBodyRatingMax),
+  "comment": zod.string().max(updateReviewBodyCommentMax).nullable()
+})
+
+export const updateReviewResponseRatingMax = 5;
+
+
+
+export const UpdateReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(updateReviewResponseRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete the current customer's review
+ */
+export const DeleteReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteReviewResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Report a review for moderation
+ */
+export const ReportReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const reportReviewBodyReasonMin = 2;
+export const reportReviewBodyReasonMax = 80;
+
+export const reportReviewBodyDetailsMax = 1000;
+
+
+
+export const ReportReviewBody = zod.object({
+  "reason": zod.string().min(reportReviewBodyReasonMin).max(reportReviewBodyReasonMax),
+  "details": zod.string().max(reportReviewBodyDetailsMax).nullish()
+})
+
+export const ReportReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "reporterId": zod.string().uuid(),
+  "entityType": zod.enum(['conversation', 'review']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string(),
+  "details": zod.string().nullable(),
+  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List reviews for moderation
+ */
+export const listAdminReviewsQueryPageDefault = 1;
+
+export const listAdminReviewsQueryLimitDefault = 20;
+export const listAdminReviewsQueryLimitMax = 50;
+
+
+
+export const ListAdminReviewsQueryParams = zod.object({
+  "status": zod.enum(['visible', 'hidden']).optional(),
+  "page": zod.coerce.number().int().min(1).default(listAdminReviewsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listAdminReviewsQueryLimitMax).default(listAdminReviewsQueryLimitDefault)
+})
+
+export const listAdminReviewsResponseReviewsItemRatingMax = 5;
+
+
+
+export const ListAdminReviewsResponse = zod.object({
+  "reviews": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(listAdminReviewsResponseReviewsItemRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Hide or restore a review
+ */
+export const ModerateReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const ModerateReviewBody = zod.object({
+  "moderationStatus": zod.enum(['visible', 'hidden'])
+})
+
+export const moderateReviewResponseRatingMax = 5;
+
+
+
+export const ModerateReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "targetType": zod.enum(['business', 'product', 'service']),
+  "targetId": zod.string().uuid(),
+  "rating": zod.number().int().min(1).max(moderateReviewResponseRatingMax),
+  "comment": zod.string().nullable(),
+  "verifiedCustomer": zod.boolean(),
+  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "author": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable()
+}),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List conversation and review reports
+ */
+export const listContentReportsQueryPageDefault = 1;
+
+export const listContentReportsQueryLimitDefault = 20;
+export const listContentReportsQueryLimitMax = 50;
+
+
+
+export const ListContentReportsQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listContentReportsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listContentReportsQueryLimitMax).default(listContentReportsQueryLimitDefault)
+})
+
+export const ListContentReportsResponse = zod.object({
+  "reports": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "reporterId": zod.string().uuid(),
+  "entityType": zod.enum(['conversation', 'review']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string(),
+  "details": zod.string().nullable(),
+  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Resolve or dismiss a content report
+ */
+export const UpdateContentReportParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const UpdateContentReportBody = zod.object({
+  "status": zod.enum(['resolved', 'dismissed'])
+})
+
+export const UpdateContentReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "reporterId": zod.string().uuid(),
+  "entityType": zod.enum(['conversation', 'review']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string(),
+  "details": zod.string().nullable(),
+  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
 })
 
 

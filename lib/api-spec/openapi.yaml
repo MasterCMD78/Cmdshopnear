@@ -26,6 +26,12 @@ tags:
     description: Administrator-only settings and category management
   - name: storage
     description: Authenticated media upload preparation
+  - name: chat
+    description: Customer and listing-owner conversations
+  - name: notifications
+    description: In-app notification history and preferences
+  - name: reviews
+    description: Customer reviews, ratings, and moderation
 paths:
   /healthz:
     get:
@@ -708,6 +714,15 @@ paths:
       operationId: getFavorites
       tags: [marketplace]
       summary: List the authenticated customer's favorites
+      security:
+        - cookieSession: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
         "200":
           description: Favorites
@@ -721,6 +736,8 @@ paths:
       operationId: addFavorite
       tags: [marketplace]
       summary: Save a business, product, or service
+      security:
+        - cookieSession: []
       requestBody:
         required: true
         content:
@@ -743,6 +760,8 @@ paths:
       operationId: removeFavorite
       tags: [marketplace]
       summary: Remove a saved marketplace item
+      security:
+        - cookieSession: []
       parameters:
         - name: targetType
           in: path
@@ -998,6 +1017,571 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UploadResponse"
+  /chat/events:
+    get:
+      operationId: subscribeChatEvents
+      tags: [chat]
+      summary: Subscribe to authenticated live chat and notification updates
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Server-sent event stream; reconnects rehydrate through the REST endpoints
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401":
+          description: Authentication required
+  /chat/conversations:
+    get:
+      operationId: listChatConversations
+      tags: [chat]
+      summary: List the current user's conversations with unread counts
+      security:
+        - cookieSession: []
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Paginated conversations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatConversationPage" }
+        "401":
+          description: Authentication required
+    post:
+      operationId: createChatConversation
+      tags: [chat]
+      summary: Start or reopen a customer conversation with a public business or provider listing
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConversationInput" }
+      responses:
+        "200":
+          description: Existing conversation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatConversation" }
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatConversation" }
+        "400":
+          description: Invalid request or role
+        "404":
+          description: Public listing not found
+  /chat/messages:
+    get:
+      operationId: listChatMessages
+      tags: [chat]
+      summary: Get a conversation's messages and mark incoming messages read
+      security:
+        - cookieSession: []
+      parameters:
+        - name: conversationId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: before
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: Conversation message page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatMessagePage" }
+        "403":
+          description: Not a conversation participant
+        "404":
+          description: Conversation not found
+  /chat/conversations/{id}/messages:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a plain-text message
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatMessageInput" }
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatMessage" }
+        "403":
+          description: Not a participant or the other user is blocked
+        "429":
+          description: Message rate limit exceeded
+  /chat/conversations/{id}/read:
+    put:
+      operationId: markConversationRead
+      tags: [chat]
+      summary: Mark a conversation's incoming messages as read
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Read state updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+  /chat/conversations/{id}/typing:
+    put:
+      operationId: updateChatTyping
+      tags: [chat]
+      summary: Publish a short-lived typing state to the other participant
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TypingInput" }
+      responses:
+        "200":
+          description: Typing state accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+  /chat/messages/{id}:
+    delete:
+      operationId: deleteChatMessage
+      tags: [chat]
+      summary: Soft-delete a message sent by the current user
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Message soft-deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "403":
+          description: Only the sender can delete this message
+  /chat/conversations/{id}/report:
+    post:
+      operationId: reportChatConversation
+      tags: [chat]
+      summary: Report a conversation for moderation
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReportInput" }
+      responses:
+        "201":
+          description: Report recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReport" }
+  /chat/blocks/{userId}:
+    post:
+      operationId: blockChatUser
+      tags: [chat]
+      summary: Block another user from messaging the current user
+      security:
+        - cookieSession: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: User blocked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+    delete:
+      operationId: unblockChatUser
+      tags: [chat]
+      summary: Remove a user block
+      security:
+        - cookieSession: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: User unblocked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List the current user's notification history
+      security:
+        - cookieSession: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - name: unreadOnly
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Paginated notification history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPage" }
+  /notifications/unread-count:
+    get:
+      operationId: getNotificationUnreadCount
+      tags: [notifications]
+      summary: Count unread notifications
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Unread notification count
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UnreadCount" }
+  /notifications/{id}/read:
+    put:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark one notification as read
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Read state updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notification" }
+  /notifications/read-all:
+    put:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Number of notifications updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationReadCount" }
+  /notifications/preferences:
+    get:
+      operationId: getNotificationPreferences
+      tags: [notifications]
+      summary: Read per-category notification preferences
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Current preferences
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+    put:
+      operationId: updateNotificationPreferences
+      tags: [notifications]
+      summary: Update per-category notification preferences
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotificationPreferencesInput" }
+      responses:
+        "200":
+          description: Updated preferences
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+  /admin/notifications/announcements:
+    post:
+      operationId: createNotificationAnnouncement
+      tags: [notifications, admin]
+      summary: Send an in-app announcement to active users
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AnnouncementInput" }
+      responses:
+        "201":
+          description: Announcement delivery summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnnouncementResult" }
+        "403":
+          description: Administrator role required
+  /ratings/{targetType}/{targetId}:
+    get:
+      operationId: getRatingSummary
+      tags: [reviews]
+      summary: Get average, count, and 1–5 star distribution
+      parameters:
+        - name: targetType
+          in: path
+          required: true
+          schema: { type: string, enum: [business, product, service] }
+        - name: targetId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Aggregated public rating
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RatingSummary" }
+  /reviews:
+    get:
+      operationId: listReviews
+      tags: [reviews]
+      summary: List visible reviews for a business, product, or service
+      parameters:
+        - name: targetType
+          in: query
+          required: true
+          schema: { type: string, enum: [business, product, service] }
+        - name: targetId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Paginated reviews
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewPage" }
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Create a customer review with a 1–5 star rating
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewInput" }
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        "409":
+          description: The customer already reviewed this listing; update the existing review
+  /reviews/mine:
+    get:
+      operationId: getMyReview
+      tags: [reviews]
+      summary: Get the current customer's review for a listing, if any
+      security:
+        - cookieSession: []
+      parameters:
+        - name: targetType
+          in: query
+          required: true
+          schema: { type: string, enum: [business, product, service] }
+        - name: targetId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Existing review or null
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyReview" }
+  /reviews/{id}:
+    put:
+      operationId: updateReview
+      tags: [reviews]
+      summary: Edit the current customer's review
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewUpdate" }
+      responses:
+        "200":
+          description: Review updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        "403":
+          description: Review ownership required
+    delete:
+      operationId: deleteReview
+      tags: [reviews]
+      summary: Delete the current customer's review
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Review deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+  /reviews/{id}/report:
+    post:
+      operationId: reportReview
+      tags: [reviews]
+      summary: Report a review for moderation
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReportInput" }
+      responses:
+        "201":
+          description: Report recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReport" }
+  /admin/reviews:
+    get:
+      operationId: listAdminReviews
+      tags: [reviews, admin]
+      summary: List reviews for moderation
+      security:
+        - cookieSession: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [visible, hidden] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Reviews pending moderation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewModerationPage" }
+  /admin/reviews/{id}/moderation:
+    patch:
+      operationId: moderateReview
+      tags: [reviews, admin]
+      summary: Hide or restore a review
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewModerationInput" }
+      responses:
+        "200":
+          description: Moderation state updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+  /admin/content-reports:
+    get:
+      operationId: listContentReports
+      tags: [reviews, admin]
+      summary: List conversation and review reports
+      security:
+        - cookieSession: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Paginated moderation reports
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReportPage" }
+  /admin/content-reports/{id}:
+    patch:
+      operationId: updateContentReport
+      tags: [reviews, admin]
+      summary: Resolve or dismiss a content report
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReportStatusInput" }
+      responses:
+        "200":
+          description: Report status updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReport" }
 components:
   parameters:
     Id:
@@ -1510,7 +2094,11 @@ components:
         favorites:
           type: array
           items: { $ref: "#/components/schemas/FavoriteItem" }
-      required: [favorites]
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [favorites, page, limit, total, hasMore]
     BusinessDetail:
       type: object
       properties:
@@ -1736,4 +2324,262 @@ components:
           type: array
           maxItems: 12
           items: { type: string, minLength: 1, maxLength: 80 }
+    ChatParticipantSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        profilePhoto: { type: ["string", "null"] }
+        accountType: { type: string, enum: [customer, business, service_provider, admin] }
+      required: [id, fullName, profilePhoto, accountType]
+    ChatLastMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        body: { type: string }
+        messageType: { type: string }
+        senderId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        status: { type: string, enum: [sent, delivered, read] }
+      required: [id, body, messageType, senderId, createdAt, status]
+    ChatConversation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        otherUser: { $ref: "#/components/schemas/ChatParticipantSummary" }
+        contextType: { type: ["string", "null"] }
+        contextId: { type: ["string", "null"], format: uuid }
+        lastMessage: { anyOf: [{ $ref: "#/components/schemas/ChatLastMessage" }, { type: "null" }] }
+        lastMessageAt: { type: string, format: date-time }
+        unreadCount: { type: integer }
+      required: [id, otherUser, contextType, contextId, lastMessage, lastMessageAt, unreadCount]
+    ChatConversationPage:
+      type: object
+      properties:
+        conversations: { type: array, items: { $ref: "#/components/schemas/ChatConversation" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [conversations, page, limit, total, hasMore]
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conversationId: { type: string, format: uuid }
+        senderId: { type: string, format: uuid }
+        messageType: { type: string }
+        body: { type: string }
+        metadata: { type: ["object", "null"], additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+        deletedAt: { type: ["string", "null"], format: date-time }
+        status: { type: string, enum: [sent, delivered, read] }
+        isMine: { type: boolean }
+      required: [id, conversationId, senderId, messageType, body, metadata, createdAt, deletedAt, status, isMine]
+    ChatMessagePage:
+      type: object
+      properties:
+        messages: { type: array, items: { $ref: "#/components/schemas/ChatMessage" } }
+        hasMore: { type: boolean }
+        nextBefore: { type: ["string", "null"], format: date-time }
+        typing: { type: boolean }
+      required: [messages, hasMore, nextBefore, typing]
+    ConversationInput:
+      type: object
+      properties:
+        targetType: { type: string, enum: [business, product, service, service_provider] }
+        targetId: { type: string, format: uuid }
+      required: [targetType, targetId]
+    ChatMessageInput:
+      type: object
+      properties:
+        body: { type: string, minLength: 1, maxLength: 4000 }
+      required: [body]
+    TypingInput:
+      type: object
+      properties:
+        typing: { type: boolean }
+      required: [typing]
+    ReportInput:
+      type: object
+      properties:
+        reason: { type: string, minLength: 2, maxLength: 80 }
+        details: { type: ["string", "null"], maxLength: 1000 }
+      required: [reason]
+    ContentReport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        reporterId: { type: string, format: uuid }
+        entityType: { type: string, enum: [conversation, review] }
+        entityId: { type: string, format: uuid }
+        reason: { type: string }
+        details: { type: ["string", "null"] }
+        status: { type: string, enum: [open, resolved, dismissed] }
+        reviewedById: { type: ["string", "null"], format: uuid }
+        reviewedAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+      required: [id, reporterId, entityType, entityId, reason, details, status, reviewedById, reviewedAt, createdAt]
+    ContentReportPage:
+      type: object
+      properties:
+        reports: { type: array, items: { $ref: "#/components/schemas/ContentReport" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [reports, page, limit, total, hasMore]
+    ReportStatusInput:
+      type: object
+      properties:
+        status: { type: string, enum: [resolved, dismissed] }
+      required: [status]
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [message, favorite, verification, review, rating, announcement, account_activity] }
+        title: { type: string }
+        message: { type: string }
+        entityType: { type: ["string", "null"] }
+        entityId: { type: ["string", "null"], format: uuid }
+        readAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+      required: [id, type, title, message, entityType, entityId, readAt, createdAt]
+    NotificationPage:
+      type: object
+      properties:
+        notifications: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        unreadCount: { type: integer }
+        hasMore: { type: boolean }
+      required: [notifications, page, limit, total, unreadCount, hasMore]
+    UnreadCount:
+      type: object
+      properties:
+        unreadCount: { type: integer }
+      required: [unreadCount]
+    NotificationReadCount:
+      type: object
+      properties:
+        updated: { type: integer }
+      required: [updated]
+    NotificationPreferences:
+      type: object
+      properties:
+        messages: { type: boolean }
+        favorites: { type: boolean }
+        verification: { type: boolean }
+        reviews: { type: boolean }
+        ratings: { type: boolean }
+        announcements: { type: boolean }
+        accountActivity: { type: boolean }
+      required: [messages, favorites, verification, reviews, ratings, announcements, accountActivity]
+    NotificationPreferencesInput:
+      type: object
+      properties:
+        messages: { type: boolean }
+        favorites: { type: boolean }
+        verification: { type: boolean }
+        reviews: { type: boolean }
+        ratings: { type: boolean }
+        announcements: { type: boolean }
+        accountActivity: { type: boolean }
+    AnnouncementInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 2, maxLength: 120 }
+        message: { type: string, minLength: 2, maxLength: 1000 }
+        entityType: { type: ["string", "null"] }
+        entityId: { type: ["string", "null"], format: uuid }
+      required: [title, message]
+    AnnouncementResult:
+      type: object
+      properties:
+        created: { type: integer }
+      required: [created]
+    RatingDistribution:
+      type: object
+      properties:
+        "1": { type: integer }
+        "2": { type: integer }
+        "3": { type: integer }
+        "4": { type: integer }
+        "5": { type: integer }
+      required: ["1", "2", "3", "4", "5"]
+    RatingSummary:
+      type: object
+      properties:
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+        averageRating: { type: number }
+        ratingCount: { type: integer }
+        distribution: { $ref: "#/components/schemas/RatingDistribution" }
+      required: [targetType, targetId, averageRating, ratingCount, distribution]
+    ReviewInput:
+      type: object
+      properties:
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: ["string", "null"], maxLength: 2000 }
+      required: [targetType, targetId, rating, comment]
+    ReviewUpdate:
+      type: object
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: ["string", "null"], maxLength: 2000 }
+      required: [rating, comment]
+    ReviewAuthor:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        profilePhoto: { type: ["string", "null"] }
+      required: [id, fullName, profilePhoto]
+    Review:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        targetType: { type: string, enum: [business, product, service] }
+        targetId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: ["string", "null"] }
+        verifiedCustomer: { type: boolean }
+        moderationStatus: { type: string, enum: [visible, hidden] }
+        author: { $ref: "#/components/schemas/ReviewAuthor" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, targetType, targetId, rating, comment, verifiedCustomer, moderationStatus, author, createdAt, updatedAt]
+    ReviewPage:
+      type: object
+      properties:
+        reviews: { type: array, items: { $ref: "#/components/schemas/Review" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+        summary: { $ref: "#/components/schemas/RatingSummary" }
+      required: [reviews, page, limit, total, hasMore, summary]
+    ReviewModerationPage:
+      type: object
+      properties:
+        reviews: { type: array, items: { $ref: "#/components/schemas/Review" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [reviews, page, limit, total, hasMore]
+    MyReview:
+      type: object
+      properties:
+        review: { anyOf: [{ $ref: "#/components/schemas/Review" }, { type: "null" }] }
+      required: [review]
+    ReviewModerationInput:
+      type: object
+      properties:
+        moderationStatus: { type: string, enum: [visible, hidden] }
+      required: [moderationStatus]
 

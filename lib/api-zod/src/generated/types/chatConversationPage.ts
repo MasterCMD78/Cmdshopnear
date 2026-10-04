@@ -5,10 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { FavoriteItem } from './favoriteItem';
+import type { ChatConversation } from './chatConversation';
 
-export interface Favorites {
-  favorites: FavoriteItem[];
+export interface ChatConversationPage {
+  conversations: ChatConversation[];
   page: number;
   limit: number;
   total: number;
