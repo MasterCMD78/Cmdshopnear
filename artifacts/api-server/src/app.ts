@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { analyticsTracking } from "./lib/analytics";
 
 const app: Express = express();
 
@@ -30,6 +31,7 @@ app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(analyticsTracking);
 
 app.use("/api", router);
 

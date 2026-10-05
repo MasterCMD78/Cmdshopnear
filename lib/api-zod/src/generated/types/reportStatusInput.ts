@@ -9,4 +9,11 @@ import type { ReportStatusInputStatus } from './reportStatusInputStatus';
 
 export interface ReportStatusInput {
   status: ReportStatusInputStatus;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  adminNote?: string | null;
+  /** @nullable */
+  assignedToId?: string | null;
 }

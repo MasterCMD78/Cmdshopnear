@@ -9,6 +9,7 @@ import aiRouter from "./ai";
 import chatRouter from "./chat";
 import notificationRouter from "./notifications";
 import reviewsRouter from "./reviews";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(aiRouter);
 router.use(chatRouter);
 router.use(notificationRouter);
 router.use(reviewsRouter);
+router.use(adminRouter);
 
 export default router;

@@ -10,6 +10,8 @@ export type ReportStatusInputStatus = typeof ReportStatusInputStatus[keyof typeo
 
 
 export const ReportStatusInputStatus = {
+  open: 'open',
+  investigating: 'investigating',
   resolved: 'resolved',
   dismissed: 'dismissed',
 } as const;

@@ -12,4 +12,5 @@ export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof 
 export const ReviewModerationStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;

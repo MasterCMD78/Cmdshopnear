@@ -73,6 +73,8 @@ export const contentReports = pgTable("content_reports", {
   entityId: uuid("entity_id").notNull(),
   reason: text("reason").notNull(),
   details: text("details"),
+  adminNote: text("admin_note"),
+  assignedToId: uuid("assigned_to_id").references(() => users.id, { onDelete: "set null" }),
   status: text("status").notNull().default("open"),
   reviewedById: uuid("reviewed_by_id").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),

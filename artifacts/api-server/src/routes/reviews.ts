@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, sql } from "drizzle-orm";
+import { z } from "zod/v4";
 import {
   CreateReviewBody,
   CreateReviewResponse,
@@ -31,9 +32,12 @@ import {
 import { db } from "@workspace/db";
 import {
   businesses,
+  chatMessages,
+  chatParticipants,
   contentReports,
   products,
   reviews,
+  adminRoleAssignments,
   serviceProviders,
   services,
   users,
@@ -41,6 +45,7 @@ import {
 import { audit } from "../lib/audit";
 import { createNotification } from "../lib/engagement";
 import { requireAuth, requireRole } from "../lib/auth";
+import { requirePermission } from "../lib/admin-permissions";
 import { consumeRateLimit } from "../lib/rate-limit";
 
 const router: IRouter = Router();
@@ -352,7 +357,72 @@ router.post("/reviews/:id/report", requireAuth, async (req, res): Promise<void> 
   res.status(201).json(ReportReviewResponse.parse(report));
 });
 
-router.get("/admin/reviews", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/reports", requireAuth, async (req, res): Promise<void> => {
+  const parsed = z.object({
+    entityType: z.enum(["business", "service_provider", "product", "service", "review", "chat_message"]),
+    entityId: z.string().uuid(),
+    reason: z.string().trim().min(2).max(80),
+    details: z.string().trim().max(1000).nullable().optional(),
+  }).safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid report" });
+    return;
+  }
+  if (!consumeRateLimit(`content-report:${req.user!.id}`, 5, 60 * 60_000)) {
+    res.status(429).json({ error: "Report rate limit exceeded" });
+    return;
+  }
+  let ownerId: string | null = null;
+  const { entityType, entityId } = parsed.data;
+  if (entityType === "business") {
+    const [target] = await db.select({ ownerId: businesses.ownerId }).from(businesses).where(eq(businesses.id, entityId)).limit(1);
+    ownerId = target?.ownerId ?? null;
+  } else if (entityType === "service_provider") {
+    const [target] = await db.select({ ownerId: serviceProviders.ownerId }).from(serviceProviders).where(eq(serviceProviders.id, entityId)).limit(1);
+    ownerId = target?.ownerId ?? null;
+  } else if (entityType === "product") {
+    const [target] = await db.select({ ownerId: products.ownerId }).from(products).where(eq(products.id, entityId)).limit(1);
+    ownerId = target?.ownerId ?? null;
+  } else if (entityType === "service") {
+    const [target] = await db.select({ ownerId: services.ownerId }).from(services).where(eq(services.id, entityId)).limit(1);
+    ownerId = target?.ownerId ?? null;
+  } else if (entityType === "review") {
+    const [target] = await db.select({ ownerId: reviews.userId }).from(reviews).where(eq(reviews.id, entityId)).limit(1);
+    ownerId = target?.ownerId ?? null;
+  } else {
+    const [target] = await db.select({
+      senderId: chatMessages.senderId,
+      conversationId: chatMessages.conversationId,
+    }).from(chatMessages).where(eq(chatMessages.id, entityId)).limit(1);
+    if (target && target.senderId !== req.user!.id) {
+      const [participant] = await db.select({ userId: chatParticipants.userId }).from(chatParticipants)
+        .where(and(
+          eq(chatParticipants.conversationId, target.conversationId),
+          eq(chatParticipants.userId, req.user!.id),
+        )).limit(1);
+      if (participant) ownerId = target.senderId;
+    }
+  }
+  if (!ownerId) {
+    res.status(404).json({ error: "Report target not found or not available to this account" });
+    return;
+  }
+  if (ownerId === req.user!.id) {
+    res.status(403).json({ error: "You cannot report your own content" });
+    return;
+  }
+  const [report] = await db.insert(contentReports).values({
+    reporterId: req.user!.id,
+    entityType,
+    entityId,
+    reason: parsed.data.reason,
+    details: parsed.data.details?.trim() || null,
+  }).returning();
+  await audit(req, "content.reported", entityType, entityId, { reportId: report!.id });
+  res.status(201).json(report);
+});
+
+router.get("/admin/reviews", requireAuth, requirePermission("moderation.manage"), async (req, res): Promise<void> => {
   const parsed = ListAdminReviewsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid moderation list request" });
@@ -381,7 +451,7 @@ router.get("/admin/reviews", requireAuth, requireRole("admin"), async (req, res)
   }));
 });
 
-router.patch("/admin/reviews/:id/moderation", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/admin/reviews/:id/moderation", requireAuth, requirePermission("moderation.manage"), async (req, res): Promise<void> => {
   const params = ModerateReviewParams.safeParse(req.params);
   const parsed = ModerateReviewBody.safeParse(req.body);
   if (!params.success || !parsed.success) {
@@ -399,28 +469,38 @@ router.patch("/admin/reviews/:id/moderation", requireAuth, requireRole("admin"),
   await syncRatingSummary(updated.targetType as TargetType, updated.targetId);
   const result = await reviewDto(updated.id);
   await audit(req, "review.moderated", "review", updated.id, { moderationStatus: updated.moderationStatus });
-  if (updated.moderationStatus === "hidden") {
+  if (updated.moderationStatus !== "visible") {
     await createNotification(updated.userId, "account_activity", "Review hidden", "A review you submitted was hidden by moderation.", "review", updated.id);
   }
   res.json(ModerateReviewResponse.parse(result));
 });
 
-router.get("/admin/content-reports", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.get("/admin/content-reports", requireAuth, requirePermission("reports.read"), async (req, res): Promise<void> => {
   const parsed = ListContentReportsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid report list request" });
     return;
   }
+  const where = and(
+    parsed.data.status ? eq(contentReports.status, parsed.data.status) : undefined,
+    parsed.data.entityType ? eq(contentReports.entityType, parsed.data.entityType) : undefined,
+  );
   const [[totalRow], reportsPage] = await Promise.all([
-    db.select({ total: count() }).from(contentReports),
-    db.select().from(contentReports)
+    db.select({ total: count() }).from(contentReports).where(where),
+    db.select({
+      report: contentReports,
+      reporterName: users.fullName,
+      reporterPhone: users.phone,
+    }).from(contentReports)
+      .innerJoin(users, eq(users.id, contentReports.reporterId))
+      .where(where)
       .orderBy(desc(contentReports.createdAt))
       .limit(parsed.data.limit)
       .offset((parsed.data.page - 1) * parsed.data.limit),
   ]);
   const total = Number(totalRow?.total ?? 0);
   res.json(ListContentReportsResponse.parse({
-    reports: reportsPage,
+    reports: reportsPage.map(({ report, reporterName, reporterPhone }) => ({ ...report, reporterName, reporterPhone })),
     page: parsed.data.page,
     limit: parsed.data.limit,
     total,
@@ -428,18 +508,33 @@ router.get("/admin/content-reports", requireAuth, requireRole("admin"), async (r
   }));
 });
 
-router.patch("/admin/content-reports/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/admin/content-reports/:id", requireAuth, requirePermission("reports.manage"), async (req, res): Promise<void> => {
   const params = UpdateContentReportParams.safeParse(req.params);
   const parsed = UpdateContentReportBody.safeParse(req.body);
   if (!params.success || !parsed.success) {
     res.status(400).json({ error: "Invalid report update" });
     return;
   }
+  if (parsed.data.assignedToId) {
+    const [assignee] = await db.select({ id: users.id }).from(users)
+      .innerJoin(adminRoleAssignments, eq(adminRoleAssignments.userId, users.id))
+      .where(and(
+        eq(users.id, parsed.data.assignedToId),
+        eq(users.accountType, "admin"),
+        eq(users.status, "active"),
+      )).limit(1);
+    if (!assignee) {
+      res.status(400).json({ error: "Reports can only be assigned to active administrators" });
+      return;
+    }
+  }
   const [updated] = await db.update(contentReports)
     .set({
       status: parsed.data.status,
+      ...(parsed.data.adminNote !== undefined ? { adminNote: parsed.data.adminNote?.trim() || null } : {}),
+      ...(parsed.data.assignedToId !== undefined ? { assignedToId: parsed.data.assignedToId } : {}),
       reviewedById: req.user!.id,
-      reviewedAt: new Date(),
+      reviewedAt: parsed.data.status === "open" ? null : new Date(),
     })
     .where(eq(contentReports.id, params.data.id))
     .returning();

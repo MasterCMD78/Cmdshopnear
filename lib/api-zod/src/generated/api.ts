@@ -4798,14 +4798,18 @@ export const ReportChatConversationBody = zod.object({
 export const ReportChatConversationResponse = zod.object({
   "id": zod.string().uuid(),
   "reporterId": zod.string().uuid(),
-  "entityType": zod.enum(['conversation', 'review']),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
   "entityId": zod.string().uuid(),
   "reason": zod.string(),
   "details": zod.string().nullable(),
-  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "adminNote": zod.string().nullable(),
+  "assignedToId": zod.string().uuid().nullable(),
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
   "reviewedById": zod.string().uuid().nullable(),
   "reviewedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "reporterName": zod.string().nullish(),
+  "reporterPhone": zod.string().nullish()
 })
 
 
@@ -5029,7 +5033,7 @@ export const ListReviewsResponse = zod.object({
   "rating": zod.number().int().min(1).max(listReviewsResponseReviewsItemRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5085,7 +5089,7 @@ export const CreateReviewResponse = zod.object({
   "rating": zod.number().int().min(1).max(createReviewResponseRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5116,7 +5120,7 @@ export const GetMyReviewResponse = zod.object({
   "rating": zod.number().int().min(1).max(getMyReviewResponseReviewOneRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5157,7 +5161,7 @@ export const UpdateReviewResponse = zod.object({
   "rating": zod.number().int().min(1).max(updateReviewResponseRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5202,14 +5206,18 @@ export const ReportReviewBody = zod.object({
 export const ReportReviewResponse = zod.object({
   "id": zod.string().uuid(),
   "reporterId": zod.string().uuid(),
-  "entityType": zod.enum(['conversation', 'review']),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
   "entityId": zod.string().uuid(),
   "reason": zod.string(),
   "details": zod.string().nullable(),
-  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "adminNote": zod.string().nullable(),
+  "assignedToId": zod.string().uuid().nullable(),
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
   "reviewedById": zod.string().uuid().nullable(),
   "reviewedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "reporterName": zod.string().nullish(),
+  "reporterPhone": zod.string().nullish()
 })
 
 
@@ -5224,7 +5232,7 @@ export const listAdminReviewsQueryLimitMax = 50;
 
 
 export const ListAdminReviewsQueryParams = zod.object({
-  "status": zod.enum(['visible', 'hidden']).optional(),
+  "status": zod.enum(['visible', 'hidden', 'removed']).optional(),
   "page": zod.coerce.number().int().min(1).default(listAdminReviewsQueryPageDefault),
   "limit": zod.coerce.number().int().min(1).max(listAdminReviewsQueryLimitMax).default(listAdminReviewsQueryLimitDefault)
 })
@@ -5241,7 +5249,7 @@ export const ListAdminReviewsResponse = zod.object({
   "rating": zod.number().int().min(1).max(listAdminReviewsResponseReviewsItemRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5265,7 +5273,7 @@ export const ModerateReviewParams = zod.object({
 })
 
 export const ModerateReviewBody = zod.object({
-  "moderationStatus": zod.enum(['visible', 'hidden'])
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed'])
 })
 
 export const moderateReviewResponseRatingMax = 5;
@@ -5279,7 +5287,7 @@ export const ModerateReviewResponse = zod.object({
   "rating": zod.number().int().min(1).max(moderateReviewResponseRatingMax),
   "comment": zod.string().nullable(),
   "verifiedCustomer": zod.boolean(),
-  "moderationStatus": zod.enum(['visible', 'hidden']),
+  "moderationStatus": zod.enum(['visible', 'hidden', 'removed']),
   "author": zod.object({
   "id": zod.string().uuid(),
   "fullName": zod.string(),
@@ -5301,6 +5309,8 @@ export const listContentReportsQueryLimitMax = 50;
 
 
 export const ListContentReportsQueryParams = zod.object({
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']).optional(),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']).optional(),
   "page": zod.coerce.number().int().min(1).default(listContentReportsQueryPageDefault),
   "limit": zod.coerce.number().int().min(1).max(listContentReportsQueryLimitMax).default(listContentReportsQueryLimitDefault)
 })
@@ -5309,14 +5319,18 @@ export const ListContentReportsResponse = zod.object({
   "reports": zod.array(zod.object({
   "id": zod.string().uuid(),
   "reporterId": zod.string().uuid(),
-  "entityType": zod.enum(['conversation', 'review']),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
   "entityId": zod.string().uuid(),
   "reason": zod.string(),
   "details": zod.string().nullable(),
-  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "adminNote": zod.string().nullable(),
+  "assignedToId": zod.string().uuid().nullable(),
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
   "reviewedById": zod.string().uuid().nullable(),
   "reviewedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "reporterName": zod.string().nullish(),
+  "reporterPhone": zod.string().nullish()
 })),
   "page": zod.number().int(),
   "limit": zod.number().int(),
@@ -5332,21 +5346,693 @@ export const UpdateContentReportParams = zod.object({
   "id": zod.coerce.string().uuid()
 })
 
+export const updateContentReportBodyAdminNoteMax = 2000;
+
+
+
 export const UpdateContentReportBody = zod.object({
-  "status": zod.enum(['resolved', 'dismissed'])
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
+  "adminNote": zod.string().max(updateContentReportBodyAdminNoteMax).nullish(),
+  "assignedToId": zod.string().uuid().nullish()
 })
 
 export const UpdateContentReportResponse = zod.object({
   "id": zod.string().uuid(),
   "reporterId": zod.string().uuid(),
-  "entityType": zod.enum(['conversation', 'review']),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
   "entityId": zod.string().uuid(),
   "reason": zod.string(),
   "details": zod.string().nullable(),
-  "status": zod.enum(['open', 'resolved', 'dismissed']),
+  "adminNote": zod.string().nullable(),
+  "assignedToId": zod.string().uuid().nullable(),
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
   "reviewedById": zod.string().uuid().nullable(),
   "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "reporterName": zod.string().nullish(),
+  "reporterPhone": zod.string().nullish()
+})
+
+
+/**
+ * @summary Report a business, provider, listing, review, or chat message
+ */
+export const createContentReportBodyReasonMin = 2;
+export const createContentReportBodyReasonMax = 80;
+
+export const createContentReportBodyDetailsMax = 1000;
+
+
+
+export const CreateContentReportBody = zod.object({
+  "entityType": zod.enum(['business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string().min(createContentReportBodyReasonMin).max(createContentReportBodyReasonMax),
+  "details": zod.string().max(createContentReportBodyDetailsMax).nullish()
+})
+
+export const CreateContentReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "reporterId": zod.string().uuid(),
+  "entityType": zod.enum(['conversation', 'business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
+  "entityId": zod.string().uuid(),
+  "reason": zod.string(),
+  "details": zod.string().nullable(),
+  "adminNote": zod.string().nullable(),
+  "assignedToId": zod.string().uuid().nullable(),
+  "status": zod.enum(['open', 'investigating', 'resolved', 'dismissed']),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "reporterName": zod.string().nullish(),
+  "reporterPhone": zod.string().nullish()
+})
+
+
+/**
+ * @summary Submit an owned business or service provider for verification
+ */
+export const createVerificationRequestBodyApplicantNoteMax = 1000;
+
+
+
+export const CreateVerificationRequestBody = zod.object({
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.string().uuid(),
+  "applicantNote": zod.string().max(createVerificationRequestBodyApplicantNoteMax).nullish()
+})
+
+export const CreateVerificationRequestResponse = zod.object({
+  "id": zod.string().uuid(),
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "applicantNote": zod.string().nullable(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "adminNote": zod.string().nullable(),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Read verification requests submitted by the current account
+ */
+export const GetMyVerificationRequestsResponse = zod.object({
+  "requests": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "applicantNote": zod.string().nullable(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "adminNote": zod.string().nullable(),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Read the current administrator role and effective permissions
+ */
+export const GetAdminAccessResponse = zod.object({
+  "role": zod.union([zod.literal('super_admin'),zod.literal('moderator'),zod.literal('support'),zod.literal(null)]).nullable(),
+  "permissions": zod.array(zod.enum(['dashboard.read', 'verification.read', 'verification.review', 'users.read', 'users.manage', 'reports.read', 'reports.manage', 'moderation.manage', 'analytics.read', 'audit.read', 'settings.read', 'settings.manage', 'categories.manage', 'announcements.manage', 'roles.manage']))
+})
+
+
+/**
+ * @summary Claim the single unassigned super administrator role
+ */
+export const BootstrapSuperAdminResponse = zod.object({
+  "userId": zod.string().uuid(),
+  "role": zod.enum(['super_admin', 'moderator', 'support']),
+  "permissions": zod.array(zod.enum(['dashboard.read', 'verification.read', 'verification.review', 'users.read', 'users.manage', 'reports.read', 'reports.manage', 'moderation.manage', 'analytics.read', 'audit.read', 'settings.read', 'settings.manage', 'categories.manage', 'announcements.manage', 'roles.manage']))
+})
+
+
+/**
+ * @summary List active administrator role assignments
+ */
+export const ListAdminRolesResponse = zod.object({
+  "administrators": zod.array(zod.object({
+  "userId": zod.string().uuid(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullable(),
+  "role": zod.enum(['super_admin', 'moderator', 'support']),
+  "assignedAt": zod.coerce.date()
+})),
+  "roles": zod.array(zod.enum(['super_admin', 'moderator', 'support']))
+})
+
+
+/**
+ * @summary Assign an explicit role to an active administrator account
+ */
+export const AssignAdminRoleParams = zod.object({
+  "userId": zod.coerce.string().uuid()
+})
+
+export const AssignAdminRoleBody = zod.object({
+  "role": zod.enum(['super_admin', 'moderator', 'support'])
+})
+
+export const AssignAdminRoleResponse = zod.object({
+  "userId": zod.string().uuid(),
+  "role": zod.enum(['super_admin', 'moderator', 'support']),
+  "permissions": zod.array(zod.enum(['dashboard.read', 'verification.read', 'verification.review', 'users.read', 'users.manage', 'reports.read', 'reports.manage', 'moderation.manage', 'analytics.read', 'audit.read', 'settings.read', 'settings.manage', 'categories.manage', 'announcements.manage', 'roles.manage']))
+})
+
+
+/**
+ * @summary Remove a non-super administrator role assignment
+ */
+export const RemoveAdminRoleParams = zod.object({
+  "userId": zod.coerce.string().uuid()
+})
+
+export const RemoveAdminRoleResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Read platform totals and recent administrator activity
+ */
+export const GetAdminDashboardResponse = zod.object({
+  "totals": zod.object({
+  "users": zod.number().int(),
+  "businesses": zod.number().int(),
+  "serviceProviders": zod.number().int(),
+  "products": zod.number().int(),
+  "services": zod.number().int(),
+  "activeConversations": zod.number().int(),
+  "reviews": zod.number().int(),
+  "ratings": zod.number().int(),
+  "pendingVerifications": zod.number().int(),
+  "pendingReports": zod.number().int(),
+  "averageRating": zod.number()
+}),
+  "recentRegistrations": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "accountType": zod.string(),
+  "city": zod.string().nullable(),
+  "state": zod.string().nullable(),
+  "status": zod.string(),
   "createdAt": zod.coerce.date()
+})),
+  "recentActivity": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "action": zod.string(),
+  "entityType": zod.string().nullable(),
+  "entityId": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "actorId": zod.string().uuid().nullable(),
+  "actorName": zod.string().nullable()
+})),
+  "windowDays": zod.number().int()
+})
+
+
+/**
+ * @summary List pending and historical verification cases
+ */
+export const listVerificationRequestsQueryPageDefault = 1;
+
+export const listVerificationRequestsQueryLimitDefault = 25;
+export const listVerificationRequestsQueryLimitMax = 100;
+
+
+
+export const ListVerificationRequestsQueryParams = zod.object({
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']).optional(),
+  "entityType": zod.enum(['business', 'service_provider']).optional(),
+  "page": zod.coerce.number().int().min(1).default(listVerificationRequestsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listVerificationRequestsQueryLimitMax).default(listVerificationRequestsQueryLimitDefault)
+})
+
+export const ListVerificationRequestsResponse = zod.object({
+  "requests": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "name": zod.string(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "createdAt": zod.coerce.date(),
+  "ownerName": zod.string(),
+  "ownerPhone": zod.string(),
+  "ownerEmail": zod.string().nullable(),
+  "entityType": zod.enum(['business', 'service_provider']),
+  "requestId": zod.string().uuid().nullable(),
+  "applicantNote": zod.string().nullable(),
+  "adminNote": zod.string().nullable(),
+  "submittedAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Record a verification review decision and admin note
+ */
+export const UpdateVerificationRequestParams = zod.object({
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.coerce.string().uuid()
+})
+
+export const updateVerificationRequestBodyAdminNoteMax = 2000;
+
+
+
+export const UpdateVerificationRequestBody = zod.object({
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "adminNote": zod.string().max(updateVerificationRequestBodyAdminNoteMax).nullish()
+})
+
+export const UpdateVerificationRequestResponse = zod.object({
+  "id": zod.string().uuid(),
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "applicantNote": zod.string().nullable(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "adminNote": zod.string().nullable(),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Read the full verification decision history for a profile
+ */
+export const GetVerificationHistoryParams = zod.object({
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.coerce.string().uuid()
+})
+
+export const GetVerificationHistoryResponse = zod.object({
+  "history": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "requestId": zod.string().uuid().nullable(),
+  "previousStatus": zod.string().nullable(),
+  "newStatus": zod.string(),
+  "note": zod.string().nullable(),
+  "actorUserId": zod.string().uuid().nullable(),
+  "actorName": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Search and filter ShopNear accounts
+ */
+export const listAdminUsersQueryQueryMax = 120;
+
+export const listAdminUsersQueryPageDefault = 1;
+
+export const listAdminUsersQueryLimitDefault = 25;
+export const listAdminUsersQueryLimitMax = 100;
+
+
+
+export const ListAdminUsersQueryParams = zod.object({
+  "query": zod.coerce.string().max(listAdminUsersQueryQueryMax).optional(),
+  "accountType": zod.enum(['customer', 'business', 'service_provider', 'admin']).optional(),
+  "status": zod.enum(['active', 'suspended', 'deleted']).optional(),
+  "page": zod.coerce.number().int().min(1).default(listAdminUsersQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listAdminUsersQueryLimitMax).default(listAdminUsersQueryLimitDefault)
+})
+
+export const ListAdminUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullable(),
+  "accountType": zod.string(),
+  "city": zod.string().nullable(),
+  "state": zod.string().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "adminRole": zod.union([zod.literal('super_admin'),zod.literal('moderator'),zod.literal('support'),zod.literal(null)]).nullable()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Read an account profile and moderation summary
+ */
+export const GetAdminUserParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetAdminUserResponse = zod.object({
+  "user": zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullable(),
+  "accountType": zod.string(),
+  "profilePhoto": zod.string().nullable(),
+  "city": zod.string().nullable(),
+  "state": zod.string().nullable(),
+  "preferredLanguage": zod.string(),
+  "notificationsEnabled": zod.boolean(),
+  "status": zod.string(),
+  "phoneVerifiedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "adminRole": zod.union([zod.literal('super_admin'),zod.literal('moderator'),zod.literal('support'),zod.literal(null)]).nullable(),
+  "business": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "businessName": zod.string(),
+  "verificationStatus": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended'])
+}),zod.null()]),
+  "serviceProvider": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "profession": zod.string(),
+  "verificationStatus": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended'])
+}),zod.null()]),
+  "activitySummary": zod.object({
+  "reportsSubmitted": zod.number().int(),
+  "reviewsWritten": zod.number().int(),
+  "auditActions": zod.number().int()
+})
+})
+
+
+/**
+ * @summary Read the most recent audit, report, and verification activity for a user
+ */
+export const GetAdminUserActivityParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetAdminUserActivityResponse = zod.object({
+  "activities": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "kind": zod.string(),
+  "entityType": zod.string().nullable(),
+  "entityId": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int()
+})
+
+
+/**
+ * @summary Suspend, reactivate, or soft-delete an account
+ */
+export const UpdateAdminUserStatusParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateAdminUserStatusBodyNoteMax = 1000;
+
+
+
+export const UpdateAdminUserStatusBody = zod.object({
+  "status": zod.enum(['active', 'suspended', 'deleted']),
+  "note": zod.string().max(updateAdminUserStatusBodyNoteMax).nullish()
+})
+
+export const UpdateAdminUserStatusResponse = zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string().nullable(),
+  "accountType": zod.string(),
+  "city": zod.string().nullable(),
+  "state": zod.string().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "adminRole": zod.union([zod.literal('super_admin'),zod.literal('moderator'),zod.literal('support'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * @summary Reset a user's business or provider verification to pending
+ */
+export const ResetUserVerificationParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const resetUserVerificationBodyNoteMax = 1000;
+
+
+
+export const ResetUserVerificationBody = zod.object({
+  "entityType": zod.enum(['business', 'service_provider']),
+  "note": zod.string().max(resetUserVerificationBodyNoteMax).nullish()
+})
+
+export const ResetUserVerificationResponse = zod.object({
+  "request": zod.object({
+  "id": zod.string().uuid(),
+  "entityType": zod.enum(['business', 'service_provider']),
+  "entityId": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "applicantNote": zod.string().nullable(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected', 'suspended']),
+  "adminNote": zod.string().nullable(),
+  "reviewedById": zod.string().uuid().nullable(),
+  "reviewedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "status": zod.enum(['pending'])
+})
+
+
+/**
+ * @summary Search user-generated content for moderation
+ */
+export const listModerationContentQueryQueryMax = 120;
+
+export const listModerationContentQueryPageDefault = 1;
+
+export const listModerationContentQueryLimitDefault = 20;
+export const listModerationContentQueryLimitMax = 50;
+
+
+
+export const ListModerationContentQueryParams = zod.object({
+  "entityType": zod.enum(['business', 'service_provider', 'product', 'service', 'review', 'chat_message']).optional(),
+  "query": zod.coerce.string().max(listModerationContentQueryQueryMax).optional(),
+  "page": zod.coerce.number().int().min(1).default(listModerationContentQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listModerationContentQueryLimitMax).default(listModerationContentQueryLimitDefault)
+})
+
+export const ListModerationContentResponse = zod.object({
+  "results": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "title": zod.string(),
+  "ownerName": zod.string().nullable(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "preview": zod.string().nullable(),
+  "entityType": zod.enum(['business', 'service_provider', 'product', 'service', 'review', 'chat_message'])
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Hide, restore, remove, or suspend content with an audit reason
+ */
+export const ModerateContentParams = zod.object({
+  "entityType": zod.enum(['business', 'service_provider', 'product', 'service', 'review', 'chat_message']),
+  "entityId": zod.coerce.string().uuid()
+})
+
+export const moderateContentBodyReasonMin = 2;
+export const moderateContentBodyReasonMax = 1000;
+
+
+
+export const ModerateContentBody = zod.object({
+  "action": zod.enum(['hide', 'restore', 'remove', 'suspend', 'unsuspend']),
+  "reason": zod.string().min(moderateContentBodyReasonMin).max(moderateContentBodyReasonMax)
+})
+
+export const ModerateContentResponse = zod.object({
+  "entityType": zod.string(),
+  "entityId": zod.string().uuid(),
+  "action": zod.string(),
+  "updated": zod.boolean()
+})
+
+
+/**
+ * @summary Read aggregate product, engagement, and search trends
+ */
+export const getAdminAnalyticsQueryDaysDefault = 30;
+export const getAdminAnalyticsQueryDaysMin = 7;
+export const getAdminAnalyticsQueryDaysMax = 90;
+
+
+
+export const GetAdminAnalyticsQueryParams = zod.object({
+  "days": zod.coerce.number().int().min(getAdminAnalyticsQueryDaysMin).max(getAdminAnalyticsQueryDaysMax).default(getAdminAnalyticsQueryDaysDefault)
+})
+
+export const getAdminAnalyticsResponseRatingDistributionItemRatingMax = 5;
+
+
+
+export const GetAdminAnalyticsResponse = zod.object({
+  "days": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "registrations": zod.number().int(),
+  "businesses": zod.number().int(),
+  "serviceProviders": zod.number().int(),
+  "products": zod.number().int(),
+  "services": zod.number().int(),
+  "dailyActiveUsers": zod.number().int(),
+  "searches": zod.number().int(),
+  "aiSearches": zod.number().int(),
+  "chats": zod.number().int(),
+  "notifications": zod.number().int(),
+  "favorites": zod.number().int(),
+  "reviews": zod.number().int()
+})),
+  "categoryPopularity": zod.array(zod.object({
+  "category": zod.string(),
+  "type": zod.enum(['product', 'service']),
+  "count": zod.number().int()
+})),
+  "ratingDistribution": zod.array(zod.object({
+  "rating": zod.number().int().min(1).max(getAdminAnalyticsResponseRatingDistributionItemRatingMax),
+  "count": zod.number().int()
+})),
+  "searchTrends": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "searches": zod.number().int(),
+  "aiSearches": zod.number().int()
+})),
+  "windowDays": zod.number().int(),
+  "privacy": zod.string()
+})
+
+
+/**
+ * @summary Search the immutable administrator audit trail
+ */
+export const listAdminAuditLogsQueryPageDefault = 1;
+
+export const listAdminAuditLogsQueryLimitDefault = 25;
+export const listAdminAuditLogsQueryLimitMax = 100;
+
+export const listAdminAuditLogsQueryActionMax = 100;
+
+export const listAdminAuditLogsQueryEntityTypeMax = 100;
+
+
+
+export const ListAdminAuditLogsQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listAdminAuditLogsQueryPageDefault),
+  "limit": zod.coerce.number().int().min(1).max(listAdminAuditLogsQueryLimitMax).default(listAdminAuditLogsQueryLimitDefault),
+  "action": zod.coerce.string().max(listAdminAuditLogsQueryActionMax).optional(),
+  "actorUserId": zod.coerce.string().uuid().optional(),
+  "entityType": zod.coerce.string().max(listAdminAuditLogsQueryEntityTypeMax).optional()
+})
+
+export const ListAdminAuditLogsResponse = zod.object({
+  "logs": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "actorUserId": zod.string().uuid().nullable(),
+  "actorName": zod.string().nullable(),
+  "action": zod.string(),
+  "entityType": zod.string().nullable(),
+  "entityId": zod.string().nullable(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "page": zod.number().int(),
+  "limit": zod.number().int(),
+  "total": zod.number().int(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Read future-ready platform settings
+ */
+export const getAdminSettingsResponseSettingsSupportContactEmailMax = 254;
+
+
+
+export const GetAdminSettingsResponse = zod.object({
+  "settings": zod.object({
+  "maintenanceMode": zod.boolean(),
+  "customerRegistrationEnabled": zod.boolean(),
+  "businessRegistrationEnabled": zod.boolean(),
+  "providerRegistrationEnabled": zod.boolean(),
+  "requireVerificationToPublish": zod.boolean(),
+  "announcementsEnabled": zod.boolean(),
+  "aiSearchEnabled": zod.boolean(),
+  "supportContactEmail": zod.string().max(getAdminSettingsResponseSettingsSupportContactEmailMax)
+}),
+  "updatedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Save future-ready platform settings
+ */
+export const updateAdminSettingsBodySupportContactEmailMax = 254;
+
+
+
+export const UpdateAdminSettingsBody = zod.object({
+  "maintenanceMode": zod.boolean(),
+  "customerRegistrationEnabled": zod.boolean(),
+  "businessRegistrationEnabled": zod.boolean(),
+  "providerRegistrationEnabled": zod.boolean(),
+  "requireVerificationToPublish": zod.boolean(),
+  "announcementsEnabled": zod.boolean(),
+  "aiSearchEnabled": zod.boolean(),
+  "supportContactEmail": zod.string().max(updateAdminSettingsBodySupportContactEmailMax)
+})
+
+export const updateAdminSettingsResponseSettingsSupportContactEmailMax = 254;
+
+
+
+export const UpdateAdminSettingsResponse = zod.object({
+  "settings": zod.object({
+  "maintenanceMode": zod.boolean(),
+  "customerRegistrationEnabled": zod.boolean(),
+  "businessRegistrationEnabled": zod.boolean(),
+  "providerRegistrationEnabled": zod.boolean(),
+  "requireVerificationToPublish": zod.boolean(),
+  "announcementsEnabled": zod.boolean(),
+  "aiSearchEnabled": zod.boolean(),
+  "supportContactEmail": zod.string().max(updateAdminSettingsResponseSettingsSupportContactEmailMax)
+}),
+  "updatedAt": zod.coerce.date().nullable()
 })
 
 

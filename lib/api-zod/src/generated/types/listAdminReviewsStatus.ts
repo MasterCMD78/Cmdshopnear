@@ -12,4 +12,5 @@ export type ListAdminReviewsStatus = typeof ListAdminReviewsStatus[keyof typeof 
 export const ListAdminReviewsStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;

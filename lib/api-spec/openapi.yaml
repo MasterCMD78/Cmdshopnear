@@ -1524,7 +1524,7 @@ paths:
       parameters:
         - name: status
           in: query
-          schema: { type: string, enum: [visible, hidden] }
+          schema: { type: string, enum: [visible, hidden, removed] }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -1565,6 +1565,12 @@ paths:
       security:
         - cookieSession: []
       parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, investigating, resolved, dismissed] }
+        - name: entityType
+          in: query
+          schema: { type: string, enum: [conversation, business, service_provider, product, service, review, chat_message] }
         - name: page
           in: query
           schema: { type: integer, minimum: 1, default: 1 }
@@ -1597,6 +1603,473 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ContentReport" }
+  /reports:
+    post:
+      operationId: createContentReport
+      tags: [reviews]
+      summary: Report a business, provider, listing, review, or chat message
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateContentReportInput" }
+      responses:
+        "201":
+          description: Report submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentReport" }
+        "400":
+          description: Invalid report
+        "404":
+          description: Content not found
+        "429":
+          description: Report rate limit exceeded
+  /verification-requests:
+    post:
+      operationId: createVerificationRequest
+      tags: [businesses]
+      summary: Submit an owned business or service provider for verification
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerificationRequestInput" }
+      responses:
+        "201":
+          description: Verification request submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VerificationRequest" }
+        "403":
+          description: The profile is not owned by the current account
+        "409":
+          description: Verification cannot be resubmitted in the current state
+  /verification-requests/mine:
+    get:
+      operationId: getMyVerificationRequests
+      tags: [businesses]
+      summary: Read verification requests submitted by the current account
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Verification request history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyVerificationRequests" }
+  /admin/access:
+    get:
+      operationId: getAdminAccess
+      tags: [admin]
+      summary: Read the current administrator role and effective permissions
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Current admin access
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminAccess" }
+        "403":
+          description: Administrator account required
+  /admin/roles/bootstrap:
+    post:
+      operationId: bootstrapSuperAdmin
+      tags: [admin]
+      summary: Claim the single unassigned super administrator role
+      security:
+        - cookieSession: []
+      responses:
+        "201":
+          description: Super administrator role assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRoleAssignmentResult" }
+        "409":
+          description: A super administrator already exists
+  /admin/roles:
+    get:
+      operationId: listAdminRoles
+      tags: [admin]
+      summary: List active administrator role assignments
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Role assignments
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRoleList" }
+  /admin/roles/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      operationId: assignAdminRole
+      tags: [admin]
+      summary: Assign an explicit role to an active administrator account
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminRoleInput" }
+      responses:
+        "200":
+          description: Administrator role assigned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminRoleAssignmentResult" }
+        "403":
+          description: The current role cannot assign the requested role
+        "409":
+          description: Role assignment conflicts with the single-super-admin rule
+    delete:
+      operationId: removeAdminRole
+      tags: [admin]
+      summary: Remove a non-super administrator role assignment
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Administrator role removed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        "409":
+          description: The super administrator role cannot be removed
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Read platform totals and recent administrator activity
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminDashboard" }
+  /admin/verifications:
+    get:
+      operationId: listVerificationRequests
+      tags: [admin]
+      summary: List pending and historical verification cases
+      security:
+        - cookieSession: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, under_review, approved, rejected, suspended] }
+        - name: entityType
+          in: query
+          schema: { type: string, enum: [business, service_provider] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Verification queue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VerificationQueue" }
+  /admin/verifications/{entityType}/{entityId}:
+    parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema: { type: string, enum: [business, service_provider] }
+      - name: entityId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: updateVerificationRequest
+      tags: [admin]
+      summary: Record a verification review decision and admin note
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerificationDecisionInput" }
+      responses:
+        "200":
+          description: Verification decision saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VerificationRequest" }
+        "404":
+          description: Verification profile not found
+  /admin/verifications/{entityType}/{entityId}/history:
+    get:
+      operationId: getVerificationHistory
+      tags: [admin]
+      summary: Read the full verification decision history for a profile
+      security:
+        - cookieSession: []
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema: { type: string, enum: [business, service_provider] }
+        - name: entityId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Verification history
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VerificationHistory" }
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: Search and filter ShopNear accounts
+      security:
+        - cookieSession: []
+      parameters:
+        - name: query
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: accountType
+          in: query
+          schema: { type: string, enum: [customer, business, service_provider, admin] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, suspended, deleted] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        "200":
+          description: Paginated user list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminUserPage" }
+  /admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      tags: [admin]
+      summary: Read an account profile and moderation summary
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminUserDetail" }
+        "404":
+          description: User not found
+  /admin/users/{id}/activity:
+    get:
+      operationId: getAdminUserActivity
+      tags: [admin]
+      summary: Read the most recent audit, report, and verification activity for a user
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: User activity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminUserActivity" }
+  /admin/users/{id}/status:
+    patch:
+      operationId: updateAdminUserStatus
+      tags: [admin]
+      summary: Suspend, reactivate, or soft-delete an account
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminUserStatusInput" }
+      responses:
+        "200":
+          description: Account status updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminUserSummary" }
+        "409":
+          description: The current account or super administrator cannot be changed
+  /admin/users/{id}/verification:
+    patch:
+      operationId: resetUserVerification
+      tags: [admin]
+      summary: Reset a user's business or provider verification to pending
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerificationResetInput" }
+      responses:
+        "200":
+          description: Verification state reset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VerificationResetResult" }
+  /admin/moderation/content:
+    get:
+      operationId: listModerationContent
+      tags: [admin]
+      summary: Search user-generated content for moderation
+      security:
+        - cookieSession: []
+      parameters:
+        - name: entityType
+          in: query
+          schema: { type: string, enum: [business, service_provider, product, service, review, chat_message] }
+        - name: query
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Content search results
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModerationContentPage" }
+  /admin/moderation/content/{entityType}/{entityId}:
+    patch:
+      operationId: moderateContent
+      tags: [admin]
+      summary: Hide, restore, remove, or suspend content with an audit reason
+      security:
+        - cookieSession: []
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema: { type: string, enum: [business, service_provider, product, service, review, chat_message] }
+        - name: entityId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ModerationActionInput" }
+      responses:
+        "200":
+          description: Moderation action applied
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModerationActionResult" }
+        "409":
+          description: No reversible moderation action exists
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Read aggregate product, engagement, and search trends
+      security:
+        - cookieSession: []
+      parameters:
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 7, maximum: 90, default: 30 }
+      responses:
+        "200":
+          description: Aggregated analytics
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminAnalytics" }
+  /admin/audit-logs:
+    get:
+      operationId: listAdminAuditLogs
+      tags: [admin]
+      summary: Search the immutable administrator audit trail
+      security:
+        - cookieSession: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: action
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: actorUserId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: entityType
+          in: query
+          schema: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Audit log page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminAuditPage" }
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      tags: [admin]
+      summary: Read future-ready platform settings
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Platform settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminSettings" }
+    put:
+      operationId: updateAdminSettings
+      tags: [admin]
+      summary: Save future-ready platform settings
+      security:
+        - cookieSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminSettingsInput" }
+      responses:
+        "200":
+          description: Settings saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminSettings" }
 components:
   parameters:
     Id:
@@ -1612,6 +2085,406 @@ components:
       in: cookie
       name: shopnear_session
   schemas:
+    AdminPermission:
+      type: string
+      enum: [dashboard.read, verification.read, verification.review, users.read, users.manage, reports.read, reports.manage, moderation.manage, analytics.read, audit.read, settings.read, settings.manage, categories.manage, announcements.manage, roles.manage]
+    AdminRoleName:
+      type: string
+      enum: [super_admin, moderator, support]
+    AdminAccess:
+      type: object
+      properties:
+        role: { type: ["string", "null"], enum: [super_admin, moderator, support, null] }
+        permissions: { type: array, items: { $ref: "#/components/schemas/AdminPermission" } }
+      required: [role, permissions]
+    AdminRoleInput:
+      type: object
+      properties:
+        role: { $ref: "#/components/schemas/AdminRoleName" }
+      required: [role]
+    AdminRoleAssignmentResult:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        role: { $ref: "#/components/schemas/AdminRoleName" }
+        permissions: { type: array, items: { $ref: "#/components/schemas/AdminPermission" } }
+      required: [userId, role, permissions]
+    AdminRoleMember:
+      type: object
+      properties:
+        userId: { type: string, format: uuid }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: ["string", "null"] }
+        role: { $ref: "#/components/schemas/AdminRoleName" }
+        assignedAt: { type: string, format: date-time }
+      required: [userId, fullName, phone, email, role, assignedAt]
+    AdminRoleList:
+      type: object
+      properties:
+        administrators: { type: array, items: { $ref: "#/components/schemas/AdminRoleMember" } }
+        roles: { type: array, items: { $ref: "#/components/schemas/AdminRoleName" } }
+      required: [administrators, roles]
+    AdminDashboardTotals:
+      type: object
+      properties:
+        users: { type: integer }
+        businesses: { type: integer }
+        serviceProviders: { type: integer }
+        products: { type: integer }
+        services: { type: integer }
+        activeConversations: { type: integer }
+        reviews: { type: integer }
+        ratings: { type: integer }
+        pendingVerifications: { type: integer }
+        pendingReports: { type: integer }
+        averageRating: { type: number }
+      required: [users, businesses, serviceProviders, products, services, activeConversations, reviews, ratings, pendingVerifications, pendingReports, averageRating]
+    AdminRecentRegistration:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        accountType: { type: string }
+        city: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, fullName, accountType, city, state, status, createdAt]
+    AdminRecentActivity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        action: { type: string }
+        entityType: { type: ["string", "null"] }
+        entityId: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        actorId: { type: ["string", "null"], format: uuid }
+        actorName: { type: ["string", "null"] }
+      required: [id, action, entityType, entityId, createdAt, actorId, actorName]
+    AdminDashboard:
+      type: object
+      properties:
+        totals: { $ref: "#/components/schemas/AdminDashboardTotals" }
+        recentRegistrations: { type: array, items: { $ref: "#/components/schemas/AdminRecentRegistration" } }
+        recentActivity: { type: array, items: { $ref: "#/components/schemas/AdminRecentActivity" } }
+        windowDays: { type: integer }
+      required: [totals, recentRegistrations, recentActivity, windowDays]
+    VerificationStatus:
+      type: string
+      enum: [pending, under_review, approved, rejected, suspended]
+    VerificationRequestInput:
+      type: object
+      properties:
+        entityType: { type: string, enum: [business, service_provider] }
+        entityId: { type: string, format: uuid }
+        applicantNote: { type: ["string", "null"], maxLength: 1000 }
+      required: [entityType, entityId]
+    VerificationRequest:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        entityType: { type: string, enum: [business, service_provider] }
+        entityId: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid }
+        applicantNote: { type: ["string", "null"] }
+        status: { $ref: "#/components/schemas/VerificationStatus" }
+        adminNote: { type: ["string", "null"] }
+        reviewedById: { type: ["string", "null"], format: uuid }
+        reviewedAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, entityType, entityId, ownerId, applicantNote, status, adminNote, reviewedById, reviewedAt, createdAt, updatedAt]
+    MyVerificationRequests:
+      type: object
+      properties:
+        requests: { type: array, items: { $ref: "#/components/schemas/VerificationRequest" } }
+      required: [requests]
+    VerificationDecisionInput:
+      type: object
+      properties:
+        status: { $ref: "#/components/schemas/VerificationStatus" }
+        adminNote: { type: ["string", "null"], maxLength: 2000 }
+      required: [status]
+    VerificationQueueEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ownerId: { type: string, format: uuid }
+        name: { type: string }
+        status: { $ref: "#/components/schemas/VerificationStatus" }
+        createdAt: { type: string, format: date-time }
+        ownerName: { type: string }
+        ownerPhone: { type: string }
+        ownerEmail: { type: ["string", "null"] }
+        entityType: { type: string, enum: [business, service_provider] }
+        requestId: { type: ["string", "null"], format: uuid }
+        applicantNote: { type: ["string", "null"] }
+        adminNote: { type: ["string", "null"] }
+        submittedAt: { type: string, format: date-time }
+      required: [id, ownerId, name, status, createdAt, ownerName, ownerPhone, ownerEmail, entityType, requestId, applicantNote, adminNote, submittedAt]
+    VerificationQueue:
+      type: object
+      properties:
+        requests: { type: array, items: { $ref: "#/components/schemas/VerificationQueueEntry" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [requests, page, limit, total, hasMore]
+    VerificationHistoryEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        requestId: { type: ["string", "null"], format: uuid }
+        previousStatus: { type: ["string", "null"] }
+        newStatus: { type: string }
+        note: { type: ["string", "null"] }
+        actorUserId: { type: ["string", "null"], format: uuid }
+        actorName: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, requestId, previousStatus, newStatus, note, actorUserId, actorName, createdAt]
+    VerificationHistory:
+      type: object
+      properties:
+        history: { type: array, items: { $ref: "#/components/schemas/VerificationHistoryEntry" } }
+      required: [history]
+    AdminUserSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: ["string", "null"] }
+        accountType: { type: string }
+        city: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+        adminRole: { type: ["string", "null"], enum: [super_admin, moderator, support, null] }
+      required: [id, fullName, phone, email, accountType, city, state, status, createdAt, adminRole]
+    AdminUserPage:
+      type: object
+      properties:
+        users: { type: array, items: { $ref: "#/components/schemas/AdminUserSummary" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [users, page, limit, total, hasMore]
+    AdminUserProfile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: ["string", "null"] }
+        accountType: { type: string }
+        profilePhoto: { type: ["string", "null"] }
+        city: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        preferredLanguage: { type: string }
+        notificationsEnabled: { type: boolean }
+        status: { type: string }
+        phoneVerifiedAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, fullName, phone, email, accountType, profilePhoto, city, state, preferredLanguage, notificationsEnabled, status, phoneVerifiedAt, createdAt, updatedAt]
+    AdminUserBusiness:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        businessName: { type: string }
+        verificationStatus: { $ref: "#/components/schemas/VerificationStatus" }
+      required: [id, businessName, verificationStatus]
+    AdminUserProvider:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        profession: { type: string }
+        verificationStatus: { $ref: "#/components/schemas/VerificationStatus" }
+      required: [id, profession, verificationStatus]
+    AdminUserActivitySummary:
+      type: object
+      properties:
+        reportsSubmitted: { type: integer }
+        reviewsWritten: { type: integer }
+        auditActions: { type: integer }
+      required: [reportsSubmitted, reviewsWritten, auditActions]
+    AdminUserDetail:
+      type: object
+      properties:
+        user: { $ref: "#/components/schemas/AdminUserProfile" }
+        adminRole: { type: ["string", "null"], enum: [super_admin, moderator, support, null] }
+        business: { anyOf: [{ $ref: "#/components/schemas/AdminUserBusiness" }, { type: "null" }] }
+        serviceProvider: { anyOf: [{ $ref: "#/components/schemas/AdminUserProvider" }, { type: "null" }] }
+        activitySummary: { $ref: "#/components/schemas/AdminUserActivitySummary" }
+      required: [user, adminRole, business, serviceProvider, activitySummary]
+    AdminUserActivityEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string }
+        entityType: { type: ["string", "null"] }
+        entityId: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, kind, entityType, entityId, createdAt]
+    AdminUserActivity:
+      type: object
+      properties:
+        activities: { type: array, items: { $ref: "#/components/schemas/AdminUserActivityEntry" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+      required: [activities, page, limit, total]
+    AdminUserStatusInput:
+      type: object
+      properties:
+        status: { type: string, enum: [active, suspended, deleted] }
+        note: { type: ["string", "null"], maxLength: 1000 }
+      required: [status]
+    VerificationResetInput:
+      type: object
+      properties:
+        entityType: { type: string, enum: [business, service_provider] }
+        note: { type: ["string", "null"], maxLength: 1000 }
+      required: [entityType]
+    VerificationResetResult:
+      type: object
+      properties:
+        request: { $ref: "#/components/schemas/VerificationRequest" }
+        status: { type: string, enum: [pending] }
+      required: [request, status]
+    CreateContentReportInput:
+      type: object
+      properties:
+        entityType: { type: string, enum: [business, service_provider, product, service, review, chat_message] }
+        entityId: { type: string, format: uuid }
+        reason: { type: string, minLength: 2, maxLength: 80 }
+        details: { type: ["string", "null"], maxLength: 1000 }
+      required: [entityType, entityId, reason]
+    ModerationContentItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        ownerName: { type: ["string", "null"] }
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+        preview: { type: ["string", "null"] }
+        entityType: { type: string, enum: [business, service_provider, product, service, review, chat_message] }
+      required: [id, title, ownerName, status, createdAt, preview, entityType]
+    ModerationContentPage:
+      type: object
+      properties:
+        results: { type: array, items: { $ref: "#/components/schemas/ModerationContentItem" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [results, page, limit, total, hasMore]
+    ModerationActionInput:
+      type: object
+      properties:
+        action: { type: string, enum: [hide, restore, remove, suspend, unsuspend] }
+        reason: { type: string, minLength: 2, maxLength: 1000 }
+      required: [action, reason]
+    ModerationActionResult:
+      type: object
+      properties:
+        entityType: { type: string }
+        entityId: { type: string, format: uuid }
+        action: { type: string }
+        updated: { type: boolean }
+      required: [entityType, entityId, action, updated]
+    AdminAnalyticsDay:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        registrations: { type: integer }
+        businesses: { type: integer }
+        serviceProviders: { type: integer }
+        products: { type: integer }
+        services: { type: integer }
+        dailyActiveUsers: { type: integer }
+        searches: { type: integer }
+        aiSearches: { type: integer }
+        chats: { type: integer }
+        notifications: { type: integer }
+        favorites: { type: integer }
+        reviews: { type: integer }
+      required: [date, registrations, businesses, serviceProviders, products, services, dailyActiveUsers, searches, aiSearches, chats, notifications, favorites, reviews]
+    AdminAnalyticsCategory:
+      type: object
+      properties:
+        category: { type: string }
+        type: { type: string, enum: [product, service] }
+        count: { type: integer }
+      required: [category, type, count]
+    AdminRatingDistribution:
+      type: object
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        count: { type: integer }
+      required: [rating, count]
+    AdminSearchTrend:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        searches: { type: integer }
+        aiSearches: { type: integer }
+      required: [date, searches, aiSearches]
+    AdminAnalytics:
+      type: object
+      properties:
+        days: { type: array, items: { $ref: "#/components/schemas/AdminAnalyticsDay" } }
+        categoryPopularity: { type: array, items: { $ref: "#/components/schemas/AdminAnalyticsCategory" } }
+        ratingDistribution: { type: array, items: { $ref: "#/components/schemas/AdminRatingDistribution" } }
+        searchTrends: { type: array, items: { $ref: "#/components/schemas/AdminSearchTrend" } }
+        windowDays: { type: integer }
+        privacy: { type: string }
+      required: [days, categoryPopularity, ratingDistribution, searchTrends, windowDays, privacy]
+    AdminAuditLog:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        actorUserId: { type: ["string", "null"], format: uuid }
+        actorName: { type: ["string", "null"] }
+        action: { type: string }
+        entityType: { type: ["string", "null"] }
+        entityId: { type: ["string", "null"] }
+        metadata: { type: ["object", "null"], additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+      required: [id, actorUserId, actorName, action, entityType, entityId, metadata, createdAt]
+    AdminAuditPage:
+      type: object
+      properties:
+        logs: { type: array, items: { $ref: "#/components/schemas/AdminAuditLog" } }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        hasMore: { type: boolean }
+      required: [logs, page, limit, total, hasMore]
+    AdminPlatformSettingsValues:
+      type: object
+      properties:
+        maintenanceMode: { type: boolean }
+        customerRegistrationEnabled: { type: boolean }
+        businessRegistrationEnabled: { type: boolean }
+        providerRegistrationEnabled: { type: boolean }
+        requireVerificationToPublish: { type: boolean }
+        announcementsEnabled: { type: boolean }
+        aiSearchEnabled: { type: boolean }
+        supportContactEmail: { type: string, maxLength: 254 }
+      required: [maintenanceMode, customerRegistrationEnabled, businessRegistrationEnabled, providerRegistrationEnabled, requireVerificationToPublish, announcementsEnabled, aiSearchEnabled, supportContactEmail]
+    AdminSettingsInput:
+      $ref: "#/components/schemas/AdminPlatformSettingsValues"
+    AdminSettings:
+      type: object
+      properties:
+        settings: { $ref: "#/components/schemas/AdminPlatformSettingsValues" }
+        updatedAt: { type: ["string", "null"], format: date-time }
+      required: [settings, updatedAt]
     HealthStatus:
       type: object
       properties:
@@ -2441,15 +3314,19 @@ components:
       properties:
         id: { type: string, format: uuid }
         reporterId: { type: string, format: uuid }
-        entityType: { type: string, enum: [conversation, review] }
+        entityType: { type: string, enum: [conversation, business, service_provider, product, service, review, chat_message] }
         entityId: { type: string, format: uuid }
         reason: { type: string }
         details: { type: ["string", "null"] }
-        status: { type: string, enum: [open, resolved, dismissed] }
+        adminNote: { type: ["string", "null"] }
+        assignedToId: { type: ["string", "null"], format: uuid }
+        status: { type: string, enum: [open, investigating, resolved, dismissed] }
         reviewedById: { type: ["string", "null"], format: uuid }
         reviewedAt: { type: ["string", "null"], format: date-time }
         createdAt: { type: string, format: date-time }
-      required: [id, reporterId, entityType, entityId, reason, details, status, reviewedById, reviewedAt, createdAt]
+        reporterName: { type: ["string", "null"] }
+        reporterPhone: { type: ["string", "null"] }
+      required: [id, reporterId, entityType, entityId, reason, details, adminNote, assignedToId, status, reviewedById, reviewedAt, createdAt]
     ContentReportPage:
       type: object
       properties:
@@ -2462,7 +3339,9 @@ components:
     ReportStatusInput:
       type: object
       properties:
-        status: { type: string, enum: [resolved, dismissed] }
+        status: { type: string, enum: [open, investigating, resolved, dismissed] }
+        adminNote: { type: ["string", "null"], maxLength: 2000 }
+        assignedToId: { type: ["string", "null"], format: uuid }
       required: [status]
     Notification:
       type: object
@@ -2578,7 +3457,7 @@ components:
         rating: { type: integer, minimum: 1, maximum: 5 }
         comment: { type: ["string", "null"] }
         verifiedCustomer: { type: boolean }
-        moderationStatus: { type: string, enum: [visible, hidden] }
+        moderationStatus: { type: string, enum: [visible, hidden, removed] }
         author: { $ref: "#/components/schemas/ReviewAuthor" }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -2610,6 +3489,6 @@ components:
     ReviewModerationInput:
       type: object
       properties:
-        moderationStatus: { type: string, enum: [visible, hidden] }
+        moderationStatus: { type: string, enum: [visible, hidden, removed] }
       required: [moderationStatus]
 

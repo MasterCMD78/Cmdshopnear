@@ -12,4 +12,5 @@ export type ReviewModerationInputModerationStatus = typeof ReviewModerationInput
 export const ReviewModerationInputModerationStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;

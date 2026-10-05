@@ -16,10 +16,18 @@ export interface ContentReport {
   reason: string;
   /** @nullable */
   details: string | null;
+  /** @nullable */
+  adminNote: string | null;
+  /** @nullable */
+  assignedToId: string | null;
   status: ContentReportStatus;
   /** @nullable */
   reviewedById: string | null;
   /** @nullable */
   reviewedAt: Date | null;
   createdAt: Date;
+  /** @nullable */
+  reporterName?: string | null;
+  /** @nullable */
+  reporterPhone?: string | null;
 }

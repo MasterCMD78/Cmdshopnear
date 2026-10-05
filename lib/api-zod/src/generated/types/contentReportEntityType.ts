@@ -11,5 +11,10 @@ export type ContentReportEntityType = typeof ContentReportEntityType[keyof typeo
 
 export const ContentReportEntityType = {
   conversation: 'conversation',
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
   review: 'review',
+  chat_message: 'chat_message',
 } as const;

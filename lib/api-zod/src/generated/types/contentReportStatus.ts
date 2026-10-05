@@ -11,6 +11,7 @@ export type ContentReportStatus = typeof ContentReportStatus[keyof typeof Conten
 
 export const ContentReportStatus = {
   open: 'open',
+  investigating: 'investigating',
   resolved: 'resolved',
   dismissed: 'dismissed',
 } as const;

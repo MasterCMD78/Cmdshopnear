@@ -15,6 +15,7 @@ import {
 import { audit } from "../lib/audit";
 import { createNotification } from "../lib/engagement";
 import { requireAuth, requireRole } from "../lib/auth";
+import { requirePermission } from "../lib/admin-permissions";
 import { getMapProvider, haversineDistanceKm, parseCoordinates, safePublicCoordinates } from "../lib/location";
 
 const router: IRouter = Router();
@@ -586,13 +587,13 @@ router.delete("/favorites/:targetType/:targetId", requireAuth, async (req, res) 
   res.json({ message: "Favorite removed" });
 });
 
-router.get("/admin/categories", requireAuth, requireRole("admin"), async (req, res) => {
+router.get("/admin/categories", requireAuth, requirePermission("categories.manage"), async (req, res) => {
   const type = req.query.type === "services" ? "services" : "products";
   const rows = await db.select().from(categoryTable(type)).orderBy(asc(categoryTable(type).sortOrder), asc(categoryTable(type).name));
   res.json({ type, categories: rows });
 });
 
-router.post("/admin/categories", requireAuth, requireRole("admin"), async (req, res) => {
+router.post("/admin/categories", requireAuth, requirePermission("categories.manage"), async (req, res) => {
   const parsed = categoryInput.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid category details" });
@@ -604,7 +605,7 @@ router.post("/admin/categories", requireAuth, requireRole("admin"), async (req, 
   res.status(201).json(category);
 });
 
-router.put("/admin/categories/:type/:id", requireAuth, requireRole("admin"), async (req, res) => {
+router.put("/admin/categories/:type/:id", requireAuth, requirePermission("categories.manage"), async (req, res) => {
   const type = req.params.type === "services" ? "services" : req.params.type === "products" ? "products" : null;
   if (!type) {
     res.status(400).json({ error: "Category type must be products or services" });
@@ -624,7 +625,7 @@ router.put("/admin/categories/:type/:id", requireAuth, requireRole("admin"), asy
   res.json(category);
 });
 
-router.delete("/admin/categories/:type/:id", requireAuth, requireRole("admin"), async (req, res) => {
+router.delete("/admin/categories/:type/:id", requireAuth, requirePermission("categories.manage"), async (req, res) => {
   const type = req.params.type === "services" ? "services" : req.params.type === "products" ? "products" : null;
   if (!type) {
     res.status(400).json({ error: "Category type must be products or services" });

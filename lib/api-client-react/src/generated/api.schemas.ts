@@ -5,6 +5,601 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type AdminPermission = typeof AdminPermission[keyof typeof AdminPermission];
+
+
+export const AdminPermission = {
+  dashboardread: 'dashboard.read',
+  verificationread: 'verification.read',
+  verificationreview: 'verification.review',
+  usersread: 'users.read',
+  usersmanage: 'users.manage',
+  reportsread: 'reports.read',
+  reportsmanage: 'reports.manage',
+  moderationmanage: 'moderation.manage',
+  analyticsread: 'analytics.read',
+  auditread: 'audit.read',
+  settingsread: 'settings.read',
+  settingsmanage: 'settings.manage',
+  categoriesmanage: 'categories.manage',
+  announcementsmanage: 'announcements.manage',
+  rolesmanage: 'roles.manage',
+} as const;
+
+export type AdminRoleName = typeof AdminRoleName[keyof typeof AdminRoleName];
+
+
+export const AdminRoleName = {
+  super_admin: 'super_admin',
+  moderator: 'moderator',
+  support: 'support',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminAccessRole = typeof AdminAccessRole[keyof typeof AdminAccessRole] | null;
+
+
+export const AdminAccessRole = {
+  super_admin: 'super_admin',
+  moderator: 'moderator',
+  support: 'support',
+} as const;
+
+export interface AdminAccess {
+  /** @nullable */
+  role: AdminAccessRole;
+  permissions: AdminPermission[];
+}
+
+export interface AdminRoleInput {
+  role: AdminRoleName;
+}
+
+export interface AdminRoleAssignmentResult {
+  userId: string;
+  role: AdminRoleName;
+  permissions: AdminPermission[];
+}
+
+export interface AdminRoleMember {
+  userId: string;
+  fullName: string;
+  phone: string;
+  /** @nullable */
+  email: string | null;
+  role: AdminRoleName;
+  assignedAt: string;
+}
+
+export interface AdminRoleList {
+  administrators: AdminRoleMember[];
+  roles: AdminRoleName[];
+}
+
+export interface AdminDashboardTotals {
+  users: number;
+  businesses: number;
+  serviceProviders: number;
+  products: number;
+  services: number;
+  activeConversations: number;
+  reviews: number;
+  ratings: number;
+  pendingVerifications: number;
+  pendingReports: number;
+  averageRating: number;
+}
+
+export interface AdminRecentRegistration {
+  id: string;
+  fullName: string;
+  accountType: string;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  state: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminRecentActivity {
+  id: string;
+  action: string;
+  /** @nullable */
+  entityType: string | null;
+  /** @nullable */
+  entityId: string | null;
+  createdAt: string;
+  /** @nullable */
+  actorId: string | null;
+  /** @nullable */
+  actorName: string | null;
+}
+
+export interface AdminDashboard {
+  totals: AdminDashboardTotals;
+  recentRegistrations: AdminRecentRegistration[];
+  recentActivity: AdminRecentActivity[];
+  windowDays: number;
+}
+
+export type VerificationStatus = typeof VerificationStatus[keyof typeof VerificationStatus];
+
+
+export const VerificationStatus = {
+  pending: 'pending',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+  suspended: 'suspended',
+} as const;
+
+export type VerificationRequestInputEntityType = typeof VerificationRequestInputEntityType[keyof typeof VerificationRequestInputEntityType];
+
+
+export const VerificationRequestInputEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+} as const;
+
+export interface VerificationRequestInput {
+  entityType: VerificationRequestInputEntityType;
+  entityId: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  applicantNote?: string | null;
+}
+
+export type VerificationRequestEntityType = typeof VerificationRequestEntityType[keyof typeof VerificationRequestEntityType];
+
+
+export const VerificationRequestEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+} as const;
+
+export interface VerificationRequest {
+  id: string;
+  entityType: VerificationRequestEntityType;
+  entityId: string;
+  ownerId: string;
+  /** @nullable */
+  applicantNote: string | null;
+  status: VerificationStatus;
+  /** @nullable */
+  adminNote: string | null;
+  /** @nullable */
+  reviewedById: string | null;
+  /** @nullable */
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MyVerificationRequests {
+  requests: VerificationRequest[];
+}
+
+export interface VerificationDecisionInput {
+  status: VerificationStatus;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  adminNote?: string | null;
+}
+
+export type VerificationQueueEntryEntityType = typeof VerificationQueueEntryEntityType[keyof typeof VerificationQueueEntryEntityType];
+
+
+export const VerificationQueueEntryEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+} as const;
+
+export interface VerificationQueueEntry {
+  id: string;
+  ownerId: string;
+  name: string;
+  status: VerificationStatus;
+  createdAt: string;
+  ownerName: string;
+  ownerPhone: string;
+  /** @nullable */
+  ownerEmail: string | null;
+  entityType: VerificationQueueEntryEntityType;
+  /** @nullable */
+  requestId: string | null;
+  /** @nullable */
+  applicantNote: string | null;
+  /** @nullable */
+  adminNote: string | null;
+  submittedAt: string;
+}
+
+export interface VerificationQueue {
+  requests: VerificationQueueEntry[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface VerificationHistoryEntry {
+  id: string;
+  /** @nullable */
+  requestId: string | null;
+  /** @nullable */
+  previousStatus: string | null;
+  newStatus: string;
+  /** @nullable */
+  note: string | null;
+  /** @nullable */
+  actorUserId: string | null;
+  /** @nullable */
+  actorName: string | null;
+  createdAt: string;
+}
+
+export interface VerificationHistory {
+  history: VerificationHistoryEntry[];
+}
+
+/**
+ * @nullable
+ */
+export type AdminUserSummaryAdminRole = typeof AdminUserSummaryAdminRole[keyof typeof AdminUserSummaryAdminRole] | null;
+
+
+export const AdminUserSummaryAdminRole = {
+  super_admin: 'super_admin',
+  moderator: 'moderator',
+  support: 'support',
+} as const;
+
+export interface AdminUserSummary {
+  id: string;
+  fullName: string;
+  phone: string;
+  /** @nullable */
+  email: string | null;
+  accountType: string;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  state: string | null;
+  status: string;
+  createdAt: string;
+  /** @nullable */
+  adminRole: AdminUserSummaryAdminRole;
+}
+
+export interface AdminUserPage {
+  users: AdminUserSummary[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface AdminUserProfile {
+  id: string;
+  fullName: string;
+  phone: string;
+  /** @nullable */
+  email: string | null;
+  accountType: string;
+  /** @nullable */
+  profilePhoto: string | null;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  state: string | null;
+  preferredLanguage: string;
+  notificationsEnabled: boolean;
+  status: string;
+  /** @nullable */
+  phoneVerifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUserBusiness {
+  id: string;
+  businessName: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface AdminUserProvider {
+  id: string;
+  profession: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface AdminUserActivitySummary {
+  reportsSubmitted: number;
+  reviewsWritten: number;
+  auditActions: number;
+}
+
+/**
+ * @nullable
+ */
+export type AdminUserDetailAdminRole = typeof AdminUserDetailAdminRole[keyof typeof AdminUserDetailAdminRole] | null;
+
+
+export const AdminUserDetailAdminRole = {
+  super_admin: 'super_admin',
+  moderator: 'moderator',
+  support: 'support',
+} as const;
+
+export interface AdminUserDetail {
+  user: AdminUserProfile;
+  /** @nullable */
+  adminRole: AdminUserDetailAdminRole;
+  business: AdminUserBusiness | null;
+  serviceProvider: AdminUserProvider | null;
+  activitySummary: AdminUserActivitySummary;
+}
+
+export interface AdminUserActivityEntry {
+  id: string;
+  kind: string;
+  /** @nullable */
+  entityType: string | null;
+  /** @nullable */
+  entityId: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserActivity {
+  activities: AdminUserActivityEntry[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export type AdminUserStatusInputStatus = typeof AdminUserStatusInputStatus[keyof typeof AdminUserStatusInputStatus];
+
+
+export const AdminUserStatusInputStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  deleted: 'deleted',
+} as const;
+
+export interface AdminUserStatusInput {
+  status: AdminUserStatusInputStatus;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+}
+
+export type VerificationResetInputEntityType = typeof VerificationResetInputEntityType[keyof typeof VerificationResetInputEntityType];
+
+
+export const VerificationResetInputEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+} as const;
+
+export interface VerificationResetInput {
+  entityType: VerificationResetInputEntityType;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+}
+
+export type VerificationResetResultStatus = typeof VerificationResetResultStatus[keyof typeof VerificationResetResultStatus];
+
+
+export const VerificationResetResultStatus = {
+  pending: 'pending',
+} as const;
+
+export interface VerificationResetResult {
+  request: VerificationRequest;
+  status: VerificationResetResultStatus;
+}
+
+export type CreateContentReportInputEntityType = typeof CreateContentReportInputEntityType[keyof typeof CreateContentReportInputEntityType];
+
+
+export const CreateContentReportInputEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
+  review: 'review',
+  chat_message: 'chat_message',
+} as const;
+
+export interface CreateContentReportInput {
+  entityType: CreateContentReportInputEntityType;
+  entityId: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  reason: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  details?: string | null;
+}
+
+export type ModerationContentItemEntityType = typeof ModerationContentItemEntityType[keyof typeof ModerationContentItemEntityType];
+
+
+export const ModerationContentItemEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
+  review: 'review',
+  chat_message: 'chat_message',
+} as const;
+
+export interface ModerationContentItem {
+  id: string;
+  title: string;
+  /** @nullable */
+  ownerName: string | null;
+  status: string;
+  createdAt: string;
+  /** @nullable */
+  preview: string | null;
+  entityType: ModerationContentItemEntityType;
+}
+
+export interface ModerationContentPage {
+  results: ModerationContentItem[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export type ModerationActionInputAction = typeof ModerationActionInputAction[keyof typeof ModerationActionInputAction];
+
+
+export const ModerationActionInputAction = {
+  hide: 'hide',
+  restore: 'restore',
+  remove: 'remove',
+  suspend: 'suspend',
+  unsuspend: 'unsuspend',
+} as const;
+
+export interface ModerationActionInput {
+  action: ModerationActionInputAction;
+  /**
+     * @minLength 2
+     * @maxLength 1000
+     */
+  reason: string;
+}
+
+export interface ModerationActionResult {
+  entityType: string;
+  entityId: string;
+  action: string;
+  updated: boolean;
+}
+
+export interface AdminAnalyticsDay {
+  date: string;
+  registrations: number;
+  businesses: number;
+  serviceProviders: number;
+  products: number;
+  services: number;
+  dailyActiveUsers: number;
+  searches: number;
+  aiSearches: number;
+  chats: number;
+  notifications: number;
+  favorites: number;
+  reviews: number;
+}
+
+export type AdminAnalyticsCategoryType = typeof AdminAnalyticsCategoryType[keyof typeof AdminAnalyticsCategoryType];
+
+
+export const AdminAnalyticsCategoryType = {
+  product: 'product',
+  service: 'service',
+} as const;
+
+export interface AdminAnalyticsCategory {
+  category: string;
+  type: AdminAnalyticsCategoryType;
+  count: number;
+}
+
+export interface AdminRatingDistribution {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  count: number;
+}
+
+export interface AdminSearchTrend {
+  date: string;
+  searches: number;
+  aiSearches: number;
+}
+
+export interface AdminAnalytics {
+  days: AdminAnalyticsDay[];
+  categoryPopularity: AdminAnalyticsCategory[];
+  ratingDistribution: AdminRatingDistribution[];
+  searchTrends: AdminSearchTrend[];
+  windowDays: number;
+  privacy: string;
+}
+
+/**
+ * @nullable
+ */
+export type AdminAuditLogMetadata = { [key: string]: unknown } | null;
+
+export interface AdminAuditLog {
+  id: string;
+  /** @nullable */
+  actorUserId: string | null;
+  /** @nullable */
+  actorName: string | null;
+  action: string;
+  /** @nullable */
+  entityType: string | null;
+  /** @nullable */
+  entityId: string | null;
+  /** @nullable */
+  metadata: AdminAuditLogMetadata;
+  createdAt: string;
+}
+
+export interface AdminAuditPage {
+  logs: AdminAuditLog[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface AdminPlatformSettingsValues {
+  maintenanceMode: boolean;
+  customerRegistrationEnabled: boolean;
+  businessRegistrationEnabled: boolean;
+  providerRegistrationEnabled: boolean;
+  requireVerificationToPublish: boolean;
+  announcementsEnabled: boolean;
+  aiSearchEnabled: boolean;
+  /** @maxLength 254 */
+  supportContactEmail: string;
+}
+
+export type AdminSettingsInput = AdminPlatformSettingsValues;
+
+export interface AdminSettings {
+  settings: AdminPlatformSettingsValues;
+  /** @nullable */
+  updatedAt: string | null;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -1328,7 +1923,12 @@ export type ContentReportEntityType = typeof ContentReportEntityType[keyof typeo
 
 export const ContentReportEntityType = {
   conversation: 'conversation',
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
   review: 'review',
+  chat_message: 'chat_message',
 } as const;
 
 export type ContentReportStatus = typeof ContentReportStatus[keyof typeof ContentReportStatus];
@@ -1336,6 +1936,7 @@ export type ContentReportStatus = typeof ContentReportStatus[keyof typeof Conten
 
 export const ContentReportStatus = {
   open: 'open',
+  investigating: 'investigating',
   resolved: 'resolved',
   dismissed: 'dismissed',
 } as const;
@@ -1348,12 +1949,20 @@ export interface ContentReport {
   reason: string;
   /** @nullable */
   details: string | null;
+  /** @nullable */
+  adminNote: string | null;
+  /** @nullable */
+  assignedToId: string | null;
   status: ContentReportStatus;
   /** @nullable */
   reviewedById: string | null;
   /** @nullable */
   reviewedAt: string | null;
   createdAt: string;
+  /** @nullable */
+  reporterName?: string | null;
+  /** @nullable */
+  reporterPhone?: string | null;
 }
 
 export interface ContentReportPage {
@@ -1368,12 +1977,21 @@ export type ReportStatusInputStatus = typeof ReportStatusInputStatus[keyof typeo
 
 
 export const ReportStatusInputStatus = {
+  open: 'open',
+  investigating: 'investigating',
   resolved: 'resolved',
   dismissed: 'dismissed',
 } as const;
 
 export interface ReportStatusInput {
   status: ReportStatusInputStatus;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  adminNote?: string | null;
+  /** @nullable */
+  assignedToId?: string | null;
 }
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
@@ -1545,6 +2163,7 @@ export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof 
 export const ReviewModerationStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;
 
 export interface Review {
@@ -1592,6 +2211,7 @@ export type ReviewModerationInputModerationStatus = typeof ReviewModerationInput
 export const ReviewModerationInputModerationStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;
 
 export interface ReviewModerationInput {
@@ -1838,9 +2458,12 @@ export type ListAdminReviewsStatus = typeof ListAdminReviewsStatus[keyof typeof 
 export const ListAdminReviewsStatus = {
   visible: 'visible',
   hidden: 'hidden',
+  removed: 'removed',
 } as const;
 
 export type ListContentReportsParams = {
+status?: ListContentReportsStatus;
+entityType?: ListContentReportsEntityType;
 /**
  * @minimum 1
  */
@@ -1850,5 +2473,156 @@ page?: number;
  * @maximum 50
  */
 limit?: number;
+};
+
+export type ListContentReportsStatus = typeof ListContentReportsStatus[keyof typeof ListContentReportsStatus];
+
+
+export const ListContentReportsStatus = {
+  open: 'open',
+  investigating: 'investigating',
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export type ListContentReportsEntityType = typeof ListContentReportsEntityType[keyof typeof ListContentReportsEntityType];
+
+
+export const ListContentReportsEntityType = {
+  conversation: 'conversation',
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
+  review: 'review',
+  chat_message: 'chat_message',
+} as const;
+
+export type ListVerificationRequestsParams = {
+status?: ListVerificationRequestsStatus;
+entityType?: ListVerificationRequestsEntityType;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListVerificationRequestsStatus = typeof ListVerificationRequestsStatus[keyof typeof ListVerificationRequestsStatus];
+
+
+export const ListVerificationRequestsStatus = {
+  pending: 'pending',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+  suspended: 'suspended',
+} as const;
+
+export type ListVerificationRequestsEntityType = typeof ListVerificationRequestsEntityType[keyof typeof ListVerificationRequestsEntityType];
+
+
+export const ListVerificationRequestsEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+} as const;
+
+export type ListAdminUsersParams = {
+/**
+ * @maxLength 120
+ */
+query?: string;
+accountType?: ListAdminUsersAccountType;
+status?: ListAdminUsersStatus;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListAdminUsersAccountType = typeof ListAdminUsersAccountType[keyof typeof ListAdminUsersAccountType];
+
+
+export const ListAdminUsersAccountType = {
+  customer: 'customer',
+  business: 'business',
+  service_provider: 'service_provider',
+  admin: 'admin',
+} as const;
+
+export type ListAdminUsersStatus = typeof ListAdminUsersStatus[keyof typeof ListAdminUsersStatus];
+
+
+export const ListAdminUsersStatus = {
+  active: 'active',
+  suspended: 'suspended',
+  deleted: 'deleted',
+} as const;
+
+export type ListModerationContentParams = {
+entityType?: ListModerationContentEntityType;
+/**
+ * @maxLength 120
+ */
+query?: string;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+};
+
+export type ListModerationContentEntityType = typeof ListModerationContentEntityType[keyof typeof ListModerationContentEntityType];
+
+
+export const ListModerationContentEntityType = {
+  business: 'business',
+  service_provider: 'service_provider',
+  product: 'product',
+  service: 'service',
+  review: 'review',
+  chat_message: 'chat_message',
+} as const;
+
+export type GetAdminAnalyticsParams = {
+/**
+ * @minimum 7
+ * @maximum 90
+ */
+days?: number;
+};
+
+export type ListAdminAuditLogsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @maxLength 100
+ */
+action?: string;
+actorUserId?: string;
+/**
+ * @maxLength 100
+ */
+entityType?: string;
 };
 

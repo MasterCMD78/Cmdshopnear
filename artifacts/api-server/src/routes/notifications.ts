@@ -17,6 +17,7 @@ import { db } from "@workspace/db";
 import { notificationPreferences, notifications, users } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
 import { requireAuth, requireRole } from "../lib/auth";
+import { requirePermission } from "../lib/admin-permissions";
 import { publishUserEvent } from "../lib/realtime";
 
 const router: IRouter = Router();
@@ -133,7 +134,7 @@ router.put("/notifications/preferences", requireAuth, async (req, res): Promise<
   res.json(UpdateNotificationPreferencesResponse.parse(next));
 });
 
-router.post("/admin/notifications/announcements", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.post("/admin/notifications/announcements", requireAuth, requirePermission("announcements.manage"), async (req, res): Promise<void> => {
   const parsed = CreateNotificationAnnouncementBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid announcement" });

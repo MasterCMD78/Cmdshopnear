@@ -5,8 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListContentReportsEntityType } from './listContentReportsEntityType';
+import type { ListContentReportsStatus } from './listContentReportsStatus';
 
 export type ListContentReportsParams = {
+status?: ListContentReportsStatus;
+entityType?: ListContentReportsEntityType;
 /**
  * @minimum 1
  */

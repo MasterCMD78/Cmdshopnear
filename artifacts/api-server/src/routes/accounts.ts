@@ -21,6 +21,7 @@ import { db } from "@workspace/db";
 import { appSettings, businesses, serviceProviders, users, type ServiceProvider } from "@workspace/db/schema";
 import { audit } from "../lib/audit";
 import { requireAuth, requireRole, serializeUser } from "../lib/auth";
+import { requirePermission } from "../lib/admin-permissions";
 import { parseCoordinates, safePublicCoordinates } from "../lib/location";
 
 const router: IRouter = Router();
@@ -197,12 +198,12 @@ router.get("/new-on-shopnear", async (_req, res) => {
   }));
 });
 
-router.get("/admin/settings/new-on-shopnear", requireAuth, requireRole("admin"), async (_req, res) => {
+router.get("/admin/settings/new-on-shopnear", requireAuth, requirePermission("settings.read"), async (_req, res) => {
   const [setting] = await db.select().from(appSettings).where(eq(appSettings.key, "new_on_shopnear_days")).limit(1);
   res.json(GetNewOnShopNearSettingsResponse.parse({ days: typeof setting?.value === "number" ? setting.value : 30 }));
 });
 
-router.put("/admin/settings/new-on-shopnear", requireAuth, requireRole("admin"), async (req, res) => {
+router.put("/admin/settings/new-on-shopnear", requireAuth, requirePermission("settings.manage"), async (req, res) => {
   const parsed = UpdateNewOnShopNearSettingsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Days must be between 0 and 365" });

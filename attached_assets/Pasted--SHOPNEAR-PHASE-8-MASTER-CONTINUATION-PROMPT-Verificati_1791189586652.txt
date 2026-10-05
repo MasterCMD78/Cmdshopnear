@@ -1,0 +1,476 @@
+🚀 SHOPNEAR PHASE 8 MASTER CONTINUATION PROMPT
+
+Verification System • Admin Dashboard • Moderation • Analytics
+
+This repository is NOT a new project.
+
+The following phases are already completed and verified:
+
+* ✅ Phase 1 – Foundation & UI
+* ✅ Phase 2 – Authentication & User Accounts
+* ✅ Phase 3 – Marketplace Management
+* ✅ Phase 4 – Customer Experience
+* ✅ Phase 5 – GPS & Nearby Discovery
+* ✅ Phase 6 – AI Search & Recommendations
+* ✅ Phase 7 – Chat, Notifications, Reviews & Ratings
+
+Do NOT rebuild, redesign, or replace any completed functionality.
+
+Continue only from the existing codebase.
+
+⸻
+
+BEFORE WRITING ANY CODE
+
+Read every project document before making changes.
+
+Read:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* docs/DECISIONS.md (create it if it does not exist)
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Also read all three official ShopNear specification PDFs.
+
+These documents are the source of truth.
+
+If implementation and documentation differ:
+
+* Audit first.
+* Verify first.
+* Fix only genuine inconsistencies.
+* Never duplicate completed work.
+
+⸻
+
+RECOVERY
+
+Before implementing anything:
+
+Audit the current project.
+
+Determine exactly what already exists.
+
+Verify:
+
+* Database
+* API
+* Frontend
+* Documentation
+* Existing tests
+* Admin functionality
+
+Recover previous implementation.
+
+Never recreate completed work.
+
+Only implement genuinely missing Phase 8 functionality.
+
+⸻
+
+PHASE 8 OBJECTIVE
+
+Build a complete production-ready administration, verification, moderation, and analytics system.
+
+Do NOT begin Phase 9.
+
+⸻
+
+BUSINESS VERIFICATION
+
+Implement a complete verification workflow.
+
+Support:
+
+* Business verification requests
+* Service Provider verification requests
+* Manual approval
+* Manual rejection
+* Verification notes
+* Verification history
+* Verification badge
+* Verification status
+
+Statuses:
+
+* Pending
+* Under Review
+* Approved
+* Rejected
+* Suspended
+
+Verification should never happen automatically.
+
+⸻
+
+ADMIN DASHBOARD
+
+Create a professional administrator dashboard.
+
+Dashboard should display:
+
+* Total users
+* Total businesses
+* Total service providers
+* Total products
+* Total services
+* Active conversations
+* Reviews
+* Ratings
+* Pending verifications
+* Pending reports
+* Recent registrations
+* Platform activity
+* Marketplace growth
+
+Provide:
+
+* Charts
+* Cards
+* Recent activity
+* Search
+* Filters
+
+Maintain the existing ShopNear design.
+
+⸻
+
+USER MANAGEMENT
+
+Allow administrators to:
+
+* Search users
+* View user profile
+* View activity
+* Suspend account
+* Reactivate account
+* Soft delete account
+* View verification status
+* Reset verification state
+* View reports
+* View audit logs
+
+⸻
+
+REPORT SYSTEM
+
+Users should be able to report:
+
+* Businesses
+* Service Providers
+* Products
+* Services
+* Reviews
+* Chat Messages
+
+Support:
+
+* Report reason
+* Additional notes
+* Reporter identity
+* Resolution status
+* Admin notes
+
+Statuses:
+
+* Open
+* Investigating
+* Resolved
+* Dismissed
+
+⸻
+
+CONTENT MODERATION
+
+Administrators should be able to:
+
+* Review reports
+* Hide listings
+* Restore listings
+* Remove reviews
+* Remove ratings
+* Suspend businesses
+* Suspend providers
+* Block abusive users
+
+Never permanently delete data.
+
+Use soft deletion where possible.
+
+⸻
+
+ANALYTICS
+
+Implement marketplace analytics.
+
+Include:
+
+* Daily active users
+* New registrations
+* Listing growth
+* Category popularity
+* Search trends
+* AI search usage
+* Chat usage
+* Notification usage
+* Favorites growth
+* Review activity
+* Rating distribution
+
+Support future expansion.
+
+⸻
+
+AUDIT LOGGING
+
+Log administrator actions.
+
+Include:
+
+* Login
+* Verification
+* Approval
+* Rejection
+* Suspension
+* Moderation
+* Report actions
+* Settings changes
+
+Each log should include:
+
+* Timestamp
+* Admin ID
+* Action
+* Target
+* Result
+
+⸻
+
+ADMIN PERMISSIONS
+
+Implement role-based administration.
+
+Support:
+
+* Super Admin
+* Moderator
+* Support
+
+Permissions must be granular.
+
+No administrator should automatically have every permission.
+
+⸻
+
+PLATFORM SETTINGS
+
+Allow administrators to configure:
+
+* Verification duration
+* Featured listing duration
+* AI settings
+* Marketplace settings
+* Notification settings
+* Search defaults
+* Registration controls
+
+Future-ready only.
+
+⸻
+
+DATABASE
+
+Only extend the existing schema.
+
+Never recreate tables.
+
+Never delete existing data.
+
+Document every migration.
+
+⸻
+
+API
+
+Create or extend secure REST endpoints for:
+
+* Verification
+* Reports
+* Moderation
+* Analytics
+* Audit logs
+* Admin dashboard
+* User management
+* Platform settings
+
+Regenerate OpenAPI only when required.
+
+⸻
+
+USER INTERFACE
+
+Maintain the existing ShopNear design.
+
+Continue using:
+
+* Emerald Green
+* Orange
+* White
+* Rounded Cards
+* Existing Bottom Navigation
+* Existing Mobile Layout
+
+The Admin Dashboard should use the same design language while being optimized for larger screens as well.
+
+⸻
+
+SECURITY
+
+Implement:
+
+* Permission middleware
+* Admin authorization
+* Secure audit logs
+* Input validation
+* Rate limiting
+* Protected admin routes
+* Secure moderation actions
+
+⸻
+
+TESTING
+
+Run before completion:
+
+* Database verification
+* Typecheck
+* Production build
+* API tests
+* Admin permission tests
+* Verification tests
+* Moderation tests
+* Analytics tests
+* Browser verification
+* Smoke tests
+
+Fix only genuine issues.
+
+⸻
+
+DOCUMENTATION
+
+Update:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* docs/DECISIONS.md
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Never leave documentation outdated.
+
+⸻
+
+DECISIONS.md
+
+If it does not exist, create it.
+
+Record important architectural decisions, including:
+
+* Verification workflow design
+* Moderation architecture
+* Analytics approach
+* Audit logging strategy
+* Admin permission model
+* Report lifecycle
+* Platform settings architecture
+
+Each decision should include:
+
+* Date
+* Context
+* Decision
+* Reason
+* Consequences
+
+⸻
+
+HANDOFF.md
+
+Update before marking Phase 8 complete.
+
+Include:
+
+* Current Phase
+* Last Completed Task
+* Database Migrations Applied
+* API Endpoints Added
+* Files Modified
+* Verification Results
+* Known Limitations
+* Exact Next Task
+
+⸻
+
+IMPORTANT RULES
+
+* Never redesign completed pages.
+* Never break existing functionality.
+* Never remove completed work.
+* Never duplicate implementation.
+* Never start Phase 9.
+* Verify existing functionality before extending it.
+* If recommending an architectural improvement, document it first in docs/DECISIONS.md before implementing it.
+
+⸻
+
+DEFINITION OF DONE
+
+Phase 8 is complete only when:
+
+* Business verification works.
+* Service Provider verification works.
+* Admin Dashboard works.
+* User management works.
+* Reports work.
+* Moderation works.
+* Analytics work.
+* Audit logging works.
+* Platform settings work.
+* Admin permissions work.
+* Database verification passes.
+* Typecheck passes.
+* Production build passes.
+* API verification passes.
+* Browser verification passes.
+* Documentation is fully synchronized.
+* replit.md is updated.
+* PROJECT_MEMORY.md is updated.
+* HANDOFF.md is updated.
+* docs/DECISIONS.md is updated.
+* A final summary clearly states:
+    * What was verified
+    * What was implemented
+    * Database migrations applied
+    * API endpoints added
+    * Tests executed
+    * Known limitations
+    * Exact recommended starting point for Phase 9 (Security Hardening, Performance Optimization, Accessibility, Bug Fixing & Production Readiness)
+
+Do not start Phase 9 under any circumstances. Stop after Phase 8 is fully verified and documented.
