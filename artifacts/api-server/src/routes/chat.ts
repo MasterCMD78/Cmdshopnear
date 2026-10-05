@@ -24,6 +24,7 @@ import {
   DeleteChatMessageResponse,
   ListChatConversationsQueryParams,
   ListChatConversationsResponse,
+  ListChatBlocksResponse,
   ListChatMessagesQueryParams,
   ListChatMessagesResponse,
   MarkConversationReadParams,
@@ -434,7 +435,11 @@ router.post("/chat/conversations", requireAuth, async (req, res): Promise<void> 
 });
 
 router.get("/chat/messages", requireAuth, async (req, res): Promise<void> => {
-  const parsed = ListChatMessagesQueryParams.safeParse(req.query);
+  const query = {
+    ...req.query,
+    ...(req.query.before === undefined ? {} : { before: new Date(String(req.query.before)) }),
+  };
+  const parsed = ListChatMessagesQueryParams.safeParse(query);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid message list request" });
     return;
@@ -672,6 +677,19 @@ router.post("/chat/conversations/:id/report", requireAuth, async (req, res): Pro
   res.status(201).json(ReportChatConversationResponse.parse(report));
 });
 
+router.get("/chat/blocks", requireAuth, async (req, res): Promise<void> => {
+  const rows = await db.select({
+    id: users.id,
+    fullName: users.fullName,
+    profilePhoto: users.profilePhoto,
+    accountType: users.accountType,
+  }).from(userBlocks)
+    .innerJoin(users, eq(users.id, userBlocks.blockedId))
+    .where(eq(userBlocks.blockerId, req.user!.id))
+    .orderBy(desc(userBlocks.createdAt));
+  res.json(ListChatBlocksResponse.parse({ blockedUsers: rows }));
+});
+
 router.post("/chat/blocks/:userId", requireAuth, async (req, res): Promise<void> => {
   const params = BlockChatUserParams.safeParse(req.params);
   if (!params.success || params.data.userId === req.user!.id) {
@@ -689,7 +707,10 @@ router.post("/chat/blocks/:userId", requireAuth, async (req, res): Promise<void>
     .values({ blockerId: req.user!.id, blockedId: params.data.userId })
     .onConflictDoNothing()
     .returning();
-  if (created) await audit(req, "chat.user.blocked", "user", params.data.userId);
+  if (created) {
+    await audit(req, "chat.user.blocked", "user", params.data.userId);
+    publishUserEvent(req.user!.id, { type: "blocks" });
+  }
   res.json(BlockChatUserResponse.parse({ message: "User blocked" }));
 });
 
@@ -703,7 +724,10 @@ router.delete("/chat/blocks/:userId", requireAuth, async (req, res): Promise<voi
     eq(userBlocks.blockerId, req.user!.id),
     eq(userBlocks.blockedId, params.data.userId),
   )).returning();
-  if (removed) await audit(req, "chat.user.unblocked", "user", params.data.userId);
+  if (removed) {
+    await audit(req, "chat.user.unblocked", "user", params.data.userId);
+    publishUserEvent(req.user!.id, { type: "blocks" });
+  }
   res.json(UnblockChatUserResponse.parse({ message: "User unblocked" }));
 });
 

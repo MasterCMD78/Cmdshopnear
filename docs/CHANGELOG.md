@@ -53,3 +53,12 @@
 - Added per-user AI controls and history clearing to Profile, recent search chips to Search, and recommendation sections to Home.
 - Added additive `ai_preferences` and `ai_search_history` tables; preserved existing marketplace and location tables.
 - Documented unsupported opening-hours/gender filters and the absence of weekly engagement and recently viewed events.
+
+## Phase 7 — Chat, Notifications, Reviews & Ratings
+
+- Added participant-scoped plain-text chat, search, read receipts, typing state, soft deletion, block/unblock, reports, and authenticated live updates.
+- Added user-owned notification history, unread counts, category preferences, mark-read actions, and administrator announcements.
+- Added customer reviews with editable ownership, server-derived verified-customer state, rating summaries, reporting, and administrator moderation.
+- Added review/rating displays and listing message actions to existing detail pages while retaining the ShopNear design and five-tab navigation.
+- Added pagination to favorites and persisted block-state retrieval; retained the existing favorites table.
+- Applied the additive development schema and synchronized OpenAPI client/Zod types and project documentation.

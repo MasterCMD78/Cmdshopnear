@@ -53,3 +53,10 @@ Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware acco
 - Added recommendation, suggestion, conversation-history, and per-user preference endpoints. AI search remains additive to the existing marketplace search.
 - AI search history is optional and user-scoped. Request GPS coordinates are used for distance ranking only and are not stored in search history or logs.
 - See `AI.md`, `API.md`, `DATABASE.md`, `ARCHITECTURE.md`, and `DECISIONS.md` for contracts, limitations, and future integration boundaries.
+
+## Phase 7 — Chat, notifications, reviews, and ratings
+
+- Added persistent chat, blocks, reports, notifications, preferences, and reviews without replacing existing tables or deleting data.
+- Added live chat updates with REST recovery, read receipts, typing state, customer review forms, public rating summaries, and administrator moderation.
+- Favorites remain business/product/service saves and now load through a paginated API.
+- The development schema push was additive. Phase 8 remains unstarted.

@@ -83,3 +83,24 @@ Nearby results include straight-line `distanceKm` for radius filtering and sorti
 - `GET /ai/preferences` and `PUT /ai/preferences` — read or update recommendation, personalization, history-saving, and category preferences.
 
 The AI routes use a 30-request-per-minute in-memory rate limit. Preferences and history require the existing session cookie. Search and recommendation responses omit raw coordinates and return only eligible public listing data. The mock provider currently supports English text queries; unsupported opening-hours and provider-gender filters are reported rather than claimed as applied. Search also explains when proximity cannot be applied without coordinates or featured filtering excludes business/provider profiles.
+
+## Phase 7 chat, notifications, reviews, and ratings
+
+All routes below are mounted under `/api` and use the existing HTTP-only session cookie where marked as protected.
+
+- `GET|POST /chat/conversations` — list/search the current user's paginated conversations or start/reopen a customer conversation from a public business, product, or service listing.
+- `GET /chat/messages?conversationId=&before=&limit=` — read a conversation's messages and mark incoming messages read; `POST /chat/conversations/:id/messages` sends bounded plain text.
+- `PUT /chat/conversations/:id/read` and `PUT /chat/conversations/:id/typing` — update read receipts and short-lived typing state.
+- `DELETE /chat/messages/:id` — soft-delete a message sent by the current user.
+- `POST /chat/conversations/:id/report`, `GET /chat/blocks`, `POST|DELETE /chat/blocks/:userId` — report a conversation and list, block, or unblock users.
+- `GET /chat/events` — authenticated server-sent updates; clients also refresh through REST so reconnects recover missed events.
+- `GET /notifications`, `GET /notifications/unread-count`, `PUT /notifications/:id/read`, and `PUT /notifications/read-all` — paginated user-owned history and read state.
+- `GET|PUT /notifications/preferences` — read or update per-category delivery preferences.
+- `POST /admin/notifications/announcements` — administrator-only in-app announcements.
+- `GET /ratings/:targetType/:targetId` — return the average, count, and 1–5 star distribution for a business, product, or service.
+- `GET /reviews?targetType=&targetId=` and `GET /reviews/mine?targetType=&targetId=` — list public reviews or the current customer's review.
+- `POST /reviews`, `PUT /reviews/:id`, `DELETE /reviews/:id`, and `POST /reviews/:id/report` — customer-owned review lifecycle and reporting.
+- `GET /admin/reviews`, `PATCH /admin/reviews/:id/moderation`, `GET /admin/content-reports`, and `PATCH /admin/content-reports/:id` — administrator moderation.
+- `GET /favorites?page=&limit=` — paginate the current customer's saved businesses, products, and services; existing create/delete endpoints remain unchanged.
+
+Review uniqueness is enforced per customer and listing. Verified-customer state is assigned by the server, not accepted from the client. Hidden reviews are excluded from public lists and rating summaries.

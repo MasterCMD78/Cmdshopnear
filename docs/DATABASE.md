@@ -69,3 +69,12 @@ The schema uses the names and concepts from the official specification. Nullable
 - Search coordinates are not stored. History can be disabled per account or cleared through the API.
 - Schema changes are additive; existing marketplace, account, authentication, and location tables are unchanged.
 - Development schema push verification added only these two AI tables and their foreign keys/indexes; no existing tables were altered.
+
+## Phase 7 additions
+
+- Added `chat_conversations`, `chat_participants`, `chat_messages`, and `user_blocks` for participant-scoped plain-text messaging, read state, typing state, and persistent blocks.
+- Added `content_reports` for conversation and review moderation.
+- Added `notifications` and `notification_preferences` for user-owned history, unread state, and per-category settings.
+- Added `reviews` with one-review-per-customer/listing uniqueness and server-owned verification/moderation fields. Rating summaries are returned for businesses, products, and services.
+- Extended the existing favorites read API with pagination; the existing entity-based favorites table remains in place.
+- The Phase 7 development schema was applied through the documented non-force Drizzle push. The change is additive; existing data and tables were preserved. Production schema changes remain on the normal publish flow.

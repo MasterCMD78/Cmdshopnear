@@ -4834,6 +4834,19 @@ export const UnblockChatUserResponse = zod.object({
 
 
 /**
+ * @summary List users blocked by the current user
+ */
+export const ListChatBlocksResponse = zod.object({
+  "blockedUsers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "fullName": zod.string(),
+  "profilePhoto": zod.string().nullable(),
+  "accountType": zod.enum(['customer', 'business', 'service_provider', 'admin'])
+}))
+})
+
+
+/**
  * @summary List the current user's notification history
  */
 export const listNotificationsQueryPageDefault = 1;

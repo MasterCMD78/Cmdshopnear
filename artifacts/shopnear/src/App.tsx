@@ -589,7 +589,7 @@ function FavoritesPage() {
     <Shell active="favorites" toast={toast}>
       <div className="px-5 py-6 md:px-10 md:py-9">
         <p className="mb-1 text-[10px] font-bold uppercase tracking-[.16em] text-[#ee7117]">Your shortlist</p>
-        <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Favorites</h1><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5 text-[11px] font-bold text-[#087044]">{favorites?.length ?? 0} saved</span></div>
+        <div className="flex items-end justify-between"><h1 className="font-display text-[30px] font-extrabold tracking-[-.05em] text-[#164d38]">Favorites</h1><span className="rounded-full bg-[#e4f3e7] px-3 py-1.5 text-[11px] font-bold text-[#087044]">{favoritesQuery.data?.total ?? favorites.length} saved</span></div>
         <p className="mt-2 text-sm text-[#7a897f]">Keep the local places and finds you want to come back to.</p>
         {favoritesQuery.isLoading && !initialized ? <div className="mt-7"><LoadingState label="Loading your favorites…" /></div> : favoritesQuery.isError && !initialized ? <div className="mt-7 rounded-2xl bg-[#fff0ed] p-5 text-sm text-[#a24430]" role="alert">Your favorites could not be loaded. <button type="button" onClick={() => void favoritesQuery.refetch()} className="font-bold underline" data-testid="button-retry-favorites">Try again</button></div> : favorites.length ? <div className="mt-7 grid gap-3 md:grid-cols-3">
           {favorites.map((favorite) => favorite.targetType === 'business'
@@ -598,7 +598,7 @@ function FavoritesPage() {
               ? <RemoteProductCard key={favorite.id} item={favorite.item as MarketplaceProduct} savedIds={savedIds} onSaved={onSaved} />
               : <RemoteServiceCard key={favorite.id} item={favorite.item as MarketplaceService} savedIds={savedIds} onSaved={onSaved} />)}
         </div> : <div className="mt-7"><EmptyState icon={Heart} title="Your favorites are waiting" detail="Tap the heart on a place or product to keep it close." action="Discover nearby" onAction={() => window.location.assign('/search')} /></div>}
-        {favoritesQuery.data && favoritesQuery.data.favorites.length === 12 && <div className="mt-5 text-center"><button type="button" onClick={() => setPage((value) => value + 1)} disabled={favoritesQuery.isFetching} className="focus-ring rounded-full border border-[#dbe6dc] bg-white px-5 py-2.5 text-xs font-bold text-[#087044] disabled:opacity-50" data-testid="button-load-more-favorites">{favoritesQuery.isFetching ? 'Loading…' : 'Load more favorites'}</button></div>}
+        {favoritesQuery.data?.hasMore && <div className="mt-5 text-center"><button type="button" onClick={() => setPage((value) => value + 1)} disabled={favoritesQuery.isFetching} className="focus-ring rounded-full border border-[#dbe6dc] bg-white px-5 py-2.5 text-xs font-bold text-[#087044] disabled:opacity-50" data-testid="button-load-more-favorites">{favoritesQuery.isFetching ? 'Loading…' : 'Load more favorites'}</button></div>}
         <div className="mt-8 rounded-[23px] bg-[#fff1df] p-5">
           <div className="flex gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#f47716] text-white"><MapPin size={19} /></span><div><h3 className="text-sm font-bold text-[#78441d]">A little local tip</h3><p className="mt-1 text-xs leading-relaxed text-[#9c6945]">Saved places are sorted by what’s closest to you, so your shortlist stays useful.</p></div></div>
         </div>

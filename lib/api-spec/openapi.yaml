@@ -1242,6 +1242,21 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Message" }
+  /chat/blocks:
+    get:
+      operationId: listChatBlocks
+      tags: [chat]
+      summary: List users blocked by the current user
+      security:
+        - cookieSession: []
+      responses:
+        "200":
+          description: Blocked users
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BlockedUsers" }
+        "401":
+          description: Authentication required
   /notifications:
     get:
       operationId: listNotifications
@@ -2384,6 +2399,21 @@ components:
         nextBefore: { type: ["string", "null"], format: date-time }
         typing: { type: boolean }
       required: [messages, hasMore, nextBefore, typing]
+    BlockedUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fullName: { type: string }
+        profilePhoto: { type: ["string", "null"] }
+        accountType: { type: string, enum: [customer, business, service_provider, admin] }
+      required: [id, fullName, profilePhoto, accountType]
+    BlockedUsers:
+      type: object
+      properties:
+        blockedUsers:
+          type: array
+          items: { $ref: "#/components/schemas/BlockedUser" }
+      required: [blockedUsers]
     ConversationInput:
       type: object
       properties:

@@ -1261,6 +1261,28 @@ export interface ChatMessagePage {
   typing: boolean;
 }
 
+export type BlockedUserAccountType = typeof BlockedUserAccountType[keyof typeof BlockedUserAccountType];
+
+
+export const BlockedUserAccountType = {
+  customer: 'customer',
+  business: 'business',
+  service_provider: 'service_provider',
+  admin: 'admin',
+} as const;
+
+export interface BlockedUser {
+  id: string;
+  fullName: string;
+  /** @nullable */
+  profilePhoto: string | null;
+  accountType: BlockedUserAccountType;
+}
+
+export interface BlockedUsers {
+  blockedUsers: BlockedUser[];
+}
+
 export type ConversationInputTargetType = typeof ConversationInputTargetType[keyof typeof ConversationInputTargetType];
 
 

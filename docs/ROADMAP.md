@@ -9,12 +9,12 @@
 - Phase 3 follow-through: richer listing fields, featured/trending/newest discovery, marketplace search, category administration API, expanded dashboard metrics, OpenAPI synchronization, and verification
 - Phase 4: persistent favorites, public business/product/service details, related listings, API-backed home/search discovery, loading/empty states, and verification badges
 - Phase 5: opt-in location and permission controls, provider-neutral map/routing boundary, nearby business/product/service discovery, distance/radius filtering, city/state and verified/featured/newest filters, OpenAPI synchronization, and verification
+- Phase 6: provider-independent AI search, recommendations, suggestions, saved history, and preferences
+- Phase 7: chat, notifications, reviews, ratings, moderation, persistent blocks, and paginated favorites
 
 ## Next
 
-- Phase 6 is complete.
-- Phase 7: chat, notifications, reviews, and ratings — wait for explicit approval before starting.
-- Phase 8: verification and admin operations
+- Phase 8: verification and admin operations — not started; requires explicit approval
 - Phase 9: security hardening and performance
 - Phase 10: production release
 
@@ -31,7 +31,10 @@
 ## Phase 6 status
 
 - Complete: provider-independent mock AI, natural-language marketplace search, intent and category detection, suggestions, corrections, recommendations, conversation context, user preferences, saved-history controls, API contracts, and documentation.
-- Not started: Phase 7 messaging, notifications, reviews, and ratings. Wait for explicit approval before beginning it.
+
+## Phase 7 status
+
+- Complete: participant-scoped chat, read receipts, typing state, persistent blocks, reports, authenticated live updates, notification history/preferences, customer reviews, rating summaries, moderation UI, and paginated favorites.
 
 ## Future AI improvements
 

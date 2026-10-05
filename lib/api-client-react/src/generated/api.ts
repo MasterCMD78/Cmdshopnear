@@ -34,6 +34,7 @@ import type {
   AnnouncementInput,
   AnnouncementResult,
   AuthResult,
+  BlockedUsers,
   Business,
   BusinessDashboard,
   BusinessDetail,
@@ -5577,6 +5578,83 @@ export const useUnblockChatUser = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUnblockChatUserMutationOptions(options));
     }
+
+export const getListChatBlocksUrl = () => {
+
+
+
+
+  return `/api/chat/blocks`
+}
+
+/**
+ * @summary List users blocked by the current user
+ */
+export const listChatBlocks = async ( options?: Parameters<typeof customFetch>[1]): Promise<BlockedUsers> => {
+
+  return customFetch<BlockedUsers>(getListChatBlocksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListChatBlocksQueryKey = () => {
+    return [
+    `/api/chat/blocks`
+    ] as const;
+    }
+
+
+export const getListChatBlocksQueryOptions = <TData = Awaited<ReturnType<typeof listChatBlocks>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChatBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListChatBlocksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChatBlocks>>> = ({ signal }) => listChatBlocks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listChatBlocks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListChatBlocksQueryResult = NonNullable<Awaited<ReturnType<typeof listChatBlocks>>>
+export type ListChatBlocksQueryError = ErrorType<void>
+
+
+/**
+ * @summary List users blocked by the current user
+ */
+
+export function useListChatBlocks<TData = Awaited<ReturnType<typeof listChatBlocks>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChatBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListChatBlocksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListNotificationsUrl = (params?: ListNotificationsParams,) => {
   const normalizedParams = new URLSearchParams();

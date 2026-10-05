@@ -8,14 +8,14 @@ import {
 import {
   getGetMyReviewQueryKey, getGetNotificationPreferencesQueryKey,
   getGetNotificationUnreadCountQueryKey, getGetRatingSummaryQueryKey,
-  getListAdminReviewsQueryKey, getListChatConversationsQueryKey,
+  getListAdminReviewsQueryKey, getListChatBlocksQueryKey, getListChatConversationsQueryKey,
   getListChatMessagesQueryKey, getListContentReportsQueryKey,
   getListNotificationsQueryKey, getListReviewsQueryKey,
   useBlockChatUser, useCreateChatConversation, useCreateNotificationAnnouncement,
   useCreateReview, useDeleteChatMessage, useDeleteReview, useGetMyReview,
   useGetNotificationPreferences, useGetNotificationUnreadCount, useGetProfile,
   useGetRatingSummary, useListAdminReviews, useListChatConversations,
-  useListChatMessages, useListContentReports, useListNotifications,
+  useListChatBlocks, useListChatMessages, useListContentReports, useListNotifications,
   useListReviews,
   useMarkAllNotificationsRead, useMarkNotificationRead, useModerateReview,
   useReportChatConversation, useReportReview, useSendChatMessage,
@@ -47,7 +47,7 @@ function useLiveRefresh(enabled: boolean) {
     const source = new EventSource('/api/chat/events', { withCredentials: true });
     source.onopen = refresh;
     source.onmessage = refresh;
-    ['message', 'conversation', 'typing', 'notification', 'read', 'connected'].forEach((name) => {
+    ['update', 'message', 'conversation', 'typing', 'notification', 'read', 'connected'].forEach((name) => {
       source.addEventListener(name, refresh);
     });
     const recovery = window.setInterval(refresh, 30000);
@@ -71,6 +71,13 @@ export function MessagesPage() {
   const profile = useGetProfile({ query: { queryKey: ['/api/profile'], retry: false } });
   const userId = profile.data?.id;
   useLiveRefresh(Boolean(userId));
+  const blockList = useListChatBlocks({
+    query: {
+      queryKey: getListChatBlocksQueryKey(),
+      enabled: Boolean(userId),
+      refetchOnMount: 'always',
+    },
+  });
   const initialConversation = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('conversation') : null;
   const [selectedId, setSelectedId] = useState<string | null>(initialConversation);
   const [search, setSearch] = useState('');
@@ -97,7 +104,7 @@ export function MessagesPage() {
   const block = useBlockChatUser();
   const unblock = useUnblockChatUser();
   const removeMessage = useDeleteChatMessage();
-  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
+  const blockedUserIds = useMemo(() => new Set((blockList.data?.blockedUsers ?? []).map((user) => user.id)), [blockList.data]);
   const typingTimer = useRef<number | undefined>(undefined);
   const messages = conversationMessages.data?.messages ?? [];
   const notifyChange = (text: string) => { setNotice(text); window.setTimeout(() => setNotice(''), 2600); };
@@ -135,14 +142,14 @@ export function MessagesPage() {
   const confirmBlock = () => {
     if (!selected || !window.confirm(`Block ${selected.otherUser.fullName}? You can unblock them later from this conversation.`)) return;
     block.mutate({ userId: selected.otherUser.id }, {
-      onSuccess: () => { setBlockedUserIds((current) => new Set(current).add(selected.otherUser.id)); notifyChange('This account is blocked.'); invalidateThread(); },
+      onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getListChatBlocksQueryKey() }); notifyChange('This account is blocked.'); invalidateThread(); },
       onError: () => notifyChange('Could not block this account.'),
     });
   };
   const confirmUnblock = () => {
     if (!selected || !window.confirm(`Unblock ${selected.otherUser.fullName}?`)) return;
     unblock.mutate({ userId: selected.otherUser.id }, {
-      onSuccess: () => { setBlockedUserIds((current) => { const next = new Set(current); next.delete(selected.otherUser.id); return next; }); notifyChange('This account is unblocked.'); invalidateThread(); },
+      onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getListChatBlocksQueryKey() }); notifyChange('This account is unblocked.'); invalidateThread(); },
       onError: () => notifyChange('Could not unblock this account.'),
     });
   };

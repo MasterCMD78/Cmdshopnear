@@ -381,7 +381,7 @@ router.get("/admin/reviews", requireAuth, requireRole("admin"), async (req, res)
   }));
 });
 
-router.put("/admin/reviews/:id/moderation", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/admin/reviews/:id/moderation", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   const params = ModerateReviewParams.safeParse(req.params);
   const parsed = ModerateReviewBody.safeParse(req.body);
   if (!params.success || !parsed.success) {
@@ -428,7 +428,7 @@ router.get("/admin/content-reports", requireAuth, requireRole("admin"), async (r
   }));
 });
 
-router.put("/admin/content-reports/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
+router.patch("/admin/content-reports/:id", requireAuth, requireRole("admin"), async (req, res): Promise<void> => {
   const params = UpdateContentReportParams.safeParse(req.params);
   const parsed = UpdateContentReportBody.safeParse(req.body);
   if (!params.success || !parsed.success) {

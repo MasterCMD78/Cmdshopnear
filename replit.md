@@ -50,6 +50,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Automatically surfaced newly approved businesses and service providers
 - Phase 4 customer marketplace detail pages, related listings, API-backed discovery, and persistent favorites
 - Phase 5 opt-in GPS, manual city/state location, nearby search, distance/radius filtering, and public business/provider location controls
+- Phase 7 participant-scoped chat, notifications, customer reviews, rating summaries, moderation, and paginated favorites
 
 ## User preferences
 
@@ -78,4 +79,4 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Customer GPS is request-scoped. Never write exact request coordinates into AI history, preferences, or logs; public listing distance requires owner opt-in and approval.
 - Saved AI history is user-owned, optional, and clearable. Use the existing session boundary and additive Drizzle schema changes only.
 - Do not claim open-now, provider-gender, weekly-engagement, or recently-viewed behavior when the existing data model cannot support it; communicate limitations in the UI/API.
-- Phase 6 is complete. Do not begin Phase 7 without explicit approval.
+- Phase 7 is complete. Preserve existing data and the current design/navigation; do not begin Phase 8 without explicit approval.

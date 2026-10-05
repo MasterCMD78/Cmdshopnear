@@ -53,3 +53,7 @@ Map and routing behavior stays behind a provider-neutral `MapProvider` interface
 `AIProvider` is a separate adapter boundary from marketplace data access. The initial mock implementation interprets English text using normalized terms, category rules, price/location parsing, typo correction, and prior intent. The service layer applies validated intent to existing Drizzle tables, scores eligible listings, and returns a stable result shape. REST routes own validation, session-scoped history, preferences, and rate limiting; the existing marketplace endpoints and pages remain in place.
 
 Recommendation ranking is shared and supports nearby, featured, newest, verified, popularity, and preferred-category signals. Nearby distance is computed only against approved listings whose owners enabled public location. The search boundary includes modality and language fields so future voice-transcription, image-query, multilingual, and external-model adapters can be added without changing the marketplace contract.
+
+## Phase 7 engagement
+
+Chat conversations and messages are scoped through database participants and the existing session/role boundary. Message deletion is a soft delete; blocks and reports are persisted. An authenticated server-sent event stream provides quick updates, while REST refetches recover after reconnects. Notifications and category preferences are user-owned records. Reviews are unique per customer and listing, and the API derives rating summaries from visible reviews rather than trusting client-supplied totals.

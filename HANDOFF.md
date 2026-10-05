@@ -2,16 +2,17 @@
 
 ## Current Phase
 
-Phase 6 — ShopNear AI (complete). Phases 1–5 remain complete; Phase 7 has not started.
+Phase 7 — Chat, Notifications, Reviews & Ratings (complete). Phases 1–6 remain complete; Phase 8 has not started.
 
 ## Last Completed Task
 
-Completed Phase 6 with a provider-independent mock AI assistant, natural-language marketplace search, public-listing recommendations, suggestions, conversation context, and per-user preferences/history.
+Completed Phase 7 by adding participant-scoped messaging, notifications, reviews, ratings, moderation, and paginated favorites without rebuilding completed phases or removing data.
 
 ## Database Migrations Applied
 
 - Phase 5 added location metadata to the existing `users`, `businesses`, and `service_providers` tables through the development-only Drizzle push. No tables were recreated.
 - Phase 6 added only `ai_preferences`, `ai_search_history`, and their foreign keys/indexes. Verification confirmed no existing tables were altered and no data was removed.
+- Phase 7 added only engagement tables and review storage through the documented non-force development Drizzle push; existing tables and data were preserved.
 - Drizzle push is the project's existing schema reconciliation workflow; there is no committed migration directory.
 
 ## API Endpoints Added
@@ -32,12 +33,20 @@ Phase 6:
 - `GET|DELETE /api/ai/history`
 - `GET|PUT /api/ai/preferences`
 
+Phase 7:
+
+- `/api/chat/*` — conversations, messages, read/typing state, reports, persistent blocks, and authenticated SSE
+- `/api/notifications/*` — paginated history, unread/read state, preferences, and admin announcements
+- `/api/reviews`, `/api/ratings/*`, and `/api/admin/*` — customer reviews, public rating summaries, and moderator queues/actions
+- `GET /api/favorites?page=&limit=` — paginated listing favorites
+
 ## Files Modified
 
 - API and tests: `artifacts/api-server/package.json`, `artifacts/api-server/src/lib/ai-provider.ts`, `artifacts/api-server/src/lib/ai-ranking.ts`, `artifacts/api-server/src/lib/ai-recommendations.ts`, `artifacts/api-server/src/routes/ai.ts`, `artifacts/api-server/src/routes/index.ts`, and `artifacts/api-server/test/ai.test.mjs`
 - Database: `lib/db/src/schema/ai.ts` and `lib/db/src/schema/index.ts`
 - API contract/codegen: `lib/api-spec/openapi.yaml`, `lib/api-client-react/src/generated/api.ts`, `lib/api-client-react/src/generated/api.schemas.ts`, `lib/api-zod/src/generated/api.ts`, and the generated AI type/parameter files under `lib/api-zod/src/generated/types/`
 - Existing ShopNear UI/client: `artifacts/shopnear/src/App.tsx`, `artifacts/shopnear/src/components/ai-marketplace.tsx`, and `artifacts/shopnear/src/lib/auth-api.ts`
+- Phase 7 API/schema/UI: `artifacts/api-server/src/routes/chat.ts`, `artifacts/api-server/src/routes/notifications.ts`, `artifacts/api-server/src/routes/reviews.ts`, `lib/db/src/schema/engagement.ts`, `lib/api-spec/openapi.yaml`, `artifacts/shopnear/src/phase7.tsx`, and `artifacts/shopnear/src/App.tsx`
 - Documentation: `docs/README.md`, `docs/API.md`, `docs/DATABASE.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/SECURITY.md`, `docs/ROADMAP.md`, `docs/CHANGELOG.md`, `docs/DECISIONS.md`, `replit.md`, `PROJECT_MEMORY.md`, and `HANDOFF.md`
 
 ## Verification Results
@@ -49,6 +58,10 @@ Phase 6:
 - All three configured workflows are running; the API workflow was restarted after the final route change.
 - Mobile Home and desktop Search rendered. The browser's 401 was the expected unauthenticated `GET /api/auth/session`, which the client treats as signed out. The signed-in Profile controls were not visually verified because the preview browser has no session.
 - No public listings are seeded, so discovery pages show the expected empty states.
+- Phase 7: OpenAPI codegen and workspace typechecks passed; `pnpm --filter @workspace/api-server test` passed all 5 existing AI parser/ranking tests; `pnpm build` passed with the existing non-fatal tooltip sourcemap warning.
+- Phase 7: the non-force development schema push succeeded. Database metadata confirms the new chat, block, report, notification, and review tables; the existing favorites columns (`id`, `user_id`, `entity_type`, `entity_id`, `created_at`) remain unchanged.
+- Phase 7: health endpoint returned 200; protected chat, notification, review, and admin routes returned the expected 401 without a session. A rating lookup for a nonexistent listing returned the expected 404.
+- Phase 7: all configured workflows restarted successfully. The mobile `/messages` preview rendered its signed-out state; authenticated screens and interactions were not visually verified because the preview browser has no session.
 
 ## Known Limitations
 
@@ -68,8 +81,8 @@ Phase 6:
 
 ## Exact Next Task
 
-There is no remaining Phase 6 implementation. Do not begin Phase 7 without explicit approval. Once approved, use the Phase 7 roadmap and official specifications to scope Chat and Notifications first, followed by Reviews and Ratings; keep the work additive and preserve completed phases.
+Phase 7 is complete. Do not begin Phase 8 without explicit approval. Keep any follow-up work within the agreed Phase 7 scope unless the user authorizes a new phase.
 
 ## Next Prompt Context
 
-Phase 6 is complete. Keep AI provider-independent, retain public-listing eligibility, never persist customer GPS coordinates, and do not start Phase 7 or alter completed phases without explicit approval.
+Phase 7 is complete. Preserve the existing ShopNear design, five-tab navigation, database records, and session boundary. Do not start Phase 8 without explicit approval.

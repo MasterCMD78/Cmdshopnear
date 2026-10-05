@@ -444,8 +444,20 @@ export type FavoriteItem = {
   item: BusinessRecord | MarketplaceProduct | MarketplaceService;
 };
 
-export function getFavorites() {
-  return request<{ favorites: FavoriteItem[] }>("/api/favorites");
+export type FavoritePage = {
+  favorites: FavoriteItem[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
+export function getFavorites(options: { page?: number; limit?: number } = {}) {
+  const query = new URLSearchParams();
+  if (options.page !== undefined) query.set("page", String(options.page));
+  if (options.limit !== undefined) query.set("limit", String(options.limit));
+  const suffix = query.toString();
+  return request<FavoritePage>(`/api/favorites${suffix ? `?${suffix}` : ""}`);
 }
 
 export function addFavorite(targetType: FavoriteItem["targetType"], targetId: string) {

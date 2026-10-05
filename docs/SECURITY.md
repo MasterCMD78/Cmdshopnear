@@ -43,3 +43,12 @@ Password hashing, external social login, production SMS delivery, object ACL rev
 - GPS coordinates are request-scoped and are not written to history, preferences, or result payloads. Distance is calculated only from public coordinates on eligible listings.
 - Saved history and preferences are restricted to the authenticated user. Users can disable history saving or delete their saved history.
 - Search results exclude unapproved businesses/providers and unpublished, hidden, unavailable, or unapproved listings. Unsupported gender and opening-hours filters are disclosed instead of being represented as applied.
+
+## Phase 7 engagement boundaries
+
+- Chat history, read/typing state, blocks, and notifications are scoped to the authenticated account; only conversation participants can read or send messages.
+- Messages are plain text with bounded length. Deletion is soft so the conversation history remains structurally consistent.
+- A block prevents new messages between the two accounts; only the blocking account can list or remove its block.
+- Customers can create and edit only their own reviews. The API derives verified-customer status and public rating totals; clients cannot set either.
+- Review and conversation reports are private to moderators. Administrator-only routes control report resolution and review visibility.
+- SSE connections require the session cookie and are closed when the session/account is no longer valid.

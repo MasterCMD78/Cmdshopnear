@@ -41,3 +41,17 @@ Convert speech to a transcript in a separate speech adapter, then pass the trans
 ### Be explicit about missing data
 
 Do not fabricate gender, opening-hours, business/provider featured, weekly-engagement, or recently viewed data. Report unsupported filters and keep “Popular This Week” and “Recently Viewed” limitations visible until the schema has appropriate approved data.
+
+## Phase 7 — engagement and trust
+
+### Keep Phase 7 additive
+
+Chat, notifications, reviews, and rating summaries extend the existing marketplace and account model. Keep the entity-based favorites table and all existing records; use the documented development Drizzle push without force or table recreation.
+
+### Keep message state recoverable
+
+Use authenticated server-sent events for prompt updates, but keep REST endpoints authoritative so clients can recover after a dropped connection. Persist conversations, messages, read state, and blocks in PostgreSQL.
+
+### Derive review trust data on the server
+
+Allow one review per customer/listing and derive verified-customer status and rating summaries from server-owned records. Moderation visibility controls whether a review contributes to public results.
