@@ -2,57 +2,25 @@ import type { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { adminRoleAssignments } from "@workspace/db/schema";
+import {
+  ADMIN_PERMISSIONS,
+  ADMIN_ROLES,
+  hasAdminPermission as policyHasAdminPermission,
+  permissionsForRole as policyPermissionsForRole,
+  type AdminPermission,
+  type AdminRole,
+} from "./admin-policy.mjs";
 
-export const ADMIN_ROLES = ["super_admin", "moderator", "support"] as const;
-export type AdminStaffRole = (typeof ADMIN_ROLES)[number];
-
-export const ADMIN_PERMISSIONS = [
-  "dashboard.read",
-  "verification.read",
-  "verification.review",
-  "users.read",
-  "users.manage",
-  "reports.read",
-  "reports.manage",
-  "moderation.manage",
-  "analytics.read",
-  "audit.read",
-  "settings.read",
-  "settings.manage",
-  "categories.manage",
-  "announcements.manage",
-  "roles.manage",
-] as const;
-export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
-
-const permissionsByRole: Record<AdminStaffRole, ReadonlySet<AdminPermission>> = {
-  super_admin: new Set(ADMIN_PERMISSIONS),
-  moderator: new Set([
-    "dashboard.read",
-    "verification.read",
-    "verification.review",
-    "reports.read",
-    "reports.manage",
-    "moderation.manage",
-    "analytics.read",
-    "audit.read",
-  ]),
-  support: new Set([
-    "dashboard.read",
-    "users.read",
-    "reports.read",
-    "audit.read",
-  ]),
-};
+export { ADMIN_PERMISSIONS, ADMIN_ROLES } from "./admin-policy.mjs";
+export type AdminStaffRole = AdminRole;
+export type { AdminPermission };
 
 export function hasAdminPermission(role: string, permission: AdminPermission) {
-  return ADMIN_ROLES.includes(role as AdminStaffRole)
-    && permissionsByRole[role as AdminStaffRole].has(permission);
+  return policyHasAdminPermission(role, permission);
 }
 
 export function permissionsForRole(role: string | null) {
-  if (!role || !ADMIN_ROLES.includes(role as AdminStaffRole)) return [];
-  return ADMIN_PERMISSIONS.filter((permission) => hasAdminPermission(role, permission));
+  return policyPermissionsForRole(role);
 }
 
 export function requirePermission(permission: AdminPermission) {

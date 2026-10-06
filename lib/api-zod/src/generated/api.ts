@@ -5980,6 +5980,14 @@ export const ListAdminAuditLogsResponse = zod.object({
 /**
  * @summary Read future-ready platform settings
  */
+export const getAdminSettingsResponseSettingsVerificationDurationDaysMax = 90;
+
+export const getAdminSettingsResponseSettingsFeaturedDurationDaysMax = 365;
+
+export const getAdminSettingsResponseSettingsDefaultSearchRadiusKmMax = 100;
+
+export const getAdminSettingsResponseSettingsDefaultSearchPageSizeMax = 100;
+
 export const getAdminSettingsResponseSettingsSupportContactEmailMax = 254;
 
 
@@ -5987,12 +5995,20 @@ export const getAdminSettingsResponseSettingsSupportContactEmailMax = 254;
 export const GetAdminSettingsResponse = zod.object({
   "settings": zod.object({
   "maintenanceMode": zod.boolean(),
+  "marketplaceEnabled": zod.boolean(),
   "customerRegistrationEnabled": zod.boolean(),
   "businessRegistrationEnabled": zod.boolean(),
   "providerRegistrationEnabled": zod.boolean(),
   "requireVerificationToPublish": zod.boolean(),
+  "verificationDurationDays": zod.number().int().min(1).max(getAdminSettingsResponseSettingsVerificationDurationDaysMax),
+  "featuredDurationDays": zod.number().int().min(1).max(getAdminSettingsResponseSettingsFeaturedDurationDaysMax),
+  "notificationsEnabled": zod.boolean(),
   "announcementsEnabled": zod.boolean(),
+  "defaultSearchRadiusKm": zod.number().int().min(1).max(getAdminSettingsResponseSettingsDefaultSearchRadiusKmMax),
+  "defaultSearchPageSize": zod.number().int().min(1).max(getAdminSettingsResponseSettingsDefaultSearchPageSizeMax),
   "aiSearchEnabled": zod.boolean(),
+  "aiRecommendationsEnabled": zod.boolean(),
+  "experimentalFeaturesEnabled": zod.boolean(),
   "supportContactEmail": zod.string().max(getAdminSettingsResponseSettingsSupportContactEmailMax)
 }),
   "updatedAt": zod.coerce.date().nullable()
@@ -6002,20 +6018,44 @@ export const GetAdminSettingsResponse = zod.object({
 /**
  * @summary Save future-ready platform settings
  */
+export const updateAdminSettingsBodyVerificationDurationDaysMax = 90;
+
+export const updateAdminSettingsBodyFeaturedDurationDaysMax = 365;
+
+export const updateAdminSettingsBodyDefaultSearchRadiusKmMax = 100;
+
+export const updateAdminSettingsBodyDefaultSearchPageSizeMax = 100;
+
 export const updateAdminSettingsBodySupportContactEmailMax = 254;
 
 
 
 export const UpdateAdminSettingsBody = zod.object({
   "maintenanceMode": zod.boolean(),
+  "marketplaceEnabled": zod.boolean(),
   "customerRegistrationEnabled": zod.boolean(),
   "businessRegistrationEnabled": zod.boolean(),
   "providerRegistrationEnabled": zod.boolean(),
   "requireVerificationToPublish": zod.boolean(),
+  "verificationDurationDays": zod.number().int().min(1).max(updateAdminSettingsBodyVerificationDurationDaysMax),
+  "featuredDurationDays": zod.number().int().min(1).max(updateAdminSettingsBodyFeaturedDurationDaysMax),
+  "notificationsEnabled": zod.boolean(),
   "announcementsEnabled": zod.boolean(),
+  "defaultSearchRadiusKm": zod.number().int().min(1).max(updateAdminSettingsBodyDefaultSearchRadiusKmMax),
+  "defaultSearchPageSize": zod.number().int().min(1).max(updateAdminSettingsBodyDefaultSearchPageSizeMax),
   "aiSearchEnabled": zod.boolean(),
+  "aiRecommendationsEnabled": zod.boolean(),
+  "experimentalFeaturesEnabled": zod.boolean(),
   "supportContactEmail": zod.string().max(updateAdminSettingsBodySupportContactEmailMax)
 })
+
+export const updateAdminSettingsResponseSettingsVerificationDurationDaysMax = 90;
+
+export const updateAdminSettingsResponseSettingsFeaturedDurationDaysMax = 365;
+
+export const updateAdminSettingsResponseSettingsDefaultSearchRadiusKmMax = 100;
+
+export const updateAdminSettingsResponseSettingsDefaultSearchPageSizeMax = 100;
 
 export const updateAdminSettingsResponseSettingsSupportContactEmailMax = 254;
 
@@ -6024,12 +6064,20 @@ export const updateAdminSettingsResponseSettingsSupportContactEmailMax = 254;
 export const UpdateAdminSettingsResponse = zod.object({
   "settings": zod.object({
   "maintenanceMode": zod.boolean(),
+  "marketplaceEnabled": zod.boolean(),
   "customerRegistrationEnabled": zod.boolean(),
   "businessRegistrationEnabled": zod.boolean(),
   "providerRegistrationEnabled": zod.boolean(),
   "requireVerificationToPublish": zod.boolean(),
+  "verificationDurationDays": zod.number().int().min(1).max(updateAdminSettingsResponseSettingsVerificationDurationDaysMax),
+  "featuredDurationDays": zod.number().int().min(1).max(updateAdminSettingsResponseSettingsFeaturedDurationDaysMax),
+  "notificationsEnabled": zod.boolean(),
   "announcementsEnabled": zod.boolean(),
+  "defaultSearchRadiusKm": zod.number().int().min(1).max(updateAdminSettingsResponseSettingsDefaultSearchRadiusKmMax),
+  "defaultSearchPageSize": zod.number().int().min(1).max(updateAdminSettingsResponseSettingsDefaultSearchPageSizeMax),
   "aiSearchEnabled": zod.boolean(),
+  "aiRecommendationsEnabled": zod.boolean(),
+  "experimentalFeaturesEnabled": zod.boolean(),
   "supportContactEmail": zod.string().max(updateAdminSettingsResponseSettingsSupportContactEmailMax)
 }),
   "updatedAt": zod.coerce.date().nullable()

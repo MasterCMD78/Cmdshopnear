@@ -8,12 +8,36 @@
 
 export interface AdminPlatformSettingsValues {
   maintenanceMode: boolean;
+  marketplaceEnabled: boolean;
   customerRegistrationEnabled: boolean;
   businessRegistrationEnabled: boolean;
   providerRegistrationEnabled: boolean;
   requireVerificationToPublish: boolean;
+  /**
+     * @minimum 1
+     * @maximum 90
+     */
+  verificationDurationDays: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  featuredDurationDays: number;
+  notificationsEnabled: boolean;
   announcementsEnabled: boolean;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  defaultSearchRadiusKm: number;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  defaultSearchPageSize: number;
   aiSearchEnabled: boolean;
+  aiRecommendationsEnabled: boolean;
+  experimentalFeaturesEnabled: boolean;
   /** @maxLength 254 */
   supportContactEmail: string;
 }

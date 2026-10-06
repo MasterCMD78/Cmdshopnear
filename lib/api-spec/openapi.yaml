@@ -2469,14 +2469,22 @@ components:
       type: object
       properties:
         maintenanceMode: { type: boolean }
+        marketplaceEnabled: { type: boolean }
         customerRegistrationEnabled: { type: boolean }
         businessRegistrationEnabled: { type: boolean }
         providerRegistrationEnabled: { type: boolean }
         requireVerificationToPublish: { type: boolean }
+        verificationDurationDays: { type: integer, minimum: 1, maximum: 90 }
+        featuredDurationDays: { type: integer, minimum: 1, maximum: 365 }
+        notificationsEnabled: { type: boolean }
         announcementsEnabled: { type: boolean }
+        defaultSearchRadiusKm: { type: integer, minimum: 1, maximum: 100 }
+        defaultSearchPageSize: { type: integer, minimum: 1, maximum: 100 }
         aiSearchEnabled: { type: boolean }
+        aiRecommendationsEnabled: { type: boolean }
+        experimentalFeaturesEnabled: { type: boolean }
         supportContactEmail: { type: string, maxLength: 254 }
-      required: [maintenanceMode, customerRegistrationEnabled, businessRegistrationEnabled, providerRegistrationEnabled, requireVerificationToPublish, announcementsEnabled, aiSearchEnabled, supportContactEmail]
+      required: [maintenanceMode, marketplaceEnabled, customerRegistrationEnabled, businessRegistrationEnabled, providerRegistrationEnabled, requireVerificationToPublish, verificationDurationDays, featuredDurationDays, notificationsEnabled, announcementsEnabled, defaultSearchRadiusKm, defaultSearchPageSize, aiSearchEnabled, aiRecommendationsEnabled, experimentalFeaturesEnabled, supportContactEmail]
     AdminSettingsInput:
       $ref: "#/components/schemas/AdminPlatformSettingsValues"
     AdminSettings:

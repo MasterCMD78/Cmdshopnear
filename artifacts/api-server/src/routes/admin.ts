@@ -43,6 +43,13 @@ import {
   permissionsForRole,
   requirePermission,
 } from "../lib/admin-permissions";
+import {
+  canAssignAdminRole,
+  canUpdateAccountStatus,
+  isSupportedModerationAction,
+  mergeDailyActiveUsers,
+  moderatedProfileStatus,
+} from "../lib/admin-policy.mjs";
 import { consumeRateLimit } from "../lib/rate-limit";
 
 const router: IRouter = Router();
@@ -116,7 +123,7 @@ router.put("/admin/roles/:userId", requireAuth, requirePermission("roles.manage"
     res.status(429).json({ error: "Administrator action rate limit exceeded" });
     return;
   }
-  if (body.data.role === "super_admin" && await getAdminRole(req.user!.id) !== "super_admin") {
+  if (!canAssignAdminRole(await getAdminRole(req.user!.id), body.data.role)) {
     res.status(403).json({ error: "Only a super administrator can assign that role" });
     return;
   }
@@ -126,20 +133,62 @@ router.put("/admin/roles/:userId", requireAuth, requirePermission("roles.manage"
     res.status(404).json({ error: "Active administrator account not found" });
     return;
   }
-  const [updated] = await db.insert(adminRoleAssignments).values({
-    userId: target.id,
-    role: body.data.role,
-    assignedById: req.user!.id,
-    updatedAt: new Date(),
-  }).onConflictDoUpdate({
-    target: adminRoleAssignments.userId,
-    set: { role: body.data.role, assignedById: req.user!.id, updatedAt: new Date() },
-  }).returning();
+  const assignment = await db.transaction(async (tx) => {
+    let previousSuperAdminUserId: string | undefined;
+    if (body.data.role === "super_admin") {
+      const [actor] = await tx.select({ role: adminRoleAssignments.role })
+        .from(adminRoleAssignments)
+        .where(eq(adminRoleAssignments.userId, req.user!.id))
+        .limit(1);
+      if (actor?.role !== "super_admin") return { forbidden: true as const };
+
+      const [currentSuperAdmin] = await tx.select({ userId: adminRoleAssignments.userId })
+        .from(adminRoleAssignments)
+        .where(eq(adminRoleAssignments.role, "super_admin"))
+        .limit(1)
+        .for("update");
+      if (currentSuperAdmin && currentSuperAdmin.userId !== target.id) {
+        previousSuperAdminUserId = currentSuperAdmin.userId;
+        await tx.update(adminRoleAssignments).set({
+          role: "moderator",
+          assignedById: req.user!.id,
+          updatedAt: new Date(),
+        }).where(eq(adminRoleAssignments.userId, currentSuperAdmin.userId));
+      }
+    }
+
+    const [updated] = await tx.insert(adminRoleAssignments).values({
+      userId: target.id,
+      role: body.data.role,
+      assignedById: req.user!.id,
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: adminRoleAssignments.userId,
+      set: { role: body.data.role, assignedById: req.user!.id, updatedAt: new Date() },
+    }).returning();
+    return { updated, previousSuperAdminUserId };
+  });
+  if ("forbidden" in assignment) {
+    res.status(403).json({ error: "Only the current super administrator can transfer that role" });
+    return;
+  }
+  const { updated, previousSuperAdminUserId } = assignment;
   if (!updated) {
     res.status(409).json({ error: "That super administrator role is already assigned" });
     return;
   }
-  await audit(req, "admin.role.assigned", "user", target.id, { role: updated.role });
+  if (previousSuperAdminUserId) {
+    await audit(req, "admin.role.transferred", "user", target.id, {
+      role: "super_admin",
+      previousSuperAdminUserId,
+    });
+    await audit(req, "admin.role.transferred_from", "user", previousSuperAdminUserId, {
+      role: "moderator",
+      transferredToUserId: target.id,
+    });
+  } else {
+    await audit(req, "admin.role.assigned", "user", target.id, { role: updated.role });
+  }
   res.json({ userId: updated.userId, role: updated.role, permissions: permissionsForRole(updated.role) });
 });
 
@@ -491,6 +540,7 @@ router.get("/admin/analytics", requireAuth, requirePermission("analytics.read"),
     productRows,
     serviceRows,
     eventRows,
+    activeUserRows,
     productCategoryRows,
     serviceCategoryRows,
     ratingRows,
@@ -519,17 +569,24 @@ router.get("/admin/analytics", requireAuth, requirePermission("analytics.read"),
       day: sql<string>`to_char(date_trunc('day', ${analyticsEvents.createdAt}), 'YYYY-MM-DD')`,
       eventType: analyticsEvents.eventType,
       count: count(),
-      activeUsers: sql<number>`count(distinct ${analyticsEvents.userId})`,
     }).from(analyticsEvents).where(gte(analyticsEvents.createdAt, cutoff))
       .groupBy(sql`date_trunc('day', ${analyticsEvents.createdAt})`, analyticsEvents.eventType),
+    db.select({
+      day: sql<string>`to_char(date_trunc('day', ${analyticsEvents.createdAt}), 'YYYY-MM-DD')`,
+      activeUsers: sql<number>`count(distinct ${analyticsEvents.userId})`,
+    }).from(analyticsEvents).where(gte(analyticsEvents.createdAt, cutoff))
+      .groupBy(sql`date_trunc('day', ${analyticsEvents.createdAt})`),
     db.select({ category: productCategories.name, count: count(products.id) })
       .from(products).leftJoin(productCategories, eq(productCategories.id, products.categoryId))
+      .where(gte(products.createdAt, cutoff))
       .groupBy(productCategories.name).orderBy(desc(count(products.id))).limit(12),
     db.select({ category: serviceCategories.name, count: count(services.id) })
       .from(services).leftJoin(serviceCategories, eq(serviceCategories.id, services.categoryId))
+      .where(gte(services.createdAt, cutoff))
       .groupBy(serviceCategories.name).orderBy(desc(count(services.id))).limit(12),
     db.select({ rating: reviews.rating, count: count() }).from(reviews)
-      .where(eq(reviews.moderationStatus, "visible")).groupBy(reviews.rating),
+      .where(and(eq(reviews.moderationStatus, "visible"), gte(reviews.createdAt, cutoff)))
+      .groupBy(reviews.rating),
   ]);
   const dayMap = new Map<string, {
     date: string; registrations: number; businesses: number; serviceProviders: number;
@@ -555,7 +612,6 @@ router.get("/admin/analytics", requireAuth, requirePermission("analytics.read"),
   for (const row of serviceRows) getDay(row.day).services = Number(row.count);
   for (const row of eventRows) {
     const day = getDay(row.day);
-    day.dailyActiveUsers = Math.max(day.dailyActiveUsers, Number(row.activeUsers));
     if (row.eventType === "search") day.searches = Number(row.count);
     if (row.eventType === "ai_search") day.aiSearches = Number(row.count);
     if (row.eventType === "chat") day.chats = Number(row.count);
@@ -563,6 +619,7 @@ router.get("/admin/analytics", requireAuth, requirePermission("analytics.read"),
     if (row.eventType === "favorite") day.favorites = Number(row.count);
     if (row.eventType === "review") day.reviews = Number(row.count);
   }
+  mergeDailyActiveUsers(dayMap, activeUserRows, getDay);
   const days: string[] = [];
   for (let offset = query.data.days - 1; offset >= 0; offset -= 1) {
     const day = new Date(Date.now() - offset * 24 * 60 * 60_000).toISOString().slice(0, 10);
@@ -768,6 +825,10 @@ router.patch("/admin/users/:id/status", requireAuth, requirePermission("users.ma
     res.status(409).json({ error: "A super administrator account cannot be suspended or deleted here" });
     return;
   }
+  if (!canUpdateAccountStatus(await getAdminRole(req.user!.id), body.data.status)) {
+    res.status(403).json({ error: "Only a super administrator can soft-delete an account" });
+    return;
+  }
   const [updated] = await db.update(users).set({ status: body.data.status, updatedAt: new Date() })
     .where(eq(users.id, id.data)).returning({
       id: users.id, fullName: users.fullName, accountType: users.accountType, status: users.status,
@@ -925,6 +986,10 @@ router.patch("/admin/moderation/content/:entityType/:entityId", requireAuth, req
     res.status(404).json({ error: "Moderation target not found" });
     return;
   }
+  if (!isSupportedModerationAction(entityType, action)) {
+    res.status(400).json({ error: "That moderation action is not supported for this item" });
+    return;
+  }
   const restore = action === "restore" || action === "unsuspend";
   const activeAction = restore
     ? await db.select().from(moderationActions).where(and(
@@ -937,11 +1002,6 @@ router.patch("/admin/moderation/content/:entityType/:entityId", requireAuth, req
     res.status(409).json({ error: "There is no active moderation action to reverse" });
     return;
   }
-  if (!restore && ((action === "hide" && ["business", "service_provider"].includes(entityType))
-    || (action === "suspend" && !["business", "service_provider"].includes(entityType)))) {
-    res.status(400).json({ error: "That moderation action is not supported for this item" });
-    return;
-  }
   const prior = restore ? (activeAction[0]!.previousState as Record<string, unknown> | null) : current.previousState;
   if (restore && !prior) {
     res.status(409).json({ error: "The previous moderation state is unavailable; refusing to overwrite it" });
@@ -950,9 +1010,7 @@ router.patch("/admin/moderation/content/:entityType/:entityId", requireAuth, req
   const transactionResult = await db.transaction(async (tx) => {
     if (entityType === "business" || entityType === "service_provider") {
       const table = entityType === "business" ? businesses : serviceProviders;
-      const status = action === "suspend"
-        ? "suspended"
-        : typeof prior?.verificationStatus === "string" ? prior.verificationStatus : "pending";
+      const status = moderatedProfileStatus(action, prior?.verificationStatus);
       await tx.update(table).set({
         verificationStatus: status,
         approvedAt: status === "approved" ? new Date() : null,
@@ -1044,22 +1102,38 @@ async function syncReviewSummary(targetType: string, targetId: string) {
 const PLATFORM_SETTINGS_KEY = "platform_settings_phase8";
 const platformSettingsSchema = z.object({
   maintenanceMode: z.boolean(),
+  marketplaceEnabled: z.boolean(),
   customerRegistrationEnabled: z.boolean(),
   businessRegistrationEnabled: z.boolean(),
   providerRegistrationEnabled: z.boolean(),
   requireVerificationToPublish: z.boolean(),
+  verificationDurationDays: z.number().int().min(1).max(90),
+  featuredDurationDays: z.number().int().min(1).max(365),
+  notificationsEnabled: z.boolean(),
   announcementsEnabled: z.boolean(),
+  defaultSearchRadiusKm: z.number().int().min(1).max(100),
+  defaultSearchPageSize: z.number().int().min(1).max(100),
   aiSearchEnabled: z.boolean(),
+  aiRecommendationsEnabled: z.boolean(),
+  experimentalFeaturesEnabled: z.boolean(),
   supportContactEmail: z.string().trim().email().max(254).or(z.literal("")),
 }).strict();
 const defaultPlatformSettings = {
   maintenanceMode: false,
+  marketplaceEnabled: true,
   customerRegistrationEnabled: true,
   businessRegistrationEnabled: true,
   providerRegistrationEnabled: true,
   requireVerificationToPublish: true,
+  verificationDurationDays: 14,
+  featuredDurationDays: 30,
+  notificationsEnabled: true,
   announcementsEnabled: true,
+  defaultSearchRadiusKm: 25,
+  defaultSearchPageSize: 25,
   aiSearchEnabled: true,
+  aiRecommendationsEnabled: true,
+  experimentalFeaturesEnabled: false,
   supportContactEmail: "",
 };
 

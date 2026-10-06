@@ -1,6 +1,7 @@
 import { db } from "@workspace/db";
 import { auditLogs } from "@workspace/db/schema";
 import type { Request } from "express";
+import { auditSuccessMetadata } from "./admin-policy.mjs";
 
 export async function audit(req: Request, action: string, entityType?: string, entityId?: string, metadata?: unknown) {
   try {
@@ -10,7 +11,7 @@ export async function audit(req: Request, action: string, entityType?: string, e
       entityType,
       entityId,
       ipAddress: req.ip,
-      metadata,
+      metadata: auditSuccessMetadata(metadata),
     });
   } catch (error) {
     req.log.error({ err: error, action }, "Audit log write failed");

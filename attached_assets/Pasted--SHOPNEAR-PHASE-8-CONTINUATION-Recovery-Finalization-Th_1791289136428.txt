@@ -1,0 +1,468 @@
+🚀 SHOPNEAR PHASE 8 CONTINUATION (Recovery & Finalization)
+
+This repository is NOT a new project.
+
+The following phases are already completed and verified:
+
+* ✅ Phase 1 – Foundation & UI
+* ✅ Phase 2 – Authentication & User Accounts
+* ✅ Phase 3 – Marketplace Management
+* ✅ Phase 4 – Customer Experience
+* ✅ Phase 5 – GPS & Nearby Discovery
+* ✅ Phase 6 – AI Search & Recommendations
+* ✅ Phase 7 – Chat, Notifications, Reviews & Ratings
+
+Phase 8 has already been started.
+
+Do NOT restart Phase 8.
+
+Continue from the current implementation.
+
+Never redesign completed pages.
+
+Never replace completed architecture.
+
+Never remove existing functionality.
+
+⸻
+
+BEFORE WRITING CODE
+
+Read all project documentation:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* docs/DECISIONS.md (create only if missing)
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Also read the three official ShopNear specification PDFs.
+
+These documents are the source of truth.
+
+⸻
+
+RECOVERY FIRST
+
+Before making changes:
+
+Audit the repository.
+
+Determine exactly what Phase 8 already contains.
+
+Recover the previous implementation.
+
+Do NOT duplicate completed work.
+
+Implement only the genuinely missing Phase 8 functionality.
+
+⸻
+
+CURRENT RECOVERY STATUS
+
+The previous implementation already completed:
+
+* Phase 8 audit
+* Documentation review
+* Specification review
+* API planning
+* Additive Drizzle schema design
+* Admin permission architecture
+* Verification architecture
+* Dashboard metrics architecture
+* Analytics aggregation architecture
+* Audit log architecture
+* User management architecture
+* API contract updates
+* OpenAPI endpoint additions
+
+The previous implementation also discovered:
+
+* Existing phase8.tsx already contains much of the Admin UI.
+* Do NOT recreate this screen.
+* Recover it.
+* Fix only genuine contract/type mismatches.
+* Connect it to the existing routing.
+
+The previous implementation stopped while:
+
+* Wiring the Admin interface
+* Connecting owner verification controls
+* Connecting moderation UI
+* Applying additive schema updates to the development database
+
+Continue from exactly that point.
+
+⸻
+
+REMAINING PHASE 8 TASKS
+
+Complete only the remaining work:
+
+Admin Dashboard
+
+Verify and finish:
+
+* Dashboard cards
+* Marketplace metrics
+* Charts
+* Recent activity
+* Search
+* Filters
+
+⸻
+
+Verification System
+
+Complete:
+
+Business verification
+
+Service Provider verification
+
+Verification queue
+
+Approval
+
+Rejection
+
+Suspension
+
+Verification history
+
+Verification notes
+
+Verification badges
+
+⸻
+
+User Management
+
+Complete:
+
+Search users
+
+User profiles
+
+Suspend
+
+Reactivate
+
+Soft delete
+
+Permission management
+
+Verification status
+
+Activity history
+
+⸻
+
+Reports
+
+Extend the existing Phase 7 reporting system.
+
+Do NOT recreate it.
+
+Complete:
+
+Business reports
+
+Product reports
+
+Service reports
+
+Conversation reports
+
+Review reports
+
+Resolution workflow
+
+Admin notes
+
+Status tracking
+
+⸻
+
+Moderation
+
+Complete:
+
+Hide listing
+
+Restore listing
+
+Suspend business
+
+Suspend provider
+
+Remove review
+
+Restore review
+
+Moderation queue
+
+Block abusive users
+
+Audit trail
+
+⸻
+
+Analytics
+
+Complete:
+
+Marketplace analytics
+
+Daily active users
+
+Registrations
+
+Listing growth
+
+Category trends
+
+AI usage
+
+Search trends
+
+Favorites
+
+Chat statistics
+
+Notification statistics
+
+Review statistics
+
+Rating distribution
+
+⸻
+
+Platform Settings
+
+Complete administrator settings for:
+
+Marketplace
+
+Verification
+
+Featured duration
+
+Notifications
+
+Search defaults
+
+AI configuration
+
+Registration controls
+
+Future feature flags
+
+⸻
+
+Audit Logs
+
+Complete:
+
+Admin login
+
+Verification actions
+
+Moderation actions
+
+Report actions
+
+Settings changes
+
+Permission changes
+
+Suspensions
+
+Every log must include:
+
+Timestamp
+
+Administrator
+
+Action
+
+Target
+
+Result
+
+⸻
+
+Admin Permissions
+
+Complete:
+
+Super Admin
+
+Moderator
+
+Support
+
+Granular permissions
+
+Never give every permission automatically.
+
+⸻
+
+DATABASE
+
+Use additive Drizzle migrations only.
+
+Never recreate tables.
+
+Never delete data.
+
+Never modify production data.
+
+Apply schema only to the configured development database.
+
+Document every migration.
+
+⸻
+
+API
+
+Verify existing Phase 8 endpoints.
+
+Complete only missing endpoints.
+
+Regenerate OpenAPI only when necessary.
+
+Synchronize generated clients.
+
+⸻
+
+USER INTERFACE
+
+Preserve the existing ShopNear design.
+
+Do NOT redesign.
+
+Continue using:
+
+* Emerald Green
+* Orange
+* White
+* Rounded Cards
+* Existing Bottom Navigation
+* Existing Mobile Layout
+
+The Admin Dashboard may also provide a responsive desktop layout while preserving the same design language.
+
+⸻
+
+TESTING
+
+Run:
+
+* Dependency installation (if missing)
+* Database schema verification
+* OpenAPI generation
+* Typecheck
+* Production build
+* API verification
+* Admin permission tests
+* Verification tests
+* Moderation tests
+* Analytics tests
+* Browser verification
+* Smoke tests
+
+Fix only genuine issues.
+
+⸻
+
+DOCUMENTATION
+
+Update:
+
+* docs/README.md
+* docs/API.md
+* docs/DATABASE.md
+* docs/ARCHITECTURE.md
+* docs/SECURITY.md
+* docs/AI.md
+* docs/CHANGELOG.md
+* docs/ROADMAP.md
+* docs/DECISIONS.md
+* replit.md
+* PROJECT_MEMORY.md
+* HANDOFF.md
+
+Never leave documentation outdated.
+
+⸻
+
+HANDOFF.md
+
+Before completing Phase 8, update:
+
+* Current Phase
+* Last Completed Task
+* Database Migrations Applied
+* API Endpoints Added
+* Files Modified
+* Verification Results
+* Known Limitations
+* Exact Next Task
+
+⸻
+
+IMPORTANT RULES
+
+* Never redesign completed pages.
+* Never remove completed functionality.
+* Never duplicate implementation.
+* Never recreate existing Admin screens.
+* Recover existing work first.
+* Extend existing Phase 7 systems instead of replacing them.
+* Never start Phase 9.
+* Stop immediately after Phase 8 is fully verified and documented.
+
+⸻
+
+DEFINITION OF DONE
+
+Phase 8 is complete only when:
+
+* Admin Dashboard works.
+* Business verification works.
+* Service Provider verification works.
+* User management works.
+* Reports work.
+* Moderation works.
+* Analytics work.
+* Platform settings work.
+* Audit logging works.
+* Admin permissions work.
+* Database verification passes.
+* OpenAPI generation passes.
+* Typecheck passes.
+* Production build passes.
+* Browser verification passes.
+* Documentation is synchronized.
+* replit.md is updated.
+* PROJECT_MEMORY.md is updated.
+* HANDOFF.md is updated.
+* docs/DECISIONS.md is updated.
+* A final report clearly lists:
+    * What was recovered
+    * What was implemented
+    * Database migrations applied
+    * API endpoints added
+    * Tests executed
+    * Known limitations
+    * Exact recommended starting point for Phase 9 (Security, Performance, Accessibility & Production Optimization)
+
+Do not start Phase 9 under any circumstances. Stop after Phase 8 is completely finished, verified, and documented.

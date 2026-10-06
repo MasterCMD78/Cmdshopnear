@@ -7,32 +7,35 @@ import {
   Shield, ShieldAlert, ShieldCheck, SlidersHorizontal, Star, Store, Users, X,
 } from 'lucide-react';
 import {
-  getGetAdminAccessQueryKey, getGetAdminAnalyticsQueryKey, getGetAdminDashboardQueryKey,
+  getGetAdminAccessQueryKey, getGetAdminAnalyticsQueryKey, getGetAdminCategoriesQueryKey, getGetAdminDashboardQueryKey,
+  getGetMarketplaceCategoriesQueryKey,
   getGetAdminSettingsQueryKey, getGetAdminUserActivityQueryKey, getGetAdminUserQueryKey,
   getGetMyBusinessQueryKey, getGetMyServiceProviderQueryKey, getGetMyVerificationRequestsQueryKey,
   getGetProfileQueryKey, getGetVerificationHistoryQueryKey,
   getListAdminAuditLogsQueryKey, getListAdminRolesQueryKey, getListAdminUsersQueryKey,
   getListContentReportsQueryKey, getListModerationContentQueryKey, getListVerificationRequestsQueryKey,
-  useAssignAdminRole, useBootstrapSuperAdmin, useCreateContentReport, useCreateNotificationAnnouncement,
+  useAssignAdminRole, useBootstrapSuperAdmin, useCreateAdminCategory, useCreateContentReport, useCreateNotificationAnnouncement,
+  useDeleteAdminCategory, useGetAdminCategories,
   useCreateVerificationRequest, useGetAdminAccess, useGetAdminAnalytics, useGetAdminDashboard,
   useGetAdminSettings, useGetAdminUser, useGetAdminUserActivity, useGetMyVerificationRequests,
   useGetMyBusiness, useGetMyServiceProvider, useGetProfile, useGetVerificationHistory,
   useListAdminAuditLogs, useListAdminRoles, useListAdminUsers,
   useListContentReports, useListModerationContent, useListVerificationRequests, useModerateContent,
-  useRemoveAdminRole, useResetUserVerification, useUpdateAdminSettings, useUpdateAdminUserStatus,
+  useRemoveAdminRole, useResetUserVerification, useUpdateAdminCategory, useUpdateAdminSettings, useUpdateAdminUserStatus,
   useUpdateContentReport, useUpdateVerificationRequest,
-  type AdminDashboard, type AdminPermission, type AdminRoleName, type AdminSettings, type AdminUserDetail, type AdminUserSummary,
+  type AdminCategoryInput, type AdminCategoryUpdate, type AdminDashboard, type AdminPermission, type AdminRoleName, type AdminSettings, type AdminUserDetail, type AdminUserSummary,
   type CreateContentReportInputEntityType, type ListAdminAuditLogsParams, type ListAdminUsersParams,
-  type ListContentReportsParams, type ListModerationContentParams, type ListVerificationRequestsParams,
+  type GetAdminCategoriesParams, type ListContentReportsParams, type ListModerationContentParams, type ListVerificationRequestsParams,
   type VerificationRequestEntityType, type VerificationStatus,
 } from '@workspace/api-client-react';
 
-type Section = 'overview' | 'users' | 'verification' | 'reports' | 'moderation' | 'analytics' | 'audit' | 'roles' | 'settings';
+type Section = 'overview' | 'users' | 'verification' | 'categories' | 'reports' | 'moderation' | 'analytics' | 'audit' | 'roles' | 'settings';
 
 const sections: { id: Section; label: string; icon: typeof Gauge; permission: AdminPermission }[] = [
   { id: 'overview', label: 'Overview', icon: Gauge, permission: 'dashboard.read' },
   { id: 'users', label: 'People', icon: Users, permission: 'users.read' },
   { id: 'verification', label: 'Verification', icon: BadgeCheck, permission: 'verification.read' },
+  { id: 'categories', label: 'Categories', icon: Package, permission: 'categories.manage' },
   { id: 'reports', label: 'Reports', icon: Flag, permission: 'reports.read' },
   { id: 'moderation', label: 'Content review', icon: ShieldAlert, permission: 'moderation.manage' },
   { id: 'analytics', label: 'Signals', icon: BarChart3, permission: 'analytics.read' },
@@ -173,8 +176,9 @@ export function AdminDashboardPage({ initialSection }: { initialSection?: string
           <Notice notice={notice} />
           {mainDenied ? <QueryProblem retry={() => void dashboard.refetch()} denied /> :
             selected?.id === 'overview' ? <Overview dashboard={dashboard} refresh={refreshDashboard} onSection={setSelected} /> :
-            selected?.id === 'users' ? <PeopleSection {...sectionProps} canManage={can('users.manage')} canRoles={can('roles.manage')} /> :
+            selected?.id === 'users' ? <PeopleSection {...sectionProps} canManage={can('users.manage')} canRoles={can('roles.manage')} canDelete={access.data.role === 'super_admin'} /> :
             selected?.id === 'verification' ? <VerificationSection {...sectionProps} canReview={can('verification.review')} /> :
+            selected?.id === 'categories' ? <CategoriesSection {...sectionProps} canManage={can('categories.manage')} /> :
             selected?.id === 'reports' ? <ReportsSection {...sectionProps} canManage={can('reports.manage')} /> :
             selected?.id === 'moderation' ? <ModerationSection {...sectionProps} /> :
             selected?.id === 'analytics' ? <AnalyticsSection /> :
@@ -225,7 +229,7 @@ function Overview({ dashboard, refresh, onSection }: { dashboard: ReturnType<typ
   </div>;
 }
 
-function PeopleSection({ say, notice, refreshDashboard, canManage, canRoles }: { say: (text: string, error?: boolean) => void; notice: { text: string; error?: boolean } | null; refreshDashboard: () => void; canManage: boolean; canRoles: boolean }) {
+function PeopleSection({ say, notice, refreshDashboard, canManage, canRoles, canDelete }: { say: (text: string, error?: boolean) => void; notice: { text: string; error?: boolean } | null; refreshDashboard: () => void; canManage: boolean; canRoles: boolean; canDelete: boolean }) {
   const client = useQueryClient();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -283,7 +287,7 @@ function PeopleSection({ say, notice, refreshDashboard, canManage, canRoles }: {
             <div className="grid grid-cols-3 gap-2 text-center">{[['Reports', selectedDetail.activitySummary.reportsSubmitted], ['Reviews', selectedDetail.activitySummary.reviewsWritten], ['Staff actions', selectedDetail.activitySummary.auditActions]].map(([label, value]) => <div key={String(label)} className="rounded-xl bg-[#f8f8f2] p-2.5"><strong className="block font-display text-lg text-[#315b43]">{value}</strong><span className="text-[9px] text-[#859087]">{label}</span></div>)}</div>
             <div><h4 className="text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]">Account details</h4><dl className="mt-2 space-y-2 text-xs"><div className="flex justify-between gap-3"><dt className="text-[#8b958c]">Account type</dt><dd className="capitalize text-[#45604e]">{selectedDetail.user.accountType.replaceAll('_', ' ')}</dd></div><div className="flex justify-between gap-3"><dt className="text-[#8b958c]">Location</dt><dd className="text-right text-[#45604e]">{[selectedDetail.user.city, selectedDetail.user.state].filter(Boolean).join(', ') || 'Not provided'}</dd></div><div className="flex justify-between gap-3"><dt className="text-[#8b958c]">Joined</dt><dd className="text-[#45604e]">{fmtDate(selectedDetail.user.createdAt)}</dd></div></dl></div>
             {(selectedDetail.business || selectedDetail.serviceProvider) && <div><h4 className="text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]">Owner listing</h4>{selectedDetail.business && <div className="mt-2 flex items-center justify-between rounded-xl bg-[#f8f8f2] p-3"><span className="text-xs font-semibold text-[#45604e]">{selectedDetail.business.businessName}</span><StatusTag status={selectedDetail.business.verificationStatus} /></div>}{selectedDetail.serviceProvider && <div className="mt-2 flex items-center justify-between rounded-xl bg-[#f8f8f2] p-3"><span className="text-xs font-semibold text-[#45604e]">{selectedDetail.serviceProvider.profession}</span><StatusTag status={selectedDetail.serviceProvider.verificationStatus} /></div>}</div>}
-            {canManage && <div className="border-t border-[#eee9df] pt-3"><label className="mb-2 block text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]" htmlFor="admin-user-note">Decision note</label><textarea id="admin-user-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} rows={2} className={input} placeholder="Optional context for the account record" data-testid="input-admin-user-note" /><div className="mt-2 flex flex-wrap gap-2">{selectedDetail.user.status === 'active' ? <button type="button" className={`${quietButton} text-[#9b4937]`} disabled={updateStatus.isPending} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'suspended')} data-testid="button-suspend-user">Suspend</button> : <button type="button" className={quietButton} disabled={updateStatus.isPending} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'active')} data-testid="button-reactivate-user">Set active</button>}<button type="button" className={`${quietButton} text-[#9b4937]`} disabled={updateStatus.isPending || selectedDetail.user.status === 'deleted'} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'deleted')} data-testid="button-delete-user">Mark deleted</button></div></div>}
+             {canManage && <div className="border-t border-[#eee9df] pt-3"><label className="mb-2 block text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]" htmlFor="admin-user-note">Decision note</label><textarea id="admin-user-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} rows={2} className={input} placeholder="Optional context for the account record" data-testid="input-admin-user-note" /><div className="mt-2 flex flex-wrap gap-2">{selectedDetail.user.status === 'active' ? <button type="button" className={`${quietButton} text-[#9b4937]`} disabled={updateStatus.isPending || selectedDetail.adminRole === 'super_admin'} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'suspended')} data-testid="button-suspend-user">Suspend</button> : <button type="button" className={quietButton} disabled={updateStatus.isPending || selectedDetail.adminRole === 'super_admin'} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'active')} data-testid="button-reactivate-user">Set active</button>}{canDelete && <button type="button" className={`${quietButton} text-[#9b4937]`} disabled={updateStatus.isPending || selectedDetail.user.status === 'deleted' || selectedDetail.adminRole === 'super_admin'} onClick={() => setUserStatus(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), 'deleted')} data-testid="button-delete-user">Mark deleted</button>}</div></div>}
             {canManage && (selectedDetail.business || selectedDetail.serviceProvider) && <div><h4 className="text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]">Verification</h4><div className="mt-2 flex flex-wrap gap-2">{selectedDetail.business && <button type="button" className={quietButton} disabled={resetVerification.isPending} onClick={() => reset(selectedDetail, 'business')} data-testid="button-reset-business-verification">Reset business review</button>}{selectedDetail.serviceProvider && <button type="button" className={quietButton} disabled={resetVerification.isPending} onClick={() => reset(selectedDetail, 'service_provider')} data-testid="button-reset-provider-verification">Reset provider review</button>}</div></div>}
             {canRoles && <div className="border-t border-[#eee9df] pt-3"><label htmlFor="admin-role-choice" className="mb-1.5 block text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]">Staff role</label><div className="flex gap-2"><select id="admin-role-choice" value={roleChoice} onChange={(event) => setRoleChoice(event.target.value as AdminRoleName)} className={`${input} min-w-0`} data-testid="select-user-admin-role"><option value="super_admin">Super administrator</option><option value="moderator">Moderator</option><option value="support">Support</option></select><button type="button" className={primaryButton} disabled={assignRole.isPending || removeRole.isPending || selectedDetail.user.status === 'deleted'} onClick={() => updateRole(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), roleChoice)} data-testid="button-assign-admin-role">{assignRole.isPending ? 'Saving…' : 'Assign'}</button></div>{selectedDetail.adminRole && <button type="button" className="mt-2 text-[10px] font-semibold text-[#a24430] underline" disabled={removeRole.isPending} onClick={() => updateRole(rows.find((user) => user.id === selectedId) ?? ({ id: selectedId } as AdminUserSummary), null)} data-testid="button-remove-admin-role">Remove current staff role</button>}</div>}
             <div><h4 className="text-[10px] font-bold uppercase tracking-[.1em] text-[#88948b]">Recent account activity</h4>{activity.isLoading ? <div className="mt-2"><Skeleton rows={2} /></div> : activity.isError ? <p className="mt-2 text-xs text-[#a24430]">Activity could not be loaded.</p> : activity.data?.activities.length ? <ul className="mt-2 space-y-2">{activity.data.activities.slice(0, 5).map((item) => <li key={item.id} className="flex justify-between gap-3 text-[10px]"><span className="capitalize text-[#56705e]">{item.kind.replaceAll('_', ' ')}{item.entityType ? ` · ${item.entityType.replaceAll('_', ' ')}` : ''}</span><time className="shrink-0 text-[#9aa198]">{fmtDate(item.createdAt)}</time></li>)}</ul> : <p className="mt-2 text-xs text-[#89948c]">No activity to show.</p>}</div>
@@ -350,6 +354,102 @@ function ReportsSection({ say, notice, refreshDashboard, canManage }: { say: (te
   </section>;
 }
 
+function CategoriesSection({ say, notice, canManage }: { say: (text: string, error?: boolean) => void; notice: { text: string; error?: boolean } | null; canManage: boolean }) {
+  const client = useQueryClient();
+  const [type, setType] = useState<'products' | 'services'>('products');
+  const [editingId, setEditingId] = useState('');
+  const [draft, setDraft] = useState({ name: '', slug: '', sortOrder: '0' });
+  const params = useMemo<GetAdminCategoriesParams>(() => ({ type }), [type]);
+  const categories = useGetAdminCategories(params, { query: { queryKey: getGetAdminCategoriesQueryKey(params) } });
+  const create = useCreateAdminCategory();
+  const update = useUpdateAdminCategory();
+  const remove = useDeleteAdminCategory();
+  const rows = categories.data?.categories ?? [];
+  const busy = create.isPending || update.isPending || remove.isPending;
+  const refreshCategoryViews = () => {
+    void client.invalidateQueries({ queryKey: getGetAdminCategoriesQueryKey() });
+    void client.invalidateQueries({ queryKey: getGetMarketplaceCategoriesQueryKey() });
+  };
+  const clearDraft = () => {
+    setEditingId('');
+    setDraft({ name: '', slug: '', sortOrder: '0' });
+  };
+  const finishSave = () => {
+    say(editingId ? 'Category updated.' : 'Category created.');
+    clearDraft();
+    refreshCategoryViews();
+  };
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!canManage || !draft.name.trim() || !draft.slug.trim()) return;
+    const values = {
+      name: draft.name.trim(),
+      slug: draft.slug.trim(),
+      sortOrder: Number(draft.sortOrder),
+    };
+    if (!Number.isInteger(values.sortOrder) || values.sortOrder < 0) {
+      say('Sort order must be a whole number of zero or more.', true);
+      return;
+    }
+    if (editingId) {
+      const data: AdminCategoryUpdate = values;
+      update.mutate({ type, id: editingId, data }, {
+        onSuccess: finishSave,
+        onError: () => say('Category could not be updated. Names and slugs must be unique.', true),
+      });
+      return;
+    }
+    const data: AdminCategoryInput = {
+      type,
+      ...values,
+      isVisible: true,
+      isFeatured: false,
+    };
+    create.mutate({ data }, {
+      onSuccess: finishSave,
+      onError: () => say('Category could not be created. Names and slugs must be unique.', true),
+    });
+  };
+  const edit = (item: (typeof rows)[number]) => {
+    setEditingId(item.id);
+    setDraft({ name: item.name, slug: item.slug, sortOrder: String(item.sortOrder) });
+  };
+  const updateCategory = (item: (typeof rows)[number], data: AdminCategoryUpdate, message: string) => {
+    update.mutate({ type, id: item.id, data }, {
+      onSuccess: () => { say(message); refreshCategoryViews(); },
+      onError: () => say('Category could not be updated.', true),
+    });
+  };
+  const deleteCategory = (item: (typeof rows)[number]) => {
+    if (!window.confirm(`Delete “${item.name}”? Existing listings will remain, but will become uncategorized.`)) return;
+    remove.mutate({ type, id: item.id }, {
+      onSuccess: () => { say('Category deleted.'); if (editingId === item.id) clearDraft(); refreshCategoryViews(); },
+      onError: () => say('Category could not be deleted.', true),
+    });
+  };
+
+  return <section>
+    <SectionTitle kicker="Marketplace organization" title="Keep local categories clear." description="Manage product and service categories used across the marketplace." action={<label><span className="sr-only">Category type</span><select value={type} onChange={(event) => { setType(event.target.value as 'products' | 'services'); clearDraft(); }} className={`${input} w-auto`} data-testid="select-admin-category-type"><option value="products">Products</option><option value="services">Services</option></select></label>} />
+    <Notice notice={notice} />
+    {!canManage && <p className="mt-3 rounded-xl bg-[#fff3df] px-3 py-2.5 text-xs text-[#80551d]">Read access only. Category changes are disabled for your current permissions.</p>}
+    <div className="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <section className={`${panel} overflow-hidden`}>
+        {categories.isLoading ? <div className="p-4"><Skeleton rows={4} /></div> : categories.isError ? <div className="p-4"><QueryProblem retry={() => void categories.refetch()} denied={errorStatus(categories.error) === 401 || errorStatus(categories.error) === 403} /></div> : !rows.length ? <EmptyState title={`No ${type} categories yet`} copy="Add a category to make marketplace listings easier to browse." icon={Package} /> : <DataTable><thead><tr><Th>Category</Th><Th>Order</Th><Th>Visibility</Th><Th>Featured</Th><Th>Actions</Th></tr></thead><tbody>{rows.map((item) => <tr key={item.id} data-testid={`row-admin-category-${item.id}`}><Td><strong className="block text-[#315b43]">{item.name}</strong><span className="font-mono text-[10px] text-[#929b91]">{item.slug}</span></Td><Td>{item.sortOrder}</Td><Td><button type="button" disabled={!canManage || busy} onClick={() => updateCategory(item, { isVisible: !item.isVisible }, item.isVisible ? 'Category hidden.' : 'Category visible.')} className="focus-ring rounded-full" data-testid={`button-category-visibility-${item.id}`}><StatusTag status={item.isVisible ? 'visible' : 'hidden'} /></button></Td><Td><button type="button" disabled={!canManage || busy} onClick={() => updateCategory(item, { isFeatured: !item.isFeatured }, item.isFeatured ? 'Category unfeatured.' : 'Category featured.')} className="focus-ring rounded-full" data-testid={`button-category-featured-${item.id}`}><StatusTag status={item.isFeatured ? 'featured' : 'standard'} /></button></Td><Td><div className="flex flex-wrap gap-1"><button type="button" disabled={!canManage || busy} onClick={() => edit(item)} className={quietButton} data-testid={`button-edit-category-${item.id}`}>Edit</button><button type="button" disabled={!canManage || busy} onClick={() => deleteCategory(item)} className={`${quietButton} text-[#a24430]`} data-testid={`button-delete-category-${item.id}`}>Delete</button></div></Td></tr>)}</tbody></DataTable>}
+      </section>
+      <section className={`${panel} p-4 md:p-5`}>
+        <p className={eyebrow}>{editingId ? 'Update category' : 'New category'}</p>
+        <h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">{editingId ? 'Edit marketplace category' : 'Add a category'}</h3>
+        <form onSubmit={submit} className="mt-4 space-y-3">
+          <label className="block text-xs font-bold text-[#45604e]">Name<input required minLength={2} maxLength={100} value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} className={`${input} mt-1 font-normal`} disabled={!canManage || busy} data-testid="input-admin-category-name" /></label>
+          <label className="block text-xs font-bold text-[#45604e]">Slug<input required minLength={2} maxLength={120} value={draft.slug} onChange={(event) => setDraft((current) => ({ ...current, slug: event.target.value }))} className={`${input} mt-1 font-normal`} disabled={!canManage || busy} data-testid="input-admin-category-slug" /></label>
+          <label className="block text-xs font-bold text-[#45604e]">Sort order<input required type="number" min={0} step={1} value={draft.sortOrder} onChange={(event) => setDraft((current) => ({ ...current, sortOrder: event.target.value }))} className={`${input} mt-1 font-normal`} disabled={!canManage || busy} data-testid="input-admin-category-sort-order" /></label>
+          <div className="flex flex-wrap gap-2 pt-1"><button type="submit" className={primaryButton} disabled={!canManage || busy || !draft.name.trim() || !draft.slug.trim()} data-testid="button-save-admin-category"><Check size={14} />{busy ? 'Saving…' : editingId ? 'Save changes' : 'Create category'}</button>{editingId && <button type="button" className={quietButton} disabled={busy} onClick={clearDraft} data-testid="button-cancel-category-edit"><X size={14} />Cancel</button>}</div>
+        </form>
+      </section>
+    </div>
+  </section>;
+}
+
 function ModerationSection({ say, notice, refreshDashboard }: { say: (text: string, error?: boolean) => void; notice: { text: string; error?: boolean } | null; refreshDashboard: () => void }) {
   const client = useQueryClient();
   const [query, setQuery] = useState('');
@@ -361,8 +461,7 @@ function ModerationSection({ say, notice, refreshDashboard }: { say: (text: stri
   const moderate = useModerateContent();
   const [actions, setActions] = useState<Record<string, 'hide' | 'restore' | 'remove' | 'suspend' | 'unsuspend'>>({});
   const [reasons, setReasons] = useState<Record<string, string>>({});
-  const actionOptions = ['hide', 'restore', 'remove', 'suspend', 'unsuspend'] as const;
-  const actionsForEntity = (type: string) => type === 'business' || type === 'service_provider' ? ['suspend', 'unsuspend', 'remove'] as const : ['hide', 'restore', 'remove'] as const;
+  const actionsForEntity = (type: string) => type === 'business' || type === 'service_provider' ? ['suspend', 'unsuspend'] as const : ['hide', 'restore', 'remove'] as const;
   const onModerate = (item: NonNullable<typeof content.data>['results'][number]) => {
     const action = actions[item.id] || (item.entityType === 'business' || item.entityType === 'service_provider' ? 'suspend' : 'hide');
     const reason = reasons[item.id]?.trim() || 'Policy review';
@@ -432,13 +531,23 @@ function SettingsSection({ say, notice, canManage, canAnnouncements }: { say: (t
   const [announcement, setAnnouncement] = useState({ title: '', message: '' });
   useEffect(() => { if (settingsQuery.data && !values) setValues(settingsQuery.data.settings); }, [settingsQuery.data, values]);
   const keys: { key: keyof AdminSettings['settings']; label: string; description: string }[] = [
-    { key: 'maintenanceMode', label: 'Maintenance mode', description: 'Configuration flag for a future maintenance flow.' },
+    { key: 'maintenanceMode', label: 'Maintenance mode', description: 'Future-ready platform availability flag; it does not take the marketplace offline.' },
+    { key: 'marketplaceEnabled', label: 'Marketplace enabled', description: 'Saved marketplace availability setting for future runtime controls.' },
     { key: 'customerRegistrationEnabled', label: 'Customer registration', description: 'Saved configuration for customer sign-up availability.' },
     { key: 'businessRegistrationEnabled', label: 'Business registration', description: 'Saved configuration for business owner onboarding.' },
     { key: 'providerRegistrationEnabled', label: 'Provider registration', description: 'Saved configuration for service provider onboarding.' },
     { key: 'requireVerificationToPublish', label: 'Verification before publishing', description: 'Saved requirement flag for listing publication.' },
+    { key: 'notificationsEnabled', label: 'Notifications', description: 'Saved setting for future notification delivery controls.' },
     { key: 'announcementsEnabled', label: 'Announcements', description: 'Saved configuration for ShopNear announcements.' },
     { key: 'aiSearchEnabled', label: 'AI search', description: 'Saved configuration for AI-assisted marketplace discovery.' },
+    { key: 'aiRecommendationsEnabled', label: 'AI recommendations', description: 'Saved setting for future AI recommendation controls.' },
+    { key: 'experimentalFeaturesEnabled', label: 'Experimental features', description: 'Future rollout flag; no experimental feature is activated by this setting yet.' },
+  ];
+  const numberFields: { key: 'verificationDurationDays' | 'featuredDurationDays' | 'defaultSearchRadiusKm' | 'defaultSearchPageSize'; label: string; description: string; min: number; max: number }[] = [
+    { key: 'verificationDurationDays', label: 'Verification duration (days)', description: 'Planning value for future verification workflows.', min: 1, max: 90 },
+    { key: 'featuredDurationDays', label: 'Featured listing duration (days)', description: 'Planning value for future featured-listing expiry.', min: 1, max: 365 },
+    { key: 'defaultSearchRadiusKm', label: 'Default search radius (km)', description: 'Future default radius for nearby marketplace searches.', min: 1, max: 100 },
+    { key: 'defaultSearchPageSize', label: 'Default search results per page', description: 'Future default result count for marketplace search.', min: 1, max: 100 },
   ];
   const updateToggle = (key: keyof AdminSettings['settings'], checked: boolean) => setValues((current) => current ? { ...current, [key]: checked } : current);
   const submitSettings = (event: FormEvent) => {
@@ -451,9 +560,9 @@ function SettingsSection({ say, notice, canManage, canAnnouncements }: { say: (t
     if (!announcement.title.trim() || !announcement.message.trim()) return;
     announce.mutate({ data: { title: announcement.title.trim(), message: announcement.message.trim() } }, { onSuccess: () => { say('Announcement sent.'); setAnnouncement({ title: '', message: '' }); void client.invalidateQueries({ queryKey: getGetAdminDashboardQueryKey() }); }, onError: () => say('Announcement could not be sent.', true) });
   };
-  return <section><SectionTitle kicker="Configuration, not enforcement" title="Settings with the future in view." description="The service stores these platform values. Saving them does not currently change runtime behavior." /><Notice notice={notice} />
-    <section className={`${panel} mt-4 overflow-hidden`}><header className="border-b border-[#eee9df] px-4 py-4 md:px-5"><p className={eyebrow}>Saved values</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">Platform configuration</h3><p className="mt-1 text-xs text-[#879189]">Values are stored as administrative configuration only. Runtime wiring is not yet available.</p></header>
-      {settingsQuery.isLoading ? <div className="space-y-3 p-4"><Skeleton rows={4} /></div> : settingsQuery.isError ? <div className="p-4"><QueryProblem retry={() => void settingsQuery.refetch()} denied={errorStatus(settingsQuery.error) === 401 || errorStatus(settingsQuery.error) === 403} /></div> : values ? <form onSubmit={submitSettings} className="p-4 md:p-5"><div className="divide-y divide-[#f0ece4]">{keys.map(({ key, label, description }) => <label key={key} className="flex cursor-pointer items-center justify-between gap-4 py-3.5"><span><span className="block text-xs font-bold text-[#45604e]">{label}</span><span className="mt-0.5 block text-[10px] leading-relaxed text-[#8b958c]">{description}</span></span><input type="checkbox" checked={values[key] as boolean} onChange={(event) => updateToggle(key, event.target.checked)} disabled={!canManage || saveSettings.isPending} className="h-4 w-4 shrink-0 accent-[#087044]" data-testid={`toggle-setting-${key}`} /></label>)}</div><div className="mt-3 border-t border-[#eee9df] pt-4"><label htmlFor="support-email" className="mb-1.5 block text-xs font-bold text-[#45604e]">Support contact email</label><input id="support-email" type="email" value={values.supportContactEmail} onChange={(event) => setValues((current) => current ? { ...current, supportContactEmail: event.target.value } : current)} disabled={!canManage || saveSettings.isPending} className={input} data-testid="input-support-contact-email" /><p className="mt-1 text-[10px] text-[#8b958c]">Saved for future platform support flows.</p></div>{!canManage && <p className="mt-3 rounded-xl bg-[#fff3df] px-3 py-2 text-xs text-[#80551d]">Read access only. Configuration edits are disabled for your current permissions.</p>}<div className="mt-4 flex flex-wrap items-center justify-between gap-3"><span className="text-[10px] text-[#9aa198]">{settingsQuery.data?.updatedAt ? `Last saved ${fmtTime(settingsQuery.data.updatedAt)}` : 'No saved timestamp available'}</span><button type="submit" disabled={!canManage || saveSettings.isPending || !values} className={primaryButton} data-testid="button-save-admin-settings"><Check size={14} />{saveSettings.isPending ? 'Saving…' : 'Save configuration'}</button></div></form> : <EmptyState title="Settings unavailable" copy="No saved platform configuration was returned." icon={Settings2} />}
+  return <section><SectionTitle kicker="Configuration, not enforcement" title="Settings with the future in view." description="Phase 8 stores these settings for future runtime use; they do not change live marketplace behavior." /><Notice notice={notice} />
+    <section className={`${panel} mt-4 overflow-hidden`}><header className="border-b border-[#eee9df] px-4 py-4 md:px-5"><p className={eyebrow}>Future-ready values</p><h3 className="mt-1 font-display text-lg font-extrabold text-[#164d38]">Platform configuration</h3><p className="mt-1 text-xs text-[#879189]">Marketplace, verification, featured duration, notifications, search defaults, AI, registration, and rollout values are stored only.</p></header>
+      {settingsQuery.isLoading ? <div className="space-y-3 p-4"><Skeleton rows={4} /></div> : settingsQuery.isError ? <div className="p-4"><QueryProblem retry={() => void settingsQuery.refetch()} denied={errorStatus(settingsQuery.error) === 401 || errorStatus(settingsQuery.error) === 403} /></div> : values ? <form onSubmit={submitSettings} className="p-4 md:p-5"><div className="divide-y divide-[#f0ece4]">{keys.map(({ key, label, description }) => <label key={key} className="flex cursor-pointer items-center justify-between gap-4 py-3.5"><span><span className="block text-xs font-bold text-[#45604e]">{label}</span><span className="mt-0.5 block text-[10px] leading-relaxed text-[#8b958c]">{description}</span></span><input type="checkbox" checked={values[key] as boolean} onChange={(event) => updateToggle(key, event.target.checked)} disabled={!canManage || saveSettings.isPending} className="h-4 w-4 shrink-0 accent-[#087044]" data-testid={`toggle-setting-${key}`} /></label>)}</div><div className="mt-4 grid gap-3 border-t border-[#eee9df] pt-4 sm:grid-cols-2">{numberFields.map(({ key, label, description, min, max }) => <label key={key} className="block text-xs font-bold text-[#45604e]">{label}<input required type="number" min={min} max={max} step={1} value={values[key]} onChange={(event) => setValues((current) => current ? { ...current, [key]: Number(event.target.value) } : current)} disabled={!canManage || saveSettings.isPending} className={`${input} mt-1 font-normal`} data-testid={`input-setting-${key}`} /><span className="mt-1 block text-[10px] font-normal leading-relaxed text-[#8b958c]">{description}</span></label>)}</div><div className="mt-3 border-t border-[#eee9df] pt-4"><label htmlFor="support-email" className="mb-1.5 block text-xs font-bold text-[#45604e]">Support contact email</label><input id="support-email" type="email" value={values.supportContactEmail} onChange={(event) => setValues((current) => current ? { ...current, supportContactEmail: event.target.value } : current)} disabled={!canManage || saveSettings.isPending} className={input} data-testid="input-support-contact-email" /><p className="mt-1 text-[10px] text-[#8b958c]">Saved for future platform support flows.</p></div>{!canManage && <p className="mt-3 rounded-xl bg-[#fff3df] px-3 py-2 text-xs text-[#80551d]">Read access only. Configuration edits are disabled for your current permissions.</p>}<div className="mt-4 flex flex-wrap items-center justify-between gap-3"><span className="text-[10px] text-[#9aa198]">{settingsQuery.data?.updatedAt ? `Last saved ${fmtTime(settingsQuery.data.updatedAt)}` : 'No saved timestamp available'}</span><button type="submit" disabled={!canManage || saveSettings.isPending || !values} className={primaryButton} data-testid="button-save-admin-settings"><Check size={14} />{saveSettings.isPending ? 'Saving…' : 'Save configuration'}</button></div></form> : <EmptyState title="Settings unavailable" copy="No saved platform configuration was returned." icon={Settings2} />}
     </section>
     {canAnnouncements && <section className={`${panel} mt-4 p-4 md:p-5`}><div className="flex items-center gap-2"><span className="rounded-xl bg-[#fff0df] p-2 text-[#c96718]"><Megaphone size={17} /></span><div><p className={eyebrow}>Community update</p><h3 className="font-display text-lg font-extrabold text-[#164d38]">Send an announcement</h3></div></div><p className="mt-1 text-xs text-[#77867c]">Create an announcement using the ShopNear staff announcement action.</p><form onSubmit={submitAnnouncement} className="mt-4 grid gap-3"><label className="text-[10px] font-bold text-[#6d7f73]">Title<input required maxLength={160} value={announcement.title} onChange={(event) => setAnnouncement((current) => ({ ...current, title: event.target.value }))} className={`${input} mt-1 font-normal`} data-testid="input-announcement-title" /></label><label className="text-[10px] font-bold text-[#6d7f73]">Message<textarea required maxLength={2000} rows={3} value={announcement.message} onChange={(event) => setAnnouncement((current) => ({ ...current, message: event.target.value }))} className={`${input} mt-1 resize-y font-normal`} data-testid="input-announcement-message" /></label><div><button type="submit" className={primaryButton} disabled={announce.isPending || !announcement.title.trim() || !announcement.message.trim()} data-testid="button-send-announcement"><Megaphone size={14} />{announce.isPending ? 'Sending…' : 'Send announcement'}</button></div></form></section>}
   </section>;
