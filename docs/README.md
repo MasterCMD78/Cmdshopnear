@@ -67,4 +67,11 @@ Phase 2 adds phone/OTP authentication, database-backed sessions, role-aware acco
 - Added the administrator Categories section using the existing marketplace category APIs and tables.
 - Added explicit server-enforced permissions, protected soft deletion, and transactional Super Admin transfer.
 - Analytics now reports aggregate daily active users, marketplace and AI searches, registrations, listings, conversations, favorites, notifications, reviews, category activity, and rating distribution.
-- Platform settings are stored for future use only; saving them does not change runtime behavior. Phase 9 has not started.
+- Platform settings are stored for future use only; saving them does not change runtime behavior.
+
+## Phase 9 — Security, reliability, performance, and accessibility
+
+- Hardened API request boundaries, response headers, error handling, OTP verification, session claim validation, private object paths, and image delivery.
+- Replaced vulnerable/unused dependencies with compatible patched alternatives and updated the lockfile.
+- Improved keyboard focus, skip navigation, reduced-motion behavior, viewport zoom, metadata, and contrast while preserving ShopNear's existing design.
+- No database migration or schema push was needed. Phase 10 has not started.

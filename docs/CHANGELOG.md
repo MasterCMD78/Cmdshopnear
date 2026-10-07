@@ -70,3 +70,12 @@
 - Added aggregate daily active user metrics, AI search and interaction totals, and listing/profile trends.
 - Expanded future-ready platform settings and synchronized generated OpenAPI clients; settings remain stored configuration and do not alter runtime behavior.
 - Verified the existing development database tables without changing or pushing the schema.
+
+## Phase 9 — Security, Reliability, Performance, and Accessibility
+
+- Added same-origin mutation checks, standard API security headers, bounded request bodies, generic API errors, and UUID/role validation for signed session claims.
+- Made OTP verification single-use and race-safe, with constant-time hash comparison and a bounded, window-aware in-process rate limiter.
+- Restricted private image object paths and storage hosts; image reads now stream through the API with a 5 MB cap instead of redirecting to signed URLs.
+- Removed unused server dependencies and replaced `fast-glob` in the mockup preview plugin with the workspace's existing `tinyglobby` dependency, eliminating the vulnerable `braces` path.
+- Improved skip navigation, focus indicators, text contrast, zoom support, reduced-motion behavior, font loading, and ShopNear metadata.
+- No database schema changes or pushes were made.

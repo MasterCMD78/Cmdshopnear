@@ -23,7 +23,7 @@ import {
   serializeUser,
   setOnboardingCookie,
 } from "../lib/auth";
-import { consumeOtp, createOtpChallenge } from "../lib/otp";
+import { consumeOtp, createOtpChallenge, OtpRateLimitError, OtpVerificationError } from "../lib/otp";
 
 const router: IRouter = Router();
 
@@ -33,11 +33,23 @@ async function requestOtp(req: Request, res: Response) {
     res.status(400).json({ error: "Enter a valid phone number" });
     return;
   }
+  let phone: string;
   try {
-    const result = await createOtpChallenge(parsed.data.phone, req.ip);
+    phone = normalizePhone(parsed.data.phone);
+  } catch {
+    res.status(400).json({ error: "Enter a valid phone number" });
+    return;
+  }
+  try {
+    const result = await createOtpChallenge(phone, req.ip);
     res.json(RequestOtpResponse.parse(result));
   } catch (error) {
-    res.status(429).json({ error: error instanceof Error ? error.message : "Unable to send OTP" });
+    if (error instanceof OtpRateLimitError) {
+      res.status(429).json({ error: "Too many OTP requests. Try again later." });
+      return;
+    }
+    req.log.error({ err: error }, "OTP request failed");
+    res.status(503).json({ error: "Unable to send a verification code" });
   }
 }
 
@@ -66,7 +78,12 @@ async function verifyOtp(req: Request, res: Response) {
     res.json(VerifyOtpResponse.parse(result));
     await audit(req, "auth.login", "user", user.id);
   } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : "Invalid or expired code" });
+    if (error instanceof OtpVerificationError) {
+      res.status(400).json({ error: "Invalid or expired code" });
+      return;
+    }
+    req.log.error({ err: error }, "OTP verification failed");
+    res.status(500).json({ error: "Unable to verify the code" });
   }
 }
 

@@ -119,3 +119,11 @@ All routes below are mounted under `/api`. Admin routes require the existing aut
 - `GET|PUT /admin/settings` — read and save future-ready platform configuration. These values are not wired to runtime behavior.
 - `GET /admin/audit-logs` — paginated audit history including action outcome; successful actions are recorded with a `success` result.
 - `POST /admin/notifications/announcements` — the existing administrator announcement endpoint.
+
+## Phase 9 request and storage protections
+
+- Unsafe cross-origin mutations are rejected; the API does not allow credentialed wildcard CORS.
+- JSON and URL-encoded bodies are limited to 64 KB. Unknown API routes return a generic 404 and API exceptions do not expose internal error messages.
+- `POST /storage/uploads/request-url` remains authenticated and validates the declared image type and size before issuing a short-lived upload URL.
+- `GET /storage/objects/*` remains authenticated and owner-scoped (administrators may read other owners' objects). It validates the private object path, then streams only JPEG, PNG, or WebP content up to 5 MB with private no-store caching. Storage URLs are never sent to the browser as redirects.
+- The storage signer currently does not bind the client-declared type/size to the PUT bytes. Production storage policy must enforce those limits before uploads are considered fully hardened.

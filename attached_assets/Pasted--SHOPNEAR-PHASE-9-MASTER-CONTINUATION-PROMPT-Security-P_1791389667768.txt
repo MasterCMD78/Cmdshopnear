@@ -1,0 +1,370 @@
+🚀 SHOPNEAR PHASE 9 MASTER CONTINUATION PROMPT
+
+Security • Performance • Optimization • Accessibility • Final Bug Fixing
+
+The previous ShopNear phases (1–8) are complete.
+
+Do NOT rebuild, redesign, or replace any existing implementation.
+
+Continue from the current imported ShopNear repository.
+
+This is a continuation project, not a new project.
+
+⸻
+
+FIRST TASK (MANDATORY)
+
+Before writing or changing any code:
+
+Read and understand:
+
+* ShopNear Functional Specification (PDF)
+* ShopNear Screen-by-Screen Specification (PDF)
+* ShopNear Database & API Specification (PDF)
+
+Read all project documentation:
+
+* docs/README.md
+* PROJECT_OVERVIEW.md
+* ARCHITECTURE.md
+* DATABASE.md
+* API.md
+* AI.md
+* SECURITY.md
+* DEPLOYMENT.md
+* CHANGELOG.md
+* ROADMAP.md
+* PROJECT_MEMORY.md
+* replit.md
+* HANDOFF.md
+
+These documents are the single source of truth.
+
+If documentation conflicts with code:
+
+Preserve the working implementation and update the documentation instead of redesigning working systems.
+
+⸻
+
+RECOVERY AUDIT
+
+Before making changes:
+
+Audit the existing project.
+
+Verify:
+
+✅ Authentication
+
+✅ OTP
+
+✅ User roles
+
+✅ Marketplace
+
+✅ AI Search
+
+✅ Chat
+
+✅ Notifications
+
+✅ Reviews
+
+✅ Ratings
+
+✅ Favorites
+
+✅ GPS
+
+✅ Maps
+
+✅ Verification
+
+✅ Admin Dashboard
+
+✅ Analytics
+
+✅ Reports
+
+✅ Categories
+
+✅ Permissions
+
+Determine what Phase 9 actually requires.
+
+Do not repeat previous phases.
+
+Only implement what is genuinely missing.
+
+⸻
+
+PHASE 9 OBJECTIVE
+
+Complete ShopNear’s production-quality engineering by focusing on:
+
+* Security hardening
+* Performance optimization
+* Accessibility
+* Code quality
+* Scalability
+* Reliability
+* Final bug fixing
+
+This phase should make ShopNear feel like a funded startup product.
+
+⸻
+
+SECURITY
+
+Audit the entire application.
+
+Improve only where necessary.
+
+Verify:
+
+* JWT validation
+* Session security
+* Cookie settings
+* CSRF protection (where applicable)
+* SQL injection protection
+* XSS protection
+* Input validation
+* Output encoding
+* Rate limiting
+* Secure uploads
+* API authorization
+* Role permissions
+* Audit logging
+* Secret handling
+* Error handling
+* File validation
+* Security headers
+* Authentication middleware
+* Protected routes
+* Session expiration
+* Refresh-token flow (future-ready)
+* Password flow (future-ready)
+
+Never weaken existing security.
+
+⸻
+
+PERFORMANCE
+
+Optimize:
+
+* Database queries
+* API response time
+* Indexes
+* Pagination
+* Lazy loading
+* Bundle size
+* React rendering
+* Memoization
+* Caching
+* API efficiency
+* Image loading
+* Infinite lists
+* Search speed
+* Dashboard queries
+
+Do not redesign the UI.
+
+⸻
+
+ACCESSIBILITY
+
+Improve accessibility across the app.
+
+Verify:
+
+* Keyboard navigation
+* Screen-reader support
+* ARIA labels
+* Focus states
+* Color contrast
+* Accessible forms
+* Accessible dialogs
+* Accessible navigation
+* Semantic HTML
+
+Keep the existing design language.
+
+⸻
+
+BUG FIXING
+
+Audit the whole application.
+
+Fix only genuine issues.
+
+Do not create unnecessary changes.
+
+Examples:
+
+* Runtime bugs
+* State bugs
+* Race conditions
+* Memory leaks
+* Navigation bugs
+* Loading bugs
+* Form bugs
+* Validation bugs
+* Pagination bugs
+* Search bugs
+* Mobile bugs
+* Responsive bugs
+
+⸻
+
+CODE QUALITY
+
+Improve:
+
+* Component reuse
+* Folder organization
+* Dead code removal
+* Duplicate code
+* Type safety
+* Error boundaries
+* Logging
+* Naming consistency
+
+Do not change architecture without justification.
+
+⸻
+
+DATABASE
+
+Keep PostgreSQL.
+
+Never recreate tables.
+
+Never delete data.
+
+Only create additive migrations if absolutely necessary.
+
+If no schema change is required:
+
+Do not push a migration.
+
+⸻
+
+API
+
+Audit all endpoints.
+
+Verify:
+
+* Validation
+* Error responses
+* Authentication
+* Authorization
+* Documentation
+* Response consistency
+
+Update OpenAPI only if implementation changes.
+
+⸻
+
+TESTING
+
+Run:
+
+* pnpm install (if dependencies are missing)
+* Database reconciliation
+* OpenAPI generation
+* Typecheck
+* Workspace build
+* API build
+* Web build
+* Unit tests
+* Existing AI tests
+* Authentication tests
+* Authorization tests
+* Marketplace tests
+* Admin tests
+* Accessibility checks
+* Security checks
+* Performance smoke tests
+* API smoke tests
+
+Fix every real failure.
+
+Ignore only known non-blocking warnings already documented.
+
+⸻
+
+DOCUMENTATION
+
+Update:
+
+* README
+* API
+* DATABASE
+* SECURITY
+* CHANGELOG
+* ROADMAP
+* PROJECT_MEMORY
+* replit.md
+* HANDOFF.md
+
+Never leave documentation outdated.
+
+⸻
+
+HANDOFF.MD (MANDATORY)
+
+Update HANDOFF.md with:
+
+* Current Phase
+* Last Completed Task
+* Database Migrations
+* API Endpoints Added
+* Files Modified
+* Verification Results
+* Known Limitations
+* Performance Improvements
+* Security Improvements
+* Accessibility Improvements
+* Exact Next Task
+
+This file must remain the primary recovery document for future Replit account changes.
+
+⸻
+
+IMPORTANT RULES
+
+Do NOT:
+
+* redesign ShopNear
+* replace existing architecture
+* remove completed features
+* recreate the database
+* restart earlier phases
+* begin Phase 10
+
+Everything must be additive and compatible with the existing application.
+
+⸻
+
+DEFINITION OF DONE
+
+Phase 9 is complete only when:
+
+* Security audit completed
+* Performance optimization completed
+* Accessibility improvements completed
+* Final bug fixing completed
+* Typecheck passes
+* Workspace build passes
+* API build passes
+* Web build passes
+* Existing tests pass
+* API smoke tests pass
+* Documentation fully updated
+* replit.md updated
+* PROJECT_MEMORY.md updated
+* HANDOFF.md updated
+* Phase 10 identified as the next phase
+* Do not start Phase 10 automatically.

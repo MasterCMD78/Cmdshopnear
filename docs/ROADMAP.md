@@ -12,10 +12,10 @@
 - Phase 6: provider-independent AI search, recommendations, suggestions, saved history, and preferences
 - Phase 7: chat, notifications, reviews, ratings, moderation, persistent blocks, and paginated favorites
 - Phase 8: administrator operations, verification, user/report/content moderation, analytics, future-ready settings, audit history, and granular roles
+- Phase 9: API security hardening, OTP/session robustness, dependency remediation, private-object safeguards, and accessibility improvements
 
 ## Next
 
-- Phase 9: security hardening and performance
 - Phase 10: production release
 
 ## Phase 2 follow-up hardening
@@ -38,7 +38,13 @@
 
 ## Phase 8 status
 
-- Complete: administrator dashboard, business/provider verification, account management, reports, moderation, analytics, future-ready platform configuration, audit logs, category management, and role administration. No Phase 8 schema migration was required. Phase 9 has not started.
+- Complete: administrator dashboard, business/provider verification, account management, reports, moderation, analytics, future-ready platform configuration, audit logs, category management, and role administration. No Phase 8 schema migration was required.
+
+## Phase 9 status
+
+- Complete: same-origin mutation checks, response security headers, bounded request parsing, generic API errors, validated session claims, atomic OTP consumption, bounded rate-limit state, safe private image retrieval, patched dependency graph, improved keyboard/zoom/reduced-motion support, stronger text contrast, and accurate page metadata.
+- No database schema change or push was needed. Production shared rate limiting, byte-bound upload signing, and authenticated App Storage verification remain explicit follow-up work.
+- Phase 10 has not started.
 
 ## Future AI improvements
 

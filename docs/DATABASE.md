@@ -84,3 +84,8 @@ The schema uses the names and concepts from the official specification. Nullable
 - Phase 8 made no schema changes and did not run a database push.
 - Development database inspection confirmed the existing `admin_role_assignments`, `verification_requests`, `verification_history`, `analytics_events`, `moderation_actions`, `audit_logs`, `app_settings`, `product_categories`, and `service_categories` tables are present.
 - Platform configuration continues to use the existing `app_settings.value` JSONB column; no settings-specific table or migration was added.
+
+## Phase 9 verification
+
+- Phase 9 made no database schema changes, created no tables, and ran no schema push or migration. Existing PostgreSQL tables and data were left untouched.
+- No new index was justified without representative production listing volume or measured query plans. Revisit query-plan profiling when the marketplace has enough data to make a meaningful comparison.

@@ -62,3 +62,18 @@ Password hashing, external social login, production SMS delivery, object ACL rev
 - Audit records include actor, action, target, timestamp, and a successful result marker. Administrator sign-in is included in the existing login audit.
 - Analytics contain daily aggregate counts only. Raw search text and request coordinates are not stored in the analytics response.
 - Platform settings are persisted for future configuration only and do not currently enforce maintenance, registration, marketplace, notification, search, or AI behavior.
+
+## Phase 9 hardening
+
+- The API rejects unsafe cross-origin mutations when the `Origin` host does not match the API host or browser fetch metadata identifies a cross-site request. It does not enable credentialed wildcard CORS.
+- JSON and URL-encoded request bodies are limited to 64 KB; URL-encoded nesting is disabled and parameter counts are bounded. API errors return generic messages while server details stay in structured logs.
+- API responses include content-sniffing, framing, referrer, permissions, and production HSTS protections. Session claims are shape-checked, the session ID must be a UUID, and database user ID/role must still match the signed claims.
+- OTP verification compares hashes in constant time, increments failed attempts atomically, and consumes a valid challenge only once. In-process rate-limit state is capped at 10,000 keys and expires by each key's own window.
+- Private object paths are restricted to the owner's UUID and one object UUID. Signed URLs are limited to HTTPS Google Cloud Storage hosts. Private image reads are proxied without redirects, restricted to JPEG/PNG/WebP, capped at 5 MB, and returned with `private, no-store`.
+- Dependency remediation removed the unused Google storage libraries and replaced the mockup preview's vulnerable glob dependency with `tinyglobby`; the lockfile contains patched releases for the remaining affected parsers.
+
+## Remaining hardening limits
+
+- Rate limiting remains process-local; use a shared limiter before horizontally scaling the API or relying on it for production abuse prevention.
+- The upload endpoint validates client-supplied image type/size metadata before issuing a short-lived PUT URL. The current storage signer does not bind those claims to the uploaded bytes, so production storage policy must enforce the actual content type and size.
+- App Storage signing still requires resolving the documented runtime resource-authorization issue. Do not treat uploads as operationally verified until the sidecar succeeds in the deployed runtime.

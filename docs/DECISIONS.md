@@ -77,3 +77,21 @@ Marketplace, verification, featured-duration, notification, search-default, AI, 
 ### Keep analytics aggregate-only
 
 Admin analytics use date-bounded daily aggregates, including distinct active users across event types. Do not include raw search terms or private request coordinates.
+
+## Phase 9 — preserve the existing platform while hardening boundaries
+
+### Keep API mutations same-origin and errors generic
+
+The browser app and API share the same origin through the artifact proxy. Reject cross-site mutations instead of enabling credentialed wildcard CORS, cap parsed request bodies, and keep internal exception details in server logs.
+
+### Preserve revocable session and OTP guarantees
+
+Signed claims are only hints; every session must still match an active database row and the user's current role. OTP challenges are consumed through conditional database updates so retries and concurrent requests cannot reuse them.
+
+### Proxy private image reads rather than redirecting
+
+Validate the owner/object UUID path and trusted Google Storage host, then stream only bounded image responses through the authenticated API. This removes the browser redirect boundary and keeps private object URLs out of client-visible `Location` headers.
+
+### Avoid speculative schema work
+
+Phase 9 did not add indexes without measured query plans or representative marketplace volume. Preserve existing PostgreSQL tables and data until evidence justifies an additive change.

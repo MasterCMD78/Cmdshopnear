@@ -84,7 +84,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Customer GPS is request-scoped. Never write exact request coordinates into AI history, preferences, or logs; public listing distance requires owner opt-in and approval.
 - Saved AI history is user-owned, optional, and clearable. Use the existing session boundary and additive Drizzle schema changes only.
 - Do not claim open-now, provider-gender, weekly-engagement, or recently-viewed behavior when the existing data model cannot support it; communicate limitations in the UI/API.
-- Phase 8 is complete. Preserve existing data and the current design/navigation; do not begin another phase without explicit approval.
+- Phases 1–9 are complete. Preserve existing PostgreSQL data and the current design/navigation; do not begin Phase 10 without explicit approval.
 
 ## Phase 8 conventions
 

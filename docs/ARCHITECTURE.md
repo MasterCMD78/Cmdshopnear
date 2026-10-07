@@ -65,3 +65,7 @@ Administrator permissions are defined centrally and checked by API middleware; a
 The existing administrator UI reuses the verification, user, report, moderation, analytics, settings, audit, and role APIs. Category administration uses the existing product/service category tables and generated API hooks. Analytics are aggregate-only and bounded by the requested date window.
 
 Future platform settings are stored in the existing `app_settings` JSONB record. Phase 8 deliberately does not connect those flags or defaults to live runtime behavior.
+
+## Phase 9 request boundaries
+
+The Express API applies same-origin mutation checks, bounded body parsing, generic error responses, and security headers before feature routes. Session claims are checked against the revocable database session and current user role. OTP attempts use conditional database updates so invalid attempts cannot race past the limit or consume a challenge more than once. Private image retrieval validates ownership and streams a bounded response from the trusted storage host instead of redirecting the browser to a signed URL.

@@ -11,7 +11,7 @@ type TokenPayload = {
   sid: string;
   role: Role;
   exp: number;
-  purpose?: "session" | "onboarding";
+  purpose: "session" | "onboarding";
 };
 
 declare global {
@@ -27,6 +27,8 @@ const SESSION_COOKIE = "shopnear_session";
 const ONBOARDING_COOKIE = "shopnear_onboarding";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const ONBOARDING_TTL_SECONDS = 60 * 15;
+const tokenIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const roles = new Set<Role>(["customer", "business", "service_provider", "admin"]);
 
 function secret() {
   const value = process.env.SESSION_SECRET;
@@ -45,14 +47,37 @@ function sign(payload: TokenPayload) {
 }
 
 function verify(token: string): TokenPayload | null {
-  const [body, signature] = token.split(".");
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [body, signature] = parts;
   if (!body || !signature) return null;
   const expected = createHmac("sha256", secret()).update(body).digest();
   const received = Buffer.from(signature, "base64url");
   if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
   try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as TokenPayload;
-    return payload.exp > Math.floor(Date.now() / 1000) ? payload : null;
+    const payload: unknown = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("sub" in payload) ||
+      typeof payload.sub !== "string" ||
+      payload.sub.length === 0 ||
+      !("sid" in payload) ||
+      typeof payload.sid !== "string" ||
+      !tokenIdPattern.test(payload.sid) ||
+      !("role" in payload) ||
+      typeof payload.role !== "string" ||
+      !roles.has(payload.role as Role) ||
+      !("exp" in payload) ||
+      typeof payload.exp !== "number" ||
+      !Number.isSafeInteger(payload.exp) ||
+      !("purpose" in payload) ||
+      (payload.purpose !== "session" && payload.purpose !== "onboarding")
+    ) {
+      return null;
+    }
+    const validPayload = payload as TokenPayload;
+    return validPayload.exp > Math.floor(Date.now() / 1000) ? validPayload : null;
   } catch {
     return null;
   }
@@ -137,8 +162,9 @@ export function getOnboardingPhone(req: Request) {
 }
 
 export function clearAuthCookies(res: Response) {
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: "lax", path: "/" });
-  res.clearCookie(ONBOARDING_COOKIE, { httpOnly: true, sameSite: "lax", path: "/" });
+  const secure = process.env.NODE_ENV === "production";
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, secure, sameSite: "lax", path: "/" });
+  res.clearCookie(ONBOARDING_COOKIE, { httpOnly: true, secure, sameSite: "lax", path: "/" });
 }
 
 export async function loadSession(req: Request) {
@@ -152,7 +178,14 @@ export async function loadSession(req: Request) {
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(and(eq(sessions.id, payload.sid), eq(sessions.tokenHash, hashToken(token)), isNull(sessions.revokedAt), gt(sessions.expiresAt, new Date())))
     .limit(1);
-  if (!session || session.user.status !== "active") return null;
+  if (
+    !session ||
+    session.user.status !== "active" ||
+    session.user.id !== payload.sub ||
+    session.user.accountType !== payload.role
+  ) {
+    return null;
+  }
   req.user = session.user;
   req.sessionId = session.session.id;
   return session.user;

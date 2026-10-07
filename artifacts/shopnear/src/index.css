@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -75,6 +74,24 @@ body {
 }
 button, input { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #a94f0c;
+  outline-offset: 3px;
+}
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-180%);
+  border-radius: .75rem;
+  background: #164d38;
+  color: #fff;
+  padding: .75rem 1rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(16, 72, 50, .2);
+}
+.skip-link:focus { transform: translateY(0); }
 
 @layer utilities {
   .font-display { font-family: var(--app-font-serif); }
@@ -82,7 +99,48 @@ button { -webkit-tap-highlight-color: transparent; }
   .tap { transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, color .18s ease; }
   .tap:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(16, 72, 50, .12); }
   .tap:active { transform: translateY(0) scale(.98); }
-  .focus-ring:focus-visible { outline: 3px solid rgba(242, 117, 19, .42); outline-offset: 3px; }
+  .focus-ring:focus-visible { outline: 3px solid #a94f0c; outline-offset: 3px; }
+}
+
+/* Keep the muted copy palette readable on ShopNear's light cards and page surfaces. */
+:where(
+  [class~="text-[#5d8e75]"], [class~="text-[#5f806e]"], [class~="text-[#658071]"],
+  [class~="text-[#688274]"], [class~="text-[#6d7f73]"], [class~="text-[#6d8979]"],
+  [class~="text-[#6e8073]"], [class~="text-[#6f8878]"], [class~="text-[#718177]"],
+  [class~="text-[#718278]"], [class~="text-[#728176]"], [class~="text-[#728676]"],
+  [class~="text-[#758379]"], [class~="text-[#768579]"], [class~="text-[#76877c]"],
+  [class~="text-[#77867c]"], [class~="text-[#779080]"], [class~="text-[#78867c]"],
+  [class~="text-[#78867d]"], [class~="text-[#78897e]"], [class~="text-[#7a887e]"],
+  [class~="text-[#7a897f]"], [class~="text-[#7b897f]"], [class~="text-[#7c897f]"],
+  [class~="text-[#7d8a80]"], [class~="text-[#7d8b80]"], [class~="text-[#7e8b80]"],
+  [class~="text-[#7f8c82]"], [class~="text-[#809084]"], [class~="text-[#829087]"],
+  [class~="text-[#849087]"], [class~="text-[#849187]"], [class~="text-[#849188]"],
+  [class~="text-[#859087]"], [class~="text-[#879189]"], [class~="text-[#87938a]"],
+  [class~="text-[#88948b]"], [class~="text-[#89918a]"], [class~="text-[#89948c]"],
+  [class~="text-[#89a895]"], [class~="text-[#8a958b]"], [class~="text-[#8a968d]"],
+  [class~="text-[#8a978d]"], [class~="text-[#8b958c]"], [class~="text-[#8b9a8f]"],
+  [class~="text-[#8c968d]"], [class~="text-[#90998f]"], [class~="text-[#909b92]"],
+  [class~="text-[#929b91]"], [class~="text-[#929d94]"], [class~="text-[#94a097]"],
+  [class~="text-[#96a097]"], [class~="text-[#97a198]"], [class~="text-[#99a198]"],
+  [class~="text-[#99aca0]"], [class~="text-[#9a9b8f]"], [class~="text-[#9aa198]"],
+  [class~="text-[#9aa49b]"], [class~="text-[#9aa69e]"], [class~="text-[#9b9e91]"],
+  [class~="text-[#9ba197]"], [class~="text-[#a0a59c]"], [class~="text-[#a0a79f]"],
+  [class~="text-[#a1a49f]"], [class~="text-[#a1a79f]"], [class~="text-[#a3aaa3]"],
+  [class~="text-[#a4aaa3]"]
+) {
+  color: #59675e !important;
+}
+
+:where(
+  [class~="text-[#ee7117]"],
+  [class~="text-[#d96714]"],
+  [class~="text-[#f47716]"]
+) {
+  color: #a94f0c !important;
+}
+
+:where([class~="bg-[#f47716]"]) {
+  background-color: #b34e08 !important;
 }
 
 @keyframes rise-in {
@@ -101,6 +159,15 @@ button { -webkit-tap-highlight-color: transparent; }
   background: linear-gradient(90deg, rgba(225,220,207,.6), rgba(255,255,255,.8), rgba(225,220,207,.6));
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
 
 @media (min-width: 768px) {
