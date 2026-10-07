@@ -53,6 +53,10 @@ export function canAssignAdminRole(actorRole, targetRole) {
   return targetRole !== "super_admin" || actorRole === "super_admin";
 }
 
+export function requiresSuperAdminTransfer(currentRole, nextRole) {
+  return currentRole === "super_admin" && nextRole !== "super_admin";
+}
+
 export function canUpdateAccountStatus(actorRole, status) {
   return status !== "deleted" || actorRole === "super_admin";
 }

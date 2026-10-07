@@ -24,6 +24,7 @@ export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 export function hasAdminPermission(role: string, permission: AdminPermission): boolean;
 export function permissionsForRole(role: string | null): AdminPermission[];
 export function canAssignAdminRole(actorRole: string | null, targetRole: string): boolean;
+export function requiresSuperAdminTransfer(currentRole: string | null | undefined, nextRole: string): boolean;
 export function canUpdateAccountStatus(actorRole: string | null, status: string): boolean;
 export function isSupportedModerationAction(entityType: string, action: string): boolean;
 export function moderatedProfileStatus(action: string, previousStatus: unknown): string;

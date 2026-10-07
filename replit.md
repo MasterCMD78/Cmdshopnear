@@ -39,6 +39,9 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Uploaded user media uses authenticated object-storage upload paths; database rows retain object paths rather than file bytes.
 - App Storage is provisioned through Replit secrets, but the current development runtime returns `401 no allowed resources` during sidecar credential exchange; do not treat uploads as verified until that runtime authorization is resolved.
 - “New on ShopNear” is computed from approval timestamps and an admin-controlled duration, defaulting to 30 days.
+- Administrator permissions are explicit and checked server-side. Soft deletion retains the account row, revokes sessions, and is limited to Super Admins.
+- Super Admin changes use the transfer flow, which demotes the previous holder to Moderator; do not directly remove, suspend, or delete a current Super Admin account.
+- Phase 8 platform settings are stored for future use only; do not wire them into marketplace, registration, notification, search, or AI runtime behavior without a separately approved scope.
 
 ## Product
 
@@ -51,6 +54,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Phase 4 customer marketplace detail pages, related listings, API-backed discovery, and persistent favorites
 - Phase 5 opt-in GPS, manual city/state location, nearby search, distance/radius filtering, and public business/provider location controls
 - Phase 7 participant-scoped chat, notifications, customer reviews, rating summaries, moderation, and paginated favorites
+- Phase 8 administrator dashboard, verification, user/report/content moderation, analytics, category management, future-ready settings, audit history, and role administration
 
 ## User preferences
 
@@ -67,6 +71,7 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - The current development database is Neon PostgreSQL configured through the Replit `DATABASE_URL` secret. Run `pnpm --filter @workspace/db run push` to reconcile it with the Drizzle schema.
 - Customer GPS is opt-in and private. Public business/provider coordinates require explicit owner sharing, valid coordinates, and approved verification status.
 - Nearby distance is straight-line; travel distance/time remain null until a map/routing provider is selected. Keep that provider behind the existing adapter boundary.
+- Admin analytics must remain aggregate-only and date-bounded; do not add raw search terms or private request coordinates.
 
 ## Pointers
 
@@ -79,4 +84,9 @@ ShopNear is a mobile-first local marketplace that helps people discover trusted 
 - Customer GPS is request-scoped. Never write exact request coordinates into AI history, preferences, or logs; public listing distance requires owner opt-in and approval.
 - Saved AI history is user-owned, optional, and clearable. Use the existing session boundary and additive Drizzle schema changes only.
 - Do not claim open-now, provider-gender, weekly-engagement, or recently-viewed behavior when the existing data model cannot support it; communicate limitations in the UI/API.
-- Phase 7 is complete. Preserve existing data and the current design/navigation; do not begin Phase 8 without explicit approval.
+- Phase 8 is complete. Preserve existing data and the current design/navigation; do not begin another phase without explicit approval.
+
+## Phase 8 conventions
+
+- Keep admin permissions and account-status protections server-enforced; UI visibility is not an authorization boundary.
+- Keep future-ready platform settings inert until their runtime behavior is separately approved.

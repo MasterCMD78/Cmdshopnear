@@ -104,3 +104,18 @@ All routes below are mounted under `/api` and use the existing HTTP-only session
 - `GET /favorites?page=&limit=` — paginate the current customer's saved businesses, products, and services; existing create/delete endpoints remain unchanged.
 
 Review uniqueness is enforced per customer and listing. Verified-customer state is assigned by the server, not accepted from the client. Hidden reviews are excluded from public lists and rating summaries.
+
+## Phase 8 administration and moderation
+
+All routes below are mounted under `/api`. Admin routes require the existing authenticated session and the specific permission enforced by the API.
+
+- `GET /admin/access`, `POST /admin/roles/bootstrap`, `GET /admin/roles`, and `PUT|DELETE /admin/roles/:userId` — inspect or assign administrator roles; Super Admin transfer is explicit and demotes the previous holder to Moderator.
+- `GET /admin/dashboard` and `GET /admin/analytics?days=7|30|90` — administrator totals and aggregate activity for the selected window.
+- `GET /admin/verifications`, `PATCH /admin/verifications/:entityType/:entityId`, and `GET /admin/verifications/:entityType/:entityId/history` — business and provider verification queues, decisions, and history.
+- `GET /admin/users`, `GET /admin/users/:id`, `GET /admin/users/:id/activity`, `PATCH /admin/users/:id/status`, and `PATCH /admin/users/:id/verification` — account search, details, moderation, and verification reset.
+- `GET /admin/content-reports` and `PATCH /admin/content-reports/:id` — report review and resolution.
+- `GET /admin/moderation/content` and `PATCH /admin/moderation/content/:entityType/:entityId` — content moderation; businesses and providers can be suspended/restored but not removed through content moderation.
+- `GET|POST /admin/categories` and `PUT|DELETE /admin/categories/:type/:id` — product and service category administration.
+- `GET|PUT /admin/settings` — read and save future-ready platform configuration. These values are not wired to runtime behavior.
+- `GET /admin/audit-logs` — paginated audit history including action outcome; successful actions are recorded with a `success` result.
+- `POST /admin/notifications/announcements` — the existing administrator announcement endpoint.

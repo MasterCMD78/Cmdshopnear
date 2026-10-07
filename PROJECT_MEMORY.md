@@ -16,3 +16,11 @@
 - ShopNear AI starts with a deterministic, provider-neutral mock. Preserve public-listing eligibility and never persist customer GPS coordinates from AI requests.
 - AI search history is optional and account-scoped; keep preference/history operations behind the existing authenticated session and retain a clear-history path.
 - Listing storage has lifetime engagement totals, not weekly event history; recently viewed and true weekly popularity remain explicit future work.
+
+## Phase 8 decisions
+
+- Administrator access is assigned explicitly and checked against granular server-side role permissions; an account type alone never grants staff access.
+- Only Super Admins can soft-delete accounts. Deletion retains rows and revokes sessions; a current Super Admin role must be transferred, not directly removed or suspended.
+- Super Admin transfer is atomic and demotes the previous holder to Moderator.
+- Phase 8 platform settings are stored in the existing settings JSONB record but have no runtime effect until separately approved and wired.
+- Admin analytics are aggregate-only and date-bounded; raw search text and private request coordinates remain outside analytics.

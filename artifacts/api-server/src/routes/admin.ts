@@ -49,6 +49,7 @@ import {
   isSupportedModerationAction,
   mergeDailyActiveUsers,
   moderatedProfileStatus,
+  requiresSuperAdminTransfer,
 } from "../lib/admin-policy.mjs";
 import { consumeRateLimit } from "../lib/rate-limit";
 
@@ -155,6 +156,13 @@ router.put("/admin/roles/:userId", requireAuth, requirePermission("roles.manage"
           updatedAt: new Date(),
         }).where(eq(adminRoleAssignments.userId, currentSuperAdmin.userId));
       }
+    } else {
+      const [currentTarget] = await tx.select({ role: adminRoleAssignments.role })
+        .from(adminRoleAssignments)
+        .where(eq(adminRoleAssignments.userId, target.id))
+        .limit(1)
+        .for("update");
+      if (requiresSuperAdminTransfer(currentTarget?.role, body.data.role)) return { transferRequired: true as const };
     }
 
     const [updated] = await tx.insert(adminRoleAssignments).values({
@@ -170,6 +178,10 @@ router.put("/admin/roles/:userId", requireAuth, requirePermission("roles.manage"
   });
   if ("forbidden" in assignment) {
     res.status(403).json({ error: "Only the current super administrator can transfer that role" });
+    return;
+  }
+  if ("transferRequired" in assignment) {
+    res.status(409).json({ error: "Transfer Super Admin access to another administrator before changing this role" });
     return;
   }
   const { updated, previousSuperAdminUserId } = assignment;

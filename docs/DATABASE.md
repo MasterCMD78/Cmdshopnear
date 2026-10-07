@@ -78,3 +78,9 @@ The schema uses the names and concepts from the official specification. Nullable
 - Added `reviews` with one-review-per-customer/listing uniqueness and server-owned verification/moderation fields. Rating summaries are returned for businesses, products, and services.
 - Extended the existing favorites read API with pagination; the existing entity-based favorites table remains in place.
 - The Phase 7 development schema was applied through the documented non-force Drizzle push. The change is additive; existing data and tables were preserved. Production schema changes remain on the normal publish flow.
+
+## Phase 8 verification
+
+- Phase 8 made no schema changes and did not run a database push.
+- Development database inspection confirmed the existing `admin_role_assignments`, `verification_requests`, `verification_history`, `analytics_events`, `moderation_actions`, `audit_logs`, `app_settings`, `product_categories`, and `service_categories` tables are present.
+- Platform configuration continues to use the existing `app_settings.value` JSONB column; no settings-specific table or migration was added.

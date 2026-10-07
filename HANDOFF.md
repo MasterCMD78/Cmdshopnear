@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 7 — Chat, Notifications, Reviews & Ratings (complete). Phases 1–6 remain complete; Phase 8 has not started.
+Phase 8 — Administration & Moderation (complete). Phases 1–7 remain complete; Phase 9 has not started.
 
 ## Last Completed Task
 
-Completed Phase 7 by adding participant-scoped messaging, notifications, reviews, ratings, moderation, and paginated favorites without rebuilding completed phases or removing data.
+Completed and verified Phase 8 administrator operations while preserving the existing ShopNear architecture, completed phases, database records, and customer-facing design.
 
 ## Database Migrations Applied
 
@@ -14,6 +14,7 @@ Completed Phase 7 by adding participant-scoped messaging, notifications, reviews
 - Phase 6 added only `ai_preferences`, `ai_search_history`, and their foreign keys/indexes. Verification confirmed no existing tables were altered and no data was removed.
 - Phase 7 added only engagement tables and review storage through the documented non-force development Drizzle push; existing tables and data were preserved.
 - Drizzle push is the project's existing schema reconciliation workflow; there is no committed migration directory.
+- Phase 8 made no schema changes and ran no push. Read-only development inspection confirmed all existing admin, verification, analytics, audit, settings, and category tables; settings remain in the existing `app_settings.value` JSONB field.
 
 ## API Endpoints Added
 
@@ -40,6 +41,15 @@ Phase 7:
 - `/api/reviews`, `/api/ratings/*`, and `/api/admin/*` — customer reviews, public rating summaries, and moderator queues/actions
 - `GET /api/favorites?page=&limit=` — paginated listing favorites
 
+Phase 8 administrator surface (all routes below are under `/api`):
+
+- `GET /admin/access`, `POST /admin/roles/bootstrap`, `GET /admin/roles`, and `PUT|DELETE /admin/roles/:userId`
+- `GET /admin/dashboard`, `GET /admin/analytics?days=`, and `GET /admin/audit-logs`
+- `GET /admin/verifications`, `PATCH /admin/verifications/:entityType/:entityId`, and `GET /admin/verifications/:entityType/:entityId/history`
+- `GET /admin/users`, `GET /admin/users/:id`, `GET /admin/users/:id/activity`, and `PATCH /admin/users/:id/status|verification`
+- `GET /admin/content-reports`, `PATCH /admin/content-reports/:id`, and `GET|PATCH /admin/moderation/content...`
+- `GET|POST /admin/categories`, `PUT|DELETE /admin/categories/:type/:id`, and `GET|PUT /admin/settings`
+
 ## Files Modified
 
 - API and tests: `artifacts/api-server/package.json`, `artifacts/api-server/src/lib/ai-provider.ts`, `artifacts/api-server/src/lib/ai-ranking.ts`, `artifacts/api-server/src/lib/ai-recommendations.ts`, `artifacts/api-server/src/routes/ai.ts`, `artifacts/api-server/src/routes/index.ts`, and `artifacts/api-server/test/ai.test.mjs`
@@ -47,16 +57,17 @@ Phase 7:
 - API contract/codegen: `lib/api-spec/openapi.yaml`, `lib/api-client-react/src/generated/api.ts`, `lib/api-client-react/src/generated/api.schemas.ts`, `lib/api-zod/src/generated/api.ts`, and the generated AI type/parameter files under `lib/api-zod/src/generated/types/`
 - Existing ShopNear UI/client: `artifacts/shopnear/src/App.tsx`, `artifacts/shopnear/src/components/ai-marketplace.tsx`, and `artifacts/shopnear/src/lib/auth-api.ts`
 - Phase 7 API/schema/UI: `artifacts/api-server/src/routes/chat.ts`, `artifacts/api-server/src/routes/notifications.ts`, `artifacts/api-server/src/routes/reviews.ts`, `lib/db/src/schema/engagement.ts`, `lib/api-spec/openapi.yaml`, `artifacts/shopnear/src/phase7.tsx`, and `artifacts/shopnear/src/App.tsx`
+- Phase 8: `artifacts/api-server/src/lib/admin-policy.mjs`, `artifacts/api-server/src/lib/admin-policy.d.mts`, `artifacts/api-server/src/lib/audit.ts`, `artifacts/api-server/src/routes/admin.ts`, `artifacts/api-server/test/admin-policy.test.mjs`, `artifacts/shopnear/src/phase8.tsx`, `lib/api-spec/openapi.yaml`, generated API client/Zod files, and `.agents/memory/phase8-settings.md`
 - Documentation: `docs/README.md`, `docs/API.md`, `docs/DATABASE.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/SECURITY.md`, `docs/ROADMAP.md`, `docs/CHANGELOG.md`, `docs/DECISIONS.md`, `replit.md`, `PROJECT_MEMORY.md`, and `HANDOFF.md`
 
 ## Verification Results
 
-- `pnpm build` passed, including workspace typechecks and API, ShopNear, and mockup production builds. Vite emitted a non-fatal sourcemap warning for the existing tooltip component.
-- `pnpm --filter @workspace/api-server test` passed all 5 AI parser/ranking tests.
-- The development schema push added only the two AI tables and their foreign keys/indexes.
-- API smoke checks passed for search, suggestions, recommendations, coordinate validation/privacy, and unauthenticated history/preferences access. Search explicitly reports when “near me” lacks coordinates or featured filtering omits business/provider profiles.
-- All three configured workflows are running; the API workflow was restarted after the final route change.
-- Mobile Home and desktop Search rendered. The browser's 401 was the expected unauthenticated `GET /api/auth/session`, which the client treats as signed out. The signed-in Profile controls were not visually verified because the preview browser has no session.
+- Phase 8: `pnpm run build` passed, including workspace typechecks and API, ShopNear, and mockup production builds. Vite reported a non-fatal existing tooltip sourcemap warning and the main bundle-size advisory.
+- Phase 8: `pnpm --filter @workspace/api-server test` passed all 11 tests (6 admin-policy/audit tests and 5 AI parser/ranking tests).
+- Phase 8: read-only development database inspection confirmed all expected admin, verification, analytics, moderation, audit, settings, and category tables, with `app_settings.value` stored as JSONB. No schema push was run.
+- Phase 8: `/api/healthz` returned 200; unauthenticated `/api/admin/access` returned the expected 401.
+- Phase 8: ShopNear and API workflows restarted successfully; all three configured workflows are running. API logs show the server listening without startup errors.
+- Phase 8: the desktop Home page rendered. Browser API calls returned 401 while signed out, as expected. The signed-in admin screens were not visually verified because the preview browser has no session.
 - No public listings are seeded, so discovery pages show the expected empty states.
 - Phase 7: OpenAPI codegen and workspace typechecks passed; `pnpm --filter @workspace/api-server test` passed all 5 existing AI parser/ranking tests; `pnpm build` passed with the existing non-fatal tooltip sourcemap warning.
 - Phase 7: the non-force development schema push succeeded. Database metadata confirms the new chat, block, report, notification, and review tables; the existing favorites columns (`id`, `user_id`, `entity_type`, `entity_id`, `created_at`) remain unchanged.
@@ -81,8 +92,8 @@ Phase 7:
 
 ## Exact Next Task
 
-Phase 7 is complete. Do not begin Phase 8 without explicit approval. Keep any follow-up work within the agreed Phase 7 scope unless the user authorizes a new phase.
+Phase 8 is complete. Await a new user-directed task. Do not start Phase 9.
 
 ## Next Prompt Context
 
-Phase 7 is complete. Preserve the existing ShopNear design, five-tab navigation, database records, and session boundary. Do not start Phase 8 without explicit approval.
+Phase 8 is complete and documented. Preserve the existing ShopNear design, five-tab navigation, database records, and session boundary. Do not start Phase 9.

@@ -10,6 +10,7 @@ import {
   mergeDailyActiveUsers,
   moderatedProfileStatus,
   permissionsForRole,
+  requiresSuperAdminTransfer,
 } from "../src/lib/admin-policy.mjs";
 
 test("staff roles grant only their documented permissions", () => {
@@ -30,6 +31,13 @@ test("only a super administrator can assign that role or soft-delete an account"
   assert.equal(canUpdateAccountStatus("moderator", "active"), true);
   assert.equal(canUpdateAccountStatus("moderator", "deleted"), false);
   assert.equal(canUpdateAccountStatus("super_admin", "deleted"), true);
+});
+
+test("the current Super Admin must be replaced through a transfer, not direct demotion", () => {
+  assert.equal(requiresSuperAdminTransfer("super_admin", "moderator"), true);
+  assert.equal(requiresSuperAdminTransfer("super_admin", "support"), true);
+  assert.equal(requiresSuperAdminTransfer("super_admin", "super_admin"), false);
+  assert.equal(requiresSuperAdminTransfer("moderator", "support"), false);
 });
 
 test("moderation actions are constrained by entity type and profile suspension is reversible", () => {

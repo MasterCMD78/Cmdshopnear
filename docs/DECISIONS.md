@@ -55,3 +55,25 @@ Use authenticated server-sent events for prompt updates, but keep REST endpoints
 ### Derive review trust data on the server
 
 Allow one review per customer/listing and derive verified-customer status and rating summaries from server-owned records. Moderation visibility controls whether a review contributes to public results.
+
+## Phase 8 — administrator operations
+
+### Keep staff authorization server-enforced and granular
+
+The API checks explicit permissions from the assigned administrator role. Account type alone does not grant access; support and moderator roles do not receive the full Super Admin permission set.
+
+### Preserve the Super Admin boundary
+
+Super Admin access cannot be deleted like an ordinary role. A transfer is performed in one database transaction, demotes the previous holder to Moderator, and records both sides of the transfer.
+
+### Keep account deletion soft and revocable
+
+Administrator account deletion changes the account status and revokes active sessions; it does not delete user rows or dependent data. Only a Super Admin can perform it, and staff cannot suspend/delete their own account or a current Super Admin account.
+
+### Store future settings without inventing behavior
+
+Marketplace, verification, featured-duration, notification, search-default, AI, registration, and feature-flag values are stored in the existing settings JSONB record. They have no runtime effect until a separately scoped implementation wires them in.
+
+### Keep analytics aggregate-only
+
+Admin analytics use date-bounded daily aggregates, including distinct active users across event types. Do not include raw search terms or private request coordinates.

@@ -52,3 +52,13 @@ Password hashing, external social login, production SMS delivery, object ACL rev
 - Customers can create and edit only their own reviews. The API derives verified-customer status and public rating totals; clients cannot set either.
 - Review and conversation reports are private to moderators. Administrator-only routes control report resolution and review visibility.
 - SSE connections require the session cookie and are closed when the session/account is no longer valid.
+
+## Phase 8 administration boundaries
+
+- Staff permissions are checked in the API, not trusted from the UI or account type. Support and Moderator roles receive only their defined permission sets.
+- Only a Super Admin can soft-delete accounts. Soft deletion retains the account record and revokes active sessions; administrators cannot suspend or delete their own account or a current Super Admin account.
+- Super Admin access cannot be removed directly. A transfer is transactionally recorded and demotes the previous holder to Moderator.
+- Content moderation does not remove business or provider profiles. It supports reversible suspension; removal remains limited to supported listing, review, and message actions.
+- Audit records include actor, action, target, timestamp, and a successful result marker. Administrator sign-in is included in the existing login audit.
+- Analytics contain daily aggregate counts only. Raw search text and request coordinates are not stored in the analytics response.
+- Platform settings are persisted for future configuration only and do not currently enforce maintenance, registration, marketplace, notification, search, or AI behavior.

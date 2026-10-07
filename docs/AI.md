@@ -21,3 +21,7 @@ Recommendation ranking combines query/category relevance, explicit category pref
 Current boundaries: English text only; no external model calls; provider gender is not public data; opening-hours data is not normalized enough to confirm “open now”; business/provider profiles have no featured field; anonymous history is not persisted. Unsupported filters are disclosed. User history is optional and clearable; request GPS coordinates are never persisted.
 
 Future OpenAI, Gemini, Anthropic, or local-model integrations should implement the same provider interface and be selected behind the adapter, without changing route schemas or marketplace result eligibility. Multilingual support should add language-aware parsing/translation; voice should pass a transcript through text interpretation; image search should add an image-to-query/embedding adapter. None of these integrations is active in Phase 6.
+
+## Phase 8 administrator configuration
+
+The administrator settings page can store future AI search and recommendation flags. These values are not connected to runtime behavior and do not select or activate a model provider; the deterministic mock remains the active provider until a separate, explicit integration is approved.

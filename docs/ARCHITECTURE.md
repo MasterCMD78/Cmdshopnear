@@ -57,3 +57,11 @@ Recommendation ranking is shared and supports nearby, featured, newest, verified
 ## Phase 7 engagement
 
 Chat conversations and messages are scoped through database participants and the existing session/role boundary. Message deletion is a soft delete; blocks and reports are persisted. An authenticated server-sent event stream provides quick updates, while REST refetches recover after reconnects. Notifications and category preferences are user-owned records. Reviews are unique per customer and listing, and the API derives rating summaries from visible reviews rather than trusting client-supplied totals.
+
+## Phase 8 administration
+
+Administrator permissions are defined centrally and checked by API middleware; account type alone never grants staff access. The role management flow assigns only active administrator accounts. Super Admin transfer is transactional: the prior Super Admin becomes a Moderator, and the transfer is audited.
+
+The existing administrator UI reuses the verification, user, report, moderation, analytics, settings, audit, and role APIs. Category administration uses the existing product/service category tables and generated API hooks. Analytics are aggregate-only and bounded by the requested date window.
+
+Future platform settings are stored in the existing `app_settings` JSONB record. Phase 8 deliberately does not connect those flags or defaults to live runtime behavior.
