@@ -1,4 +1,5 @@
 - [Phase 2 auth boundary](phase2-auth.md) — Phone OTP is provider-agnostic; JWT cookies are backed by revocable database sessions.
 - [Vite workspace builds](vite-builds.md) — Vite artifact builds require workflow-style PORT and BASE_PATH variables even when run from the root.
 - [App Storage runtime authorization](app-storage-runtime.md) — Provisioned bucket variables do not guarantee sidecar credential authorization for the current runtime.
+- [Signed object URL handling](signed-object-url-handling.md) — Proxy validated private objects through the API; do not send signer-returned URLs as redirects.
 - [Phase 8 platform settings](phase8-settings.md) — Admin settings are future-ready stored configuration and remain inert until separately approved for runtime use.

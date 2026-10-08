@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-Phase 8 — Administration & Moderation (complete). Phases 1–7 remain complete; Phase 9 has not started.
+Phase 9 — Security, Reliability, Performance & Accessibility (complete). Phases 1–8 remain complete. Phase 10 has not started.
 
 ## Last Completed Task
 
-Completed and verified Phase 8 administrator operations while preserving the existing ShopNear architecture, completed phases, database records, and customer-facing design.
+Completed and verified Phase 9 hardening while preserving the existing ShopNear architecture, completed phases, PostgreSQL data, and customer-facing design.
 
 ## Database Migrations Applied
 
@@ -15,6 +15,7 @@ Completed and verified Phase 8 administrator operations while preserving the exi
 - Phase 7 added only engagement tables and review storage through the documented non-force development Drizzle push; existing tables and data were preserved.
 - Drizzle push is the project's existing schema reconciliation workflow; there is no committed migration directory.
 - Phase 8 made no schema changes and ran no push. Read-only development inspection confirmed all existing admin, verification, analytics, audit, settings, and category tables; settings remain in the existing `app_settings.value` JSONB field.
+- Phase 9 made no schema changes, created no tables, and ran no push or migration. Existing PostgreSQL tables and records were not modified.
 
 ## API Endpoints Added
 
@@ -58,6 +59,7 @@ Phase 8 administrator surface (all routes below are under `/api`):
 - Existing ShopNear UI/client: `artifacts/shopnear/src/App.tsx`, `artifacts/shopnear/src/components/ai-marketplace.tsx`, and `artifacts/shopnear/src/lib/auth-api.ts`
 - Phase 7 API/schema/UI: `artifacts/api-server/src/routes/chat.ts`, `artifacts/api-server/src/routes/notifications.ts`, `artifacts/api-server/src/routes/reviews.ts`, `lib/db/src/schema/engagement.ts`, `lib/api-spec/openapi.yaml`, `artifacts/shopnear/src/phase7.tsx`, and `artifacts/shopnear/src/App.tsx`
 - Phase 8: `artifacts/api-server/src/lib/admin-policy.mjs`, `artifacts/api-server/src/lib/admin-policy.d.mts`, `artifacts/api-server/src/lib/audit.ts`, `artifacts/api-server/src/routes/admin.ts`, `artifacts/api-server/test/admin-policy.test.mjs`, `artifacts/shopnear/src/phase8.tsx`, `lib/api-spec/openapi.yaml`, generated API client/Zod files, and `.agents/memory/phase8-settings.md`
+- Phase 9: API origin/header/body/error handling, OTP/session/rate-limit hardening, private image streaming and path checks, security tests, dependency manifests/lockfile, mockup preview globbing, ShopNear accessibility and metadata, and Phase 9 documentation
 - Documentation: `docs/README.md`, `docs/API.md`, `docs/DATABASE.md`, `docs/ARCHITECTURE.md`, `docs/AI.md`, `docs/SECURITY.md`, `docs/ROADMAP.md`, `docs/CHANGELOG.md`, `docs/DECISIONS.md`, `replit.md`, `PROJECT_MEMORY.md`, and `HANDOFF.md`
 
 ## Verification Results
@@ -68,6 +70,11 @@ Phase 8 administrator surface (all routes below are under `/api`):
 - Phase 8: `/api/healthz` returned 200; unauthenticated `/api/admin/access` returned the expected 401.
 - Phase 8: ShopNear and API workflows restarted successfully; all three configured workflows are running. API logs show the server listening without startup errors.
 - Phase 8: the desktop Home page rendered. Browser API calls returned 401 while signed out, as expected. The signed-in admin screens were not visually verified because the preview browser has no session.
+- Phase 9: `pnpm run build` passed across workspace typechecks and API, ShopNear, and mockup production builds. The existing tooltip sourcemap warning and 603 KB main JavaScript chunk advisory remain.
+- Phase 9: `pnpm --filter @workspace/api-server test` passed all 15 tests.
+- Phase 9: dependency audit, SAST, and HoundDog scans each reported zero findings after the dependency replacement and storage proxy change.
+- Phase 9: `/api/healthz` returned 200 with security headers; unauthenticated admin access returned 401; cross-origin mutation returned 403; same-origin invalid input returned 400; a 70 KB JSON body returned 413.
+- Phase 9: all three managed workflows restarted and served requests. The mobile Home preview rendered with no visual layout regression. Signed-out browser requests returned expected 401s; signed-in screens were not visually verified.
 - No public listings are seeded, so discovery pages show the expected empty states.
 - Phase 7: OpenAPI codegen and workspace typechecks passed; `pnpm --filter @workspace/api-server test` passed all 5 existing AI parser/ranking tests; `pnpm build` passed with the existing non-fatal tooltip sourcemap warning.
 - Phase 7: the non-force development schema push succeeded. Database metadata confirms the new chat, block, report, notification, and review tables; the existing favorites columns (`id`, `user_id`, `entity_type`, `entity_id`, `created_at`) remain unchanged.
@@ -83,6 +90,7 @@ Phase 8 administrator surface (all routes below are under `/api`):
 - Customer GPS is request-scoped and private; public business/provider coordinates require owner opt-in and approval.
 - No map/routing vendor is configured. Straight-line distance works; road distance and travel time remain `null`.
 - There is no committed demo/seed data. App Storage upload signing remains limited by the runtime authorization issue documented elsewhere.
+- Rate-limit state remains process-local. Upload metadata is validated before URL signing, but storage must enforce the actual uploaded byte size/type. Neither limitation was represented as fully production-ready.
 
 ## Environment Requirements
 
@@ -92,8 +100,8 @@ Phase 8 administrator surface (all routes below are under `/api`):
 
 ## Exact Next Task
 
-Phase 8 is complete. Await a new user-directed task. Do not start Phase 9.
+Phase 9 is complete. Await a new user-directed task. Do not start Phase 10.
 
 ## Next Prompt Context
 
-Phase 8 is complete and documented. Preserve the existing ShopNear design, five-tab navigation, database records, and session boundary. Do not start Phase 9.
+Phase 9 is complete and documented. Preserve the existing ShopNear design, five-tab navigation, PostgreSQL records, and session boundary. Do not start Phase 10 without explicit direction.
